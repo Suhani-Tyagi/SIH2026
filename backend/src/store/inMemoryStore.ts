@@ -27,6 +27,9 @@ export interface MemoryStudentProfile {
   phone: string;
   location: string;
   skillScores: string;
+  assessedSkills?: string;
+  coursePassedSkills?: string;
+  mentorVerifiedSkills?: string;
   verifiedBadges: string;
   careerGoals: string;
 }
@@ -100,6 +103,71 @@ export interface MemoryCourse {
   createdAt: Date;
 }
 
+export interface MemoryModule {
+  id: string;
+  courseId: string;
+  title: string;
+  order: number;
+  summary: string;
+}
+
+export interface MemoryLesson {
+  id: string;
+  moduleId: string;
+  title: string;
+  order: number;
+  content: string;
+  videoUrl?: string;
+  duration: string;
+  isCompulsory: boolean;
+}
+
+export interface MemoryLearningResource {
+  id: string;
+  courseId: string;
+  lessonId?: string;
+  title: string;
+  type: string; // PDF, SOP, SLIDE, WORKSHEET, CASE_STUDY
+  fileUrl: string;
+  fileSize: string;
+  createdAt: Date;
+}
+
+export interface MemoryLessonProgress {
+  id: string;
+  enrollmentId: string;
+  lessonId: string;
+  status: string; // LOCKED, AVAILABLE, IN_PROGRESS, COMPLETED
+  completedAt?: Date;
+  updatedAt: Date;
+}
+
+export interface MemoryCourseAssessment {
+  id: string;
+  courseId: string;
+  title: string;
+  passScorePercent: number;
+  timeLimitMinutes: number;
+  questionsJson: string;
+}
+
+export interface MemoryCertificate {
+  id: string;
+  certificateNumber: string;
+  enrollmentId: string;
+  studentId: string;
+  courseId: string;
+  studentName: string;
+  courseTitle: string;
+  providerName: string;
+  issueDate: Date;
+  score: number;
+  verificationQrToken: string;
+  signatory: string;
+  status: 'VALID' | 'REVOKED' | 'EXPIRED';
+  revocationReason?: string;
+}
+
 export interface MemoryEnrollment {
   id: string;
   courseId: string;
@@ -144,6 +212,18 @@ export interface MemoryMentorshipRequest {
   createdAt: Date;
 }
 
+export interface MemoryMentorshipSession {
+  id: string;
+  requestId: string;
+  studentId: string;
+  mentorId: string;
+  scheduledAt: string;
+  agenda: string;
+  notes?: string;
+  status: string;
+  createdAt: Date;
+}
+
 export interface MemoryTimelineEvent {
   id: string;
   applicationId: string;
@@ -165,6 +245,16 @@ export interface MemoryInternshipLifecycle {
   weeklyLogs: string;
   midtermScore: number;
   finalScore: number;
+}
+
+export interface MemoryAuditLog {
+  id: string;
+  actorId: string;
+  actorRole: string;
+  action: string;
+  targetEntity: string;
+  detailsJson: string;
+  timestamp: Date;
 }
 
 // Initial Data Lists
@@ -297,6 +387,9 @@ export const memoryStudentProfiles: MemoryStudentProfile[] = [
       patientCounseling: 88,
       qaGmp: 70
     }),
+    assessedSkills: JSON.stringify({ panchakarma: 85, herbalFormulation: 80, clinicalDiagnostics: 92, nadiPariksha: 80, qaGmp: 75 }),
+    mentorVerifiedSkills: JSON.stringify({ panchakarma: 88, clinicalDiagnostics: 90 }),
+    coursePassedSkills: JSON.stringify({ herbalFormulation: 85, qaGmp: 80 }),
     verifiedBadges: JSON.stringify(['Advanced Panchakarma Practitioner', 'Clinical Research Associate', 'Ayurvedic Pulse Diagnosis']),
     careerGoals: JSON.stringify(['Herbal Formulation Scientist', 'Panchakarma Consultant'])
   },
@@ -319,6 +412,9 @@ export const memoryStudentProfiles: MemoryStudentProfile[] = [
       patientCounseling: 90,
       qaGmp: 80
     }),
+    assessedSkills: JSON.stringify({ herbalFormulation: 92, qaGmp: 85, researchMethodology: 88 }),
+    mentorVerifiedSkills: JSON.stringify({ herbalFormulation: 90, qaGmp: 85 }),
+    coursePassedSkills: JSON.stringify({ herbalFormulation: 90 }),
     verifiedBadges: JSON.stringify(['Herbal Standardization Expert', 'AYUSH QA/QC Certified', 'NABH Clinical Safety']),
     careerGoals: JSON.stringify(['Clinical Research Associate', 'Herbal Formulation Scientist'])
   }
@@ -474,7 +570,7 @@ export const memoryCourses: MemoryCourse[] = [
     price: 'Free (Ministry of AYUSH Sponsored)',
     skillsAcquired: JSON.stringify(['Herbal Formulation', 'QA/QC & GMP Compliance', 'Phytochemistry']),
     image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=600',
-    description: 'Learn modern chromatographic fingerprinting methods, solvent extraction techniques, and marker identification.',
+    description: 'Learn modern chromatographic fingerprinting methods, solvent extraction techniques, and marker identification for Ayurvedic botanical raw materials.',
     createdAt: new Date()
   },
   {
@@ -487,8 +583,173 @@ export const memoryCourses: MemoryCourse[] = [
     price: 'Free (AIIA Partnered)',
     skillsAcquired: JSON.stringify(['Panchakarma Techniques', 'Nadi Pariksha', 'Clinical Diagnostics']),
     image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
-    description: 'Step-by-step practical masterclass covering Shirodhara, Pizhichil, Navarakizhi, Nasyam, and Vasti dosage computation.',
+    description: 'Step-by-step practical masterclass covering Shirodhara, Pizhichil, Navarakizhi, Nasyam, and Vasti dosage computation according to classical Samhitas.',
     createdAt: new Date()
+  }
+];
+
+export const memoryModules: MemoryModule[] = [
+  {
+    id: 'mod-1',
+    courseId: 'crs-1',
+    title: 'Module 1: Botanical Raw Material Authentication & Quality Norms',
+    order: 1,
+    summary: 'Overview of Ayurvedic Pharmacopoeia of India (API) standards, macroscopic & microscopic herb identification.'
+  },
+  {
+    id: 'mod-2',
+    courseId: 'crs-1',
+    title: 'Module 2: High-Performance Thin-Layer Chromatography (HPTLC) Fingerprinting',
+    order: 2,
+    summary: 'Sample preparation, plate development, densitometric scanning, and active marker quantification.'
+  },
+  {
+    id: 'mod-3',
+    courseId: 'crs-1',
+    title: 'Module 3: Practical Lab SOPs & Final Aptitude Assessment',
+    order: 3,
+    summary: 'Heavy metal limits, pesticide residue testing, and final certification exam.'
+  }
+];
+
+export const memoryLessons: MemoryLesson[] = [
+  {
+    id: 'les-1',
+    moduleId: 'mod-1',
+    title: 'Lesson 1.1: Introduction to API Pharmacopoeial Standards',
+    order: 1,
+    content: 'Detailed breakdown of Schedules T & Y, foreign matter limits, total ash, and acid-insoluble ash determinations.',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '15 mins',
+    isCompulsory: true
+  },
+  {
+    id: 'les-2',
+    moduleId: 'mod-1',
+    title: 'Lesson 1.2: Supercritical Extraction & Solvent Selection SOPs',
+    order: 2,
+    content: 'Polarity index matrices, hydro-alcoholic maceration protocols, and batch yield calculation.',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '20 mins',
+    isCompulsory: true
+  },
+  {
+    id: 'les-3',
+    moduleId: 'mod-2',
+    title: 'Lesson 2.1: HPTLC Instrumentation Calibration & Mobile Phase Setup',
+    order: 1,
+    content: 'CAMAG HPTLC applicator setup, chamber saturation parameters, and derivative spraying techniques.',
+    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    duration: '25 mins',
+    isCompulsory: true
+  }
+];
+
+export const memoryLearningResources: MemoryLearningResource[] = [
+  {
+    id: 'res-1',
+    courseId: 'crs-1',
+    lessonId: 'les-1',
+    title: 'AYUSH Pharmacopoeia API Guidelines 2025.pdf',
+    type: 'PDF',
+    fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    fileSize: '3.2 MB',
+    createdAt: new Date()
+  },
+  {
+    id: 'res-2',
+    courseId: 'crs-1',
+    lessonId: 'les-2',
+    title: 'Dabur R&D Standard Extraction SOP Checklist.pdf',
+    type: 'SOP',
+    fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    fileSize: '1.8 MB',
+    createdAt: new Date()
+  }
+];
+
+export const memoryLessonProgress: MemoryLessonProgress[] = [
+  {
+    id: 'lsp-1',
+    enrollmentId: 'enr-1',
+    lessonId: 'les-1',
+    status: 'COMPLETED',
+    completedAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: 'lsp-2',
+    enrollmentId: 'enr-1',
+    lessonId: 'les-2',
+    status: 'COMPLETED',
+    completedAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: 'lsp-3',
+    enrollmentId: 'enr-1',
+    lessonId: 'les-3',
+    status: 'COMPLETED',
+    completedAt: new Date(),
+    updatedAt: new Date()
+  }
+];
+
+export const memoryCourseAssessments: MemoryCourseAssessment[] = [
+  {
+    id: 'ca-1',
+    courseId: 'crs-1',
+    title: 'Industrial Phytochemistry Final Aptitude Assessment',
+    passScorePercent: 75,
+    timeLimitMinutes: 30,
+    questionsJson: JSON.stringify([
+      {
+        id: 'q1',
+        question: 'What is the standard permissible Lead (Pb) limit under API Schedule T for Ayurvedic raw drugs?',
+        options: ['1.0 ppm', '10.0 ppm', '0.3 ppm', '50.0 ppm'],
+        correctAnswer: '10.0 ppm',
+        explanation: 'Schedule T specifies a 10.0 ppm maximum threshold for Lead in raw and finished formulations.'
+      },
+      {
+        id: 'q2',
+        question: 'Which wavelength range is typically used for UV-Densitometric scanning of flavonoids on HPTLC plates?',
+        options: ['254 nm and 366 nm', '600 nm', '100 nm', '800 nm'],
+        correctAnswer: '254 nm and 366 nm',
+        explanation: 'Short-wave UV 254 nm and long-wave UV 366 nm are standard for non-destructive chromatographic detection.'
+      },
+      {
+        id: 'q3',
+        question: 'What is the primary indicator of Vata pulse in Nadi Pariksha?',
+        options: ['Frog Jump (Manduka)', 'Snake Slither (Sarpa)', 'Swan Glide (Hamsa)', 'Elephant Walk (Gaja)'],
+        correctAnswer: 'Snake Slither (Sarpa)',
+        explanation: 'Sarpa Gati characterizes fast, serpentine Vata pulse movement under the index finger.'
+      },
+      {
+        id: 'q4',
+        question: 'Under ICMR Good Clinical Practice (GCP) guidelines, who is responsible for verifying Informed Consent Forms?',
+        options: ['Sponsor Auditor', 'Clinical Research Associate / Principal Investigator', 'Patient Relative', 'Marketing Manager'],
+        correctAnswer: 'Clinical Research Associate / Principal Investigator',
+        explanation: 'The PI and CRA ensure informed consent compliance prior to subject enrolment.'
+      }
+    ])
+  }
+];
+
+export const memoryCertificates: MemoryCertificate[] = [
+  {
+    id: 'cert-1',
+    certificateNumber: 'AYUSH-CERT-88F192A0',
+    enrollmentId: 'enr-1',
+    studentId: 'usr-stu-1',
+    courseId: 'crs-1',
+    studentName: 'Aarav Sharma',
+    courseTitle: 'Industrial Phytochemistry & HPTLC Standardization',
+    providerName: 'Dabur R&D Academy',
+    issueDate: new Date(),
+    score: 90,
+    verificationQrToken: 'VERIFIED-TOKEN-AARAV-01',
+    signatory: 'Dr. Tanuja Nesari (Director AIIA) & Dabur R&D Head',
+    status: 'VALID'
   }
 ];
 
@@ -544,6 +805,20 @@ export const memoryMentorshipRequests: MemoryMentorshipRequest[] = [
   }
 ];
 
+export const memoryMentorshipSessions: MemoryMentorshipSession[] = [
+  {
+    id: 'm-sess-1',
+    requestId: 'men-1',
+    studentId: 'usr-stu-1',
+    mentorId: 'usr-aca-1',
+    scheduledAt: '2026-09-15T14:00:00.000Z',
+    agenda: 'Review Dravyaguna phytochemistry extraction methodology and paper draft.',
+    notes: 'Approved outline. Advised student to submit to Journal of Ayurveda & Integrative Medicine.',
+    status: 'SCHEDULED',
+    createdAt: new Date()
+  }
+];
+
 export const memoryTimelineEvents: MemoryTimelineEvent[] = [
   {
     id: 'tml-1',
@@ -579,5 +854,17 @@ export const memoryInternshipLifecycles: MemoryInternshipLifecycle[] = [
     ]),
     midtermScore: 94,
     finalScore: 96
+  }
+];
+
+export const memoryAuditLogs: MemoryAuditLog[] = [
+  {
+    id: 'audit-1',
+    actorId: 'usr-ind-1',
+    actorRole: 'INDUSTRY',
+    action: 'COURSE_PUBLISHED',
+    targetEntity: 'Industrial Phytochemistry & HPTLC Standardization',
+    detailsJson: JSON.stringify({ passScorePercent: 75 }),
+    timestamp: new Date()
   }
 ];

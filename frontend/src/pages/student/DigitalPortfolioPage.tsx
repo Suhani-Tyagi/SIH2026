@@ -1,20 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Award, Share2, CheckCircle2, ShieldCheck, ExternalLink, GraduationCap, MapPin, Phone, Mail } from 'lucide-react';
+import { Award, Share2, ShieldCheck, ExternalLink, GraduationCap, MapPin, Phone, Mail, FileCheck, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const DigitalPortfolioPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [profile, setProfile] = useState<any>(null);
+  const [certificates, setCertificates] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch('/api/skills/profile', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('ayush_token')}` }
+      headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` }
     })
       .then((res) => res.json())
       .then((data) => setProfile(data))
       .catch((err) => console.error(err));
-  }, []);
+
+    fetch('/api/certificates/student', {
+      headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` }
+    })
+      .then((res) => res.json())
+      .then((data) => setCertificates(data.certificates || []))
+      .catch((err) => console.error(err));
+  }, [token]);
 
   const readinessScore = profile?.overallReadiness || user?.studentProfile?.readinessScore || 88;
 
@@ -35,7 +44,6 @@ export const DigitalPortfolioPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-4">
-      
       {/* Header & Public Share Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs">
         <div>
@@ -58,16 +66,14 @@ export const DigitalPortfolioPage: React.FC = () => {
 
       {/* Main Profile Showcase Card */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
-        
         {/* Cover Header */}
         <div className="h-32 bg-gradient-to-r from-emerald-950 via-ayush-dark to-emerald-900 p-6 flex items-end">
           <span className="text-xs font-bold text-amber-300 bg-black/40 px-3 py-1 rounded-full border border-amber-400/30">
-            {user?.system} SYSTEM OF MEDICINE
+            {user?.system || 'AYURVEDA'} SYSTEM OF MEDICINE
           </span>
         </div>
 
         <div className="p-6 sm:p-8 space-y-6 relative -mt-12">
-          
           <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
             <div className="flex items-end gap-4">
               <img
@@ -101,10 +107,50 @@ export const DigitalPortfolioPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Earned E-Certificates Section */}
+          <div className="space-y-3 pt-4 border-t border-slate-100">
+            <h3 className="text-sm font-extrabold text-slate-900 flex items-center justify-between">
+              <span className="flex items-center gap-2"><Award className="w-4 h-4 text-amber-600" /> Issued Tamper-Resistant E-Certificates ({certificates.length})</span>
+            </h3>
+
+            {certificates.length === 0 ? (
+              <div className="p-4 bg-gray-50 rounded-2xl border text-center text-xs text-gray-500">
+                No E-Certificates issued yet. Complete an industry course and pass the mandatory 75% aptitude test to earn your credential.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {certificates.map((cert) => (
+                  <div key={cert.id} className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <FileCheck className="w-4 h-4 text-emerald-700" />
+                        <span className="font-bold text-xs text-gray-900">{cert.courseTitle}</span>
+                        <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-emerald-300 font-bold text-emerald-900">
+                          {cert.certificateNumber}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-600">
+                        Provider: {cert.providerName} • Score: <strong className="text-emerald-800">{cert.score}%</strong> • Issued: {new Date(cert.issueDate).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <Link
+                      to={`/certificate/verify/${cert.id}`}
+                      target="_blank"
+                      className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0 transition"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Public Verification Link
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Verified Badges Section */}
           <div className="space-y-3 pt-4 border-t border-slate-100">
             <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-600" /> Verified Skill Badges & Certifications
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Verified Skill Badges
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -135,10 +181,8 @@ export const DigitalPortfolioPage: React.FC = () => {
               Copy Link
             </button>
           </div>
-
         </div>
       </div>
-
     </div>
   );
 };

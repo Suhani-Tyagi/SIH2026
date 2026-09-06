@@ -9,6 +9,9 @@ import {
 
 export const getInstitutionAnalytics = async (req: Request, res: Response) => {
   try {
+    const { institutionName, discipline, batch, atRiskOnly } = req.query;
+    const targetInstitution = institutionName ? String(institutionName) : 'All India Institute of Ayurveda';
+
     let totalStudents = 15;
     let totalApplications = 5;
     let placedStudents = 2;
@@ -25,8 +28,52 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
 
         const avgReadiness = await prisma.studentProfile.aggregate({ _avg: { readinessScore: true } });
         avgScoreVal = Math.round(avgReadiness._avg.readinessScore || 85);
-        studentProfiles = await prisma.studentProfile.findMany();
+        studentProfiles = await prisma.studentProfile.findMany({ include: { user: true } });
       } catch (e) {}
+    }
+
+    // Filter student roster by institution data isolation
+    let roster = studentProfiles.map(p => {
+      const user = memoryUsers.find(u => u.id === p.userId) || p.user;
+      let certCount = 0;
+      try {
+        if (p.verifiedBadges) {
+          const b = typeof p.verifiedBadges === 'string' ? JSON.parse(p.verifiedBadges) : p.verifiedBadges;
+          certCount = b.length;
+        }
+      } catch (e) {}
+
+      const isAtRisk = (p.readinessScore || 75) < 70 || certCount === 0;
+
+      return {
+        userId: p.userId,
+        studentName: user?.name || 'AYUSH Student',
+        email: user?.email || '',
+        institutionName: (p as any).institutionName || user?.institutionName || targetInstitution,
+        system: (p as any).system || user?.system || 'AYURVEDA',
+        degree: p.degree || 'BAMS',
+        discipline: p.degree || 'Kayachikitsa & Panchakarma',
+        passoutYear: p.passoutYear || 2025,
+        readinessScore: p.readinessScore || 75,
+        verifiedCertificatesCount: certCount,
+        isAtRisk,
+        atRiskReason: isAtRisk ? ((p.readinessScore || 75) < 70 ? 'Skill Readiness Score < 70' : '0 Industry Certificates Completed') : null
+      };
+    });
+
+
+    // Apply Filters
+    if (targetInstitution && targetInstitution !== 'ALL') {
+      roster = roster.filter(r => r.institutionName.toLowerCase().includes(targetInstitution.toLowerCase()));
+    }
+    if (discipline && discipline !== 'ALL') {
+      roster = roster.filter(r => r.degree === discipline || r.discipline.includes(String(discipline)));
+    }
+    if (batch && batch !== 'ALL') {
+      roster = roster.filter(r => r.passoutYear === parseInt(String(batch), 10));
+    }
+    if (atRiskOnly === 'true') {
+      roster = roster.filter(r => r.isAtRisk);
     }
 
     let panchakarmaSum = 0, herbalSum = 0, diagSum = 0, nadiSum = 0, researchSum = 0, qaSum = 0;
@@ -75,14 +122,17 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
     ];
 
     return res.json({
+      institutionName: targetInstitution,
       metrics: {
-        totalStudents,
+        totalStudents: roster.length || totalStudents,
         totalApplications,
         placedStudents,
         placementRatePercent: totalStudents > 0 ? Math.round((placedStudents / totalStudents) * 100) : 85,
         activeIndustryPartners,
-        avgSkillReadinessScore: avgScoreVal
+        avgSkillReadinessScore: avgScoreVal,
+        atRiskStudentsCount: roster.filter(r => r.isAtRisk).length
       },
+      roster,
       skillGaps,
       placementBySystem,
       topDeficientSkills
@@ -157,20 +207,27 @@ export const getSuperAdminAnalytics = async (req: Request, res: Response) => {
 
 export const exportAnalyticsCSV = async (req: Request, res: Response) => {
   try {
-    const csvContent = [
-      'Report Type,Metric Name,Value,Notes',
-      'National Analytics,Total Registered Students,15,AIIA National Portal',
-      'National Analytics,Placed Candidates,5,Selected across Dabur, Himalaya, Kerala Ayurveda',
-      'National Analytics,Placement Rate,88%,SIH 2026 Target Met',
-      'Skill Gap Matrix,Panchakarma Benchmark,90%,Current Avg 85%',
-      'Skill Gap Matrix,Herbal Formulation Benchmark,85%,Current Avg 78%',
-      'Skill Gap Matrix,Clinical Diagnostics Benchmark,90%,Current Avg 88%'
-    ].join('\n');
+    const profiles = memoryStudentProfiles;
+    const csvHeader = 'Candidate ID,Student Name,Email,Institution,System,Degree,Passout Year,Readiness Score,Verified Certs Count,At Risk Flag,At Risk Reason';
+    const csvRows = profiles.map(p => {
+      const u = memoryUsers.find(usr => usr.id === p.userId);
+      let certCount = 0;
+      try {
+        if (p.verifiedBadges) certCount = (typeof p.verifiedBadges === 'string' ? JSON.parse(p.verifiedBadges) : p.verifiedBadges).length;
+      } catch (e) {}
+      const isAtRisk = (p.readinessScore || 75) < 70 || certCount === 0;
+      const reason = isAtRisk ? ((p.readinessScore || 75) < 70 ? 'Skill Score < 70' : '0 Certificates') : 'None';
+      return `"${p.userId}","${u?.name || 'Candidate'}","${u?.email || ''}","${(p as any).institutionName || u?.institutionName || 'AIIA'}","${(p as any).system || u?.system || 'AYURVEDA'}","${p.degree || 'BAMS'}",${p.passoutYear || 2025},${p.readinessScore || 75},${certCount},"${isAtRisk ? 'YES' : 'NO'}","${reason}"`;
+    });
+
+    const csvContent = [csvHeader, ...csvRows].join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="AYUSH_Setu_National_Analytics_Report.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="AYUSH_Setu_Institution_Roster_Report.csv"');
     return res.status(200).send(csvContent);
   } catch (error: any) {
     return res.status(500).json({ message: error.message || 'Server error' });
   }
 };
+
+

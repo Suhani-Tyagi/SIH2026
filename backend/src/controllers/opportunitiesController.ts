@@ -195,3 +195,102 @@ export const createOpportunity = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: error.message || 'Server error' });
   }
 };
+
+export const searchCandidates = async (req: AuthRequest, res: Response) => {
+  try {
+    const { system, skills, minScore, minDegree, batch, search } = req.query;
+    const reqSkills: string[] = typeof skills === 'string' ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const minScoreNum = minScore ? parseInt(String(minScore), 10) : 0;
+
+    let profiles: any[] = [];
+    if (isDatabaseConfigured) {
+      try {
+        const where: any = {};
+        if (system && system !== 'ALL') where.system = system;
+        if (minDegree && minDegree !== 'ALL') where.degree = minDegree;
+        if (batch && batch !== 'ALL') where.passoutYear = parseInt(String(batch), 10);
+
+        profiles = await prisma.studentProfile.findMany({
+          where,
+          include: { user: true }
+        });
+      } catch (e) {}
+    }
+
+    if (profiles.length === 0) {
+      profiles = memoryStudentProfiles
+        .filter(p => {
+          const pSys = (p as any).system || memoryUsers.find(usr => usr.id === p.userId)?.system;
+          if (system && system !== 'ALL' && pSys !== system) return false;
+          if (minDegree && minDegree !== 'ALL' && p.degree !== minDegree) return false;
+          if (batch && batch !== 'ALL' && p.passoutYear !== parseInt(String(batch), 10)) return false;
+          if (search) {
+            const q = String(search).toLowerCase();
+            const u = memoryUsers.find(usr => usr.id === p.userId);
+            return p.location?.toLowerCase().includes(q) || u?.name?.toLowerCase().includes(q) || p.bio?.toLowerCase().includes(q);
+          }
+          return true;
+        })
+        .map(p => {
+          const user = memoryUsers.find(u => u.id === p.userId);
+          return { ...p, user };
+        });
+    }
+
+
+    const candidateResults = profiles.map(p => {
+      let candidateSkills: Record<string, number> = {};
+      let verifiedBadges: string[] = [];
+      let assessed: Record<string, number> = {};
+      let coursePassed: Record<string, number> = {};
+      let mentorVerified: Record<string, number> = {};
+
+      try {
+        if (p.skillScores) candidateSkills = typeof p.skillScores === 'string' ? JSON.parse(p.skillScores) : p.skillScores;
+        if (p.verifiedBadges) verifiedBadges = typeof p.verifiedBadges === 'string' ? JSON.parse(p.verifiedBadges) : p.verifiedBadges;
+        if (p.assessedSkills) assessed = typeof p.assessedSkills === 'string' ? JSON.parse(p.assessedSkills) : p.assessedSkills;
+        if (p.coursePassedSkills) coursePassed = typeof p.coursePassedSkills === 'string' ? JSON.parse(p.coursePassedSkills) : p.coursePassedSkills;
+        if (p.mentorVerifiedSkills) mentorVerified = typeof p.mentorVerifiedSkills === 'string' ? JSON.parse(p.mentorVerifiedSkills) : p.mentorVerifiedSkills;
+      } catch (e) {}
+
+      const candidateSkillKeys = Object.keys(candidateSkills);
+      const matchingSkills = reqSkills.length > 0
+        ? reqSkills.filter(s => candidateSkillKeys.some(ck => ck.toLowerCase().includes(s.toLowerCase())))
+        : candidateSkillKeys.slice(0, 4);
+
+      const missingSkills = reqSkills.filter(s => !matchingSkills.includes(s));
+
+      const readinessScore = p.readinessScore || 75;
+      const fitScore = Math.min(100, Math.round(readinessScore * 0.5 + (matchingSkills.length / Math.max(reqSkills.length, 1)) * 30 + (p.passoutYear >= 2025 ? 20 : 10)));
+
+      return {
+        userId: p.userId,
+        studentName: p.user?.name || 'AYUSH Candidate',
+        email: p.user?.email || '',
+        system: (p as any).system || p.user?.system || 'AYURVEDA',
+        degree: p.degree || 'BAMS',
+        institutionName: (p as any).institutionName || p.user?.institutionName || 'All India Institute of Ayurveda',
+
+        passoutYear: p.passoutYear || 2025,
+        location: p.location || 'New Delhi',
+        readinessScore,
+        fitScore,
+        matchingSkills,
+        missingSkills,
+        verifiedBadges,
+        provenanceSummary: {
+          hasAssessedScore: Object.keys(assessed).length > 0,
+          hasCourseCert: verifiedBadges.length > 0 || Object.keys(coursePassed).length > 0,
+          hasMentorVerification: Object.keys(mentorVerified).length > 0
+        }
+      };
+    })
+    .filter(c => c.fitScore >= minScoreNum)
+    .sort((a, b) => b.fitScore - a.fitScore);
+
+    return res.json({ candidates: candidateResults, totalCount: candidateResults.length });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+

@@ -34,35 +34,40 @@ model User {
   mentorshipsAsMentor  MentorshipRequest[] @relation("MentorUser")
   mentorshipsAsStudent MentorshipRequest[] @relation("StudentUser")
   researchProposals    ResearchProposal[]
+  certificates         Certificate[]
+  auditLogs            AuditLog[]
 }
 
 model StudentProfile {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  degree         String   @default("BAMS") // BAMS, BHMS, BUMS, BSMS, BNYS, MD/MS (AYUSH)
-  passoutYear    Int      @default(2025)
-  readinessScore Int      @default(75)
-  bio            String?
-  phone          String?
-  location       String?  @default("New Delhi, India")
-  skillScores    String   @default("{}") // JSON string: { panchakarma: 85, herbal: 70, ... }
-  verifiedBadges String   @default("[]") // JSON string array of earned certificates
-  careerGoals    String   @default("[]") // JSON string array of preferred career track IDs
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  degree               String   @default("BAMS") // BAMS, BHMS, BUMS, BSMS, BNYS, MD/MS (AYUSH)
+  passoutYear          Int      @default(2025)
+  readinessScore       Int      @default(75)
+  bio                  String?
+  phone                String?
+  location             String?  @default("New Delhi, India")
+  skillScores          String   @default("{}") // Self-declared JSON string
+  assessedSkills       String   @default("{}") // Backend MCQ test score JSON
+  coursePassedSkills   String   @default("{}") // Course test passed score JSON
+  mentorVerifiedSkills String   @default("{}") // Mentor verified score JSON
+  verifiedBadges       String   @default("[]") // JSON string array of earned certificates
+  careerGoals          String   @default("[]") // JSON string array of preferred career track IDs
 }
 
 model JobRole {
   id                 String   @id @default(uuid())
   title              String
   code               String   @unique
-  system             String   @default("AYURVEDA") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  system             String   @default("AYURVEDA")
   summary            String
   careerPathway      String
-  eligibleDegrees    String   // JSON string array
-  coreSkills         String   // JSON string object: { skillName: benchmarkLevel }
-  secondarySkills    String   // JSON string array
-  typicalSalaryRange String   // e.g. "₹6.0 - ₹9.0 LPA"
-  demandSignal       String   @default("HIGH") // HIGH, VERY_HIGH, MODERATE
+  eligibleDegrees    String
+  coreSkills         String
+  secondarySkills    String
+  typicalSalaryRange String
+  demandSignal       String   @default("HIGH")
   createdAt          DateTime @default(now())
 
   targetRoles TargetRole[]
@@ -80,14 +85,14 @@ model TargetRole {
 
 model AssessmentQuestion {
   id            String   @id @default(uuid())
-  discipline    String   @default("AYURVEDA") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
-  skillCategory String   // e.g., panchakarma, herbalFormulation, clinicalDiagnostics, qaGmp
-  questionType  String   @default("MCQ") // MCQ, MULTI_SELECT, SCENARIO, ORDERING, SHORT_RESPONSE
-  difficulty    String   @default("INTERMEDIATE") // BEGINNER, INTERMEDIATE, ADVANCED
+  discipline    String   @default("AYURVEDA")
+  skillCategory String
+  questionType  String   @default("MCQ") // MCQ, MULTI_SELECT, CLINICAL_CASE, REASONING, APTITUDE, SITUATIONAL_JUDGEMENT, SHORT_ANSWER
+  difficulty    String   @default("INTERMEDIATE")
   weight        Int      @default(10)
   questionText  String
-  options       String   // JSON string array of options
-  correctAnswer String   // JSON string or string
+  options       String
+  correctAnswer String
   explanation   String
   referenceDoc  String?
   active        Boolean  @default(true)
@@ -102,35 +107,35 @@ model AssessmentAttempt {
   totalScore        Int
   technicalScore    Int
   softSkillScore    Int
-  categoryBreakdown String   // JSON string object
-  answers           String   // JSON string object
+  categoryBreakdown String
+  answers           String
   completedAt       DateTime @default(now())
 }
 
 model Opportunity {
   id                   String   @id @default(uuid())
   title                String
-  type                 String   // INTERNSHIP, JOB, APPRENTICESHIP, RESEARCH_FELLOWSHIP, LIVE_PROJECT, FDP, WORKSHOP
+  type                 String
   companyName          String
   companyId            String
   company              User     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  system               String   @default("ALL") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  system               String   @default("ALL")
   department           String   @default("R&D / Clinical Operations")
-  skillsRequired       String   // JSON string array / object
-  preferredSkills      String   @default("[]") // JSON string array
-  stipend              String   // e.g. "₹25,000 / month" or "₹6.5 LPA"
+  skillsRequired       String
+  preferredSkills      String   @default("[]")
+  stipend              String
   location             String
-  mode                 String   @default("ONSITE") // REMOTE, ONSITE, HYBRID
-  duration             String   // e.g. "6 Months", "Full Time"
+  mode                 String   @default("ONSITE")
+  duration             String
   openings             Int      @default(5)
   applicationDeadline  String?  @default("2026-10-31")
   joiningDate          String?  @default("2026-11-15")
   minDegree            String   @default("BAMS")
   eligibleBatch        Int      @default(2025)
   description          String
-  selectionStages      String   @default("[\"Application Review\",\"Technical Interview\",\"HR Fit\"]") // JSON array
-  knockoutQuestions    String   @default("[]") // JSON string array
-  status               String   @default("PUBLISHED") // DRAFT, PUBLISHED, PAUSED, CLOSED, ARCHIVED
+  selectionStages      String   @default("[\"Application Review\",\"Technical Interview\",\"HR Fit\"]")
+  knockoutQuestions    String   @default("[]")
+  status               String   @default("PUBLISHED")
   companyVerified      Boolean  @default(true)
   active               Boolean  @default(true)
   createdAt            DateTime @default(now())
@@ -145,11 +150,11 @@ model Application {
   opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
   studentId     String
   student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status        String   @default("APPLIED") // APPLIED, SHORTLISTED, INTERVIEW, OFFERED, ACCEPTED, REJECTED, COMPLETED
+  status        String   @default("APPLIED")
   matchScore    Int      @default(80)
-  matchSnapshot String   @default("{}") // JSON string of score components & breakdown
+  matchSnapshot String   @default("{}")
   coverLetter   String?
-  answers       String   @default("{}") // Knockout answers JSON
+  answers       String   @default("{}")
   interviewDate String?
   appliedAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -175,23 +180,66 @@ model Course {
   companyId            String
   duration             String
   level                String   @default("Intermediate")
-  deliveryMode         String   @default("HYBRID") // SELF_PACED, LIVE, HYBRID, IN_PERSON
+  deliveryMode         String   @default("HYBRID")
   system               String   @default("AYURVEDA")
-  skillsAcquired       String   // JSON string array
+  skillsAcquired       String
   description          String
-  learningOutcomes     String   @default("[]") // JSON string array
-  modulesJson          String   @default("[]") // JSON string array of modules & lessons
-  instructorDetails    String   @default("{}") // JSON string
+  learningOutcomes     String   @default("[]")
+  modulesJson          String   @default("[]")
+  instructorDetails    String   @default("{}")
   capacity             Int      @default(100)
   registrationDeadline String?  @default("2026-11-30")
-  passThreshold        Int      @default(70)
+  passThreshold        Int      @default(75)
   image                String?
   price                String   @default("Free (Ministry Sponsored)")
   enrollmentsCount     Int      @default(0)
-  status               String   @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  status               String   @default("PUBLISHED")
   createdAt            DateTime @default(now())
 
   enrollments          Enrollment[]
+  modules              Module[]
+  resources            LearningResource[]
+  assessments          CourseAssessment[]
+  certificates         Certificate[]
+}
+
+model Module {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  order       Int      @default(1)
+  summary     String
+
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id           String   @id @default(uuid())
+  moduleId     String
+  module       Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title        String
+  order        Int      @default(1)
+  content      String
+  videoUrl     String?
+  duration     String   @default("15 mins")
+  isCompulsory Boolean  @default(true)
+
+  resources    LearningResource[]
+  progress     LessonProgress[]
+}
+
+model LearningResource {
+  id          String   @id @default(uuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonId    String?
+  lesson      Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  title       String
+  type        String   @default("PDF") // PDF, SOP, SLIDE, WORKSHEET, CASE_STUDY
+  fileUrl     String
+  fileSize    String   @default("2.4 MB")
+  createdAt   DateTime @default(now())
 }
 
 model Enrollment {
@@ -206,22 +254,66 @@ model Enrollment {
   completedAt     DateTime?
   certificateHash String?
   enrolledAt      DateTime  @default(now())
+
+  lessonProgress  LessonProgress[]
+  certificates    Certificate[]
+}
+
+model LessonProgress {
+  id           String    @id @default(uuid())
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     String
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  status       String    @default("LOCKED") // LOCKED, AVAILABLE, IN_PROGRESS, COMPLETED
+  completedAt  DateTime?
+  updatedAt    DateTime  @updatedAt
+}
+
+model CourseAssessment {
+  id                String   @id @default(uuid())
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title             String
+  passScorePercent  Int      @default(75)
+  timeLimitMinutes  Int      @default(30)
+  questionsJson     String   // JSON string array of MCQs
+}
+
+model Certificate {
+  id                  String   @id @default(uuid())
+  certificateNumber   String   @unique
+  enrollmentId        String
+  enrollment          Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  studentId           String
+  student             User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId            String
+  course              Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentName         String
+  courseTitle         String
+  providerName        String
+  issueDate           DateTime @default(now())
+  score               Int      @default(85)
+  verificationQrToken String
+  signatory           String   @default("Ministry of AYUSH & AIIA Academic Cell")
+  status              String   @default("VALID") // VALID, REVOKED, EXPIRED
+  revocationReason    String?
 }
 
 model InternshipLifecycle {
-  id                String    @id @default(uuid())
-  opportunityId     String
-  opportunity       Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  studentId         String
-  mentorName        String
-  onboardingStatus  String    @default("COMPLETED")
-  weeklyLogs        String    @default("[]") // JSON array of weekly logs
-  midpointEvaluation String   @default("{}") // JSON object
-  finalEvaluation   String    @default("{}") // JSON object
-  completionStatus  String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, DISCONTINUED
-  certificateHash   String?
-  startedAt         DateTime  @default(now())
-  completedAt       DateTime?
+  id                  String    @id @default(uuid())
+  opportunityId       String
+  opportunity         Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId           String
+  mentorName          String
+  onboardingStatus    String    @default("COMPLETED")
+  weeklyLogs          String    @default("[]")
+  midpointEvaluation  String    @default("{}")
+  finalEvaluation     String    @default("{}")
+  completionStatus    String    @default("IN_PROGRESS")
+  certificateHash     String?
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
 }
 
 model AcademicProgram {
@@ -242,10 +334,10 @@ model DocumentVault {
   userId             String
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   fileName           String
-  fileCategory       String   // RESUME, ACADEMIC_TRANSCRIPT, CERTIFICATE, INTERNSHIP_REPORT
+  fileCategory       String
   fileUrl            String
   fileSize           String   @default("1.2 MB")
-  verificationStatus String   @default("VERIFIED") // PENDING, VERIFIED, REJECTED
+  verificationStatus String   @default("VERIFIED")
   checksum           String?
   uploadedAt         DateTime @default(now())
 }
@@ -258,8 +350,23 @@ model MentorshipRequest {
   mentor       User     @relation("MentorUser", fields: [mentorId], references: [id], onDelete: Cascade)
   topic        String
   notes        String
-  status       String   @default("PENDING") // PENDING, ACCEPTED, COMPLETED
+  status       String   @default("PENDING")
   createdAt    DateTime @default(now())
+
+  sessions     MentorshipSession[]
+}
+
+model MentorshipSession {
+  id          String   @id @default(uuid())
+  requestId   String
+  request     MentorshipRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  studentId   String
+  mentorId    String
+  scheduledAt String
+  agenda      String
+  notes       String?
+  status      String   @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  createdAt   DateTime @default(now())
 }
 
 model ResearchProposal {
@@ -270,17 +377,28 @@ model ResearchProposal {
   industryOrg   String
   discipline    String   @default("AYURVEDA")
   budget        String   @default("₹5,00,000")
-  status        String   @default("UNDER_REVIEW") // UNDER_REVIEW, APPROVED, IN_PROGRESS
+  status        String   @default("UNDER_REVIEW")
   createdAt     DateTime @default(now())
 }
 
 model IntegrationLog {
   id            String   @id @default(uuid())
-  sourceSystem  String   // LMS_LTI, SIS_ERP, ATS_WEBHOOK
+  sourceSystem  String
   action        String
   itemsSynced   Int      @default(1)
   status        String   @default("SUCCESS")
   syncedAt      DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actorId      String
+  actor        User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actorRole    String
+  action       String
+  targetEntity String
+  detailsJson  String   @default("{}")
+  timestamp    DateTime @default(now())
 }
 
 model Message {

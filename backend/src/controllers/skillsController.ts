@@ -6,12 +6,11 @@ import {
   memoryStudentProfiles,
   memoryJobRoles,
   memoryQuestions,
-  memoryCourses,
+  memoryEnrollments,
   memoryApplications,
-  memoryEnrollments
+  memoryCertificates
 } from '../store/inMemoryStore';
 
-// Extended AYUSH Career Track Benchmarks
 const CAREER_BENCHMARKS = {
   herbalRnd: {
     name: 'Herbal Formulation Scientist',
@@ -75,7 +74,6 @@ export const getSkillProfile = async (req: AuthRequest, res: Response) => {
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     let profile: any = null;
-    let userObj: any = null;
 
     if (isDatabaseConfigured) {
       try {
@@ -96,30 +94,45 @@ export const getSkillProfile = async (req: AuthRequest, res: Response) => {
 
     if (!profile) return res.status(404).json({ message: 'Student profile not found' });
 
-    let currentScores = {
-      panchakarma: 75,
-      herbalFormulation: 75,
-      clinicalDiagnostics: 80,
-      nadiPariksha: 70,
-      yogaTherapy: 65,
-      researchMethodology: 70,
-      patientCounseling: 80,
-      qaGmp: 65
-    };
+    let selfScores = { panchakarma: 70, herbalFormulation: 70, clinicalDiagnostics: 75, nadiPariksha: 65, yogaTherapy: 60, researchMethodology: 70, patientCounseling: 75, qaGmp: 65 };
+    let assessedSkills = {};
+    let coursePassedSkills = {};
+    let mentorVerifiedSkills = {};
+    let verifiedBadges: string[] = [];
 
     try {
-      if (profile.skillScores) {
-        currentScores = { ...currentScores, ...JSON.parse(profile.skillScores) };
-      }
+      if (profile.skillScores) selfScores = { ...selfScores, ...JSON.parse(profile.skillScores) };
+      if (profile.assessedSkills) assessedSkills = JSON.parse(profile.assessedSkills);
+      if (profile.coursePassedSkills) coursePassedSkills = JSON.parse(profile.coursePassedSkills);
+      if (profile.mentorVerifiedSkills) mentorVerifiedSkills = JSON.parse(profile.mentorVerifiedSkills);
+      if (profile.verifiedBadges) verifiedBadges = JSON.parse(profile.verifiedBadges);
     } catch (e) {}
 
-    // Calculate career readiness scores against benchmarks
+    // Calculate Provenance Weighted Readiness Score
+    const keys = ['panchakarma', 'herbalFormulation', 'clinicalDiagnostics', 'nadiPariksha', 'yogaTherapy', 'researchMethodology', 'patientCounseling', 'qaGmp'];
+    let weightedSum = 0;
+
+    const weightedSkills: Record<string, number> = {};
+    keys.forEach(k => {
+      const selfVal = (selfScores as any)[k] || 60;
+      const assVal = (assessedSkills as any)[k] || selfVal;
+      const courseVal = (coursePassedSkills as any)[k] || selfVal;
+      const mentorVal = (mentorVerifiedSkills as any)[k] || selfVal;
+
+      const finalVal = Math.round(assVal * 0.4 + courseVal * 0.3 + mentorVal * 0.2 + selfVal * 0.1);
+      weightedSkills[k] = finalVal;
+      weightedSum += finalVal;
+    });
+
+    const overallReadiness = Math.round(weightedSum / keys.length);
+
+    // Calculate career tracks fit
     const trackScores: any = {};
     for (const [key, track] of Object.entries(CAREER_BENCHMARKS)) {
       let totalMatch = 0;
       let totalWeight = 0;
       for (const [sKey, benchmarkVal] of Object.entries(track.skills)) {
-        const studentVal = (currentScores as any)[sKey] || 0;
+        const studentVal = (weightedSkills as any)[sKey] || 0;
         const ratio = Math.min(1.0, studentVal / benchmarkVal);
         totalMatch += ratio * benchmarkVal;
         totalWeight += benchmarkVal;
@@ -133,9 +146,20 @@ export const getSkillProfile = async (req: AuthRequest, res: Response) => {
 
     return res.json({
       profile,
-      skillScores: currentScores,
+      skillScores: weightedSkills,
+      selfScores,
+      assessedSkills,
+      coursePassedSkills,
+      mentorVerifiedSkills,
+      verifiedBadges,
+      provenanceBadges: [
+        { label: 'Aptitude Assessed', count: Object.keys(assessedSkills).length, color: 'emerald' },
+        { label: 'Course Certified', count: verifiedBadges.length, color: 'blue' },
+        { label: 'Mentor Verified', count: Object.keys(mentorVerifiedSkills).length, color: 'purple' },
+        { label: 'Self Declared', count: Object.keys(selfScores).length, color: 'amber' }
+      ],
       careerTracks: trackScores,
-      overallReadiness: profile.readinessScore
+      overallReadiness
     });
   } catch (error: any) {
     return res.status(500).json({ message: error.message || 'Server error' });
@@ -183,29 +207,29 @@ export const submitAssessment = async (req: AuthRequest, res: Response) => {
           where: { userId },
           data: {
             readinessScore: overallReadiness,
-            skillScores: JSON.stringify(categoryScores)
+            assessedSkills: JSON.stringify(categoryScores || {})
           }
         });
 
         return res.json({
-          message: 'Skill assessment evaluated & persisted successfully!',
+          message: 'Skill assessment evaluated & persisted strictly on backend!',
           readinessScore: overallReadiness,
           profile: updatedProfile
         });
       } catch (e) {}
     }
 
-    // Memory fallback
+    // Memory Fallback
     const memProf = memoryStudentProfiles.find(p => p.userId === userId);
     if (memProf) {
       memProf.readinessScore = overallReadiness;
-      memProf.skillScores = JSON.stringify(categoryScores);
+      memProf.assessedSkills = JSON.stringify(categoryScores || {});
     }
 
     return res.json({
-      message: 'Skill assessment evaluated & persisted successfully!',
+      message: 'Skill assessment evaluated & persisted strictly on backend!',
       readinessScore: overallReadiness,
-      profile: memProf || { readinessScore: overallReadiness, skillScores: JSON.stringify(categoryScores) }
+      profile: memProf || { readinessScore: overallReadiness }
     });
 
   } catch (error: any) {
@@ -226,21 +250,6 @@ export const getCareerGuidance = async (req: AuthRequest, res: Response) => {
       } catch (e) {}
     }
 
-    let scores = {
-      panchakarma: 75,
-      herbalFormulation: 75,
-      clinicalDiagnostics: 80,
-      nadiPariksha: 70,
-      yogaTherapy: 65,
-      researchMethodology: 70,
-      patientCounseling: 80,
-      qaGmp: 65
-    };
-    try {
-      if (profile?.skillScores) scores = { ...scores, ...JSON.parse(profile.skillScores) };
-    } catch (e) {}
-
-    // Generate 30/60/90 day action plan
     const actionPlan = [
       {
         phase: 'Days 1 - 30 (Foundation & Gap Closing)',
@@ -273,7 +282,6 @@ export const getCareerGuidance = async (req: AuthRequest, res: Response) => {
 
     return res.json({
       readinessScore: profile?.readinessScore || 75,
-      scores,
       actionPlan
     });
   } catch (error: any) {
@@ -285,67 +293,43 @@ export const getPublicPortfolio = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
+    let certsList: any[] = [];
     if (isDatabaseConfigured) {
       try {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          include: {
-            studentProfile: true,
-            enrollments: { where: { status: 'COMPLETED' }, include: { course: true } },
-            applications: { where: { status: 'SELECTED' }, include: { opportunity: true } }
-          }
+        certsList = await prisma.certificate.findMany({
+          where: { studentId: userId, status: 'VALID' }
         });
-
-        if (user) {
-          let skillScores = {};
-          let verifiedBadges = [];
-          try {
-            if (user.studentProfile?.skillScores) skillScores = JSON.parse(user.studentProfile.skillScores);
-            if (user.studentProfile?.verifiedBadges) verifiedBadges = JSON.parse(user.studentProfile.verifiedBadges);
-          } catch (e) {}
-
-          return res.json({
-            user: {
-              id: user.id,
-              name: user.name,
-              system: user.system,
-              institutionName: user.institutionName,
-              avatar: user.avatar,
-              studentProfile: user.studentProfile,
-              skillScores,
-              verifiedBadges,
-              completedCourses: user.enrollments,
-              selectedApplications: user.applications
-            }
-          });
-        }
       } catch (e) {}
     }
+    if (certsList.length === 0) {
+      certsList = memoryCertificates.filter(c => c.studentId === userId && c.status === 'VALID');
+    }
 
-    // Memory fallback
     const memUser = memoryUsers.find(u => u.id === userId);
-    if (!memUser) return res.status(404).json({ message: 'Public portfolio user not found' });
     const memProfile = memoryStudentProfiles.find(p => p.userId === userId);
 
+    if (!memUser && !isDatabaseConfigured) {
+      return res.status(404).json({ message: 'Public portfolio user not found' });
+    }
+
     let skillScores = {};
-    let verifiedBadges = [];
+    let verifiedBadges: string[] = [];
     try {
-      if (memProfile?.skillScores) skillScores = JSON.parse(memProfile.skillScores);
+      if (memProfile?.assessedSkills) skillScores = JSON.parse(memProfile.assessedSkills);
       if (memProfile?.verifiedBadges) verifiedBadges = JSON.parse(memProfile.verifiedBadges);
     } catch (e) {}
 
     return res.json({
       user: {
-        id: memUser.id,
-        name: memUser.name,
-        system: memUser.system,
-        institutionName: memUser.institutionName,
-        avatar: memUser.avatar,
+        id: userId,
+        name: memUser?.name || 'AYUSH Scholar',
+        system: memUser?.system || 'AYURVEDA',
+        institutionName: memUser?.institutionName || 'All India Institute of Ayurveda',
+        avatar: memUser?.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
         studentProfile: memProfile,
         skillScores,
         verifiedBadges,
-        completedCourses: memoryEnrollments.filter(e => e.studentId === userId && e.status === 'COMPLETED'),
-        selectedApplications: memoryApplications.filter(a => a.studentId === userId && a.status === 'SELECTED')
+        certificates: certsList
       }
     });
   } catch (error: any) {

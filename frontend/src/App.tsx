@@ -21,8 +21,11 @@ import { SkillProfilePage } from './pages/student/SkillProfilePage';
 import { OpportunitiesMarketplace } from './pages/student/OpportunitiesMarketplace';
 import { ApplicationsTrackerPage } from './pages/student/ApplicationsTrackerPage';
 import { LearningProgramsPage } from './pages/student/LearningProgramsPage';
+import { CoursePlayerPage } from './pages/student/CoursePlayerPage';
+import { CourseAptitudeTestPage } from './pages/student/CourseAptitudeTestPage';
 import { DigitalPortfolioPage } from './pages/student/DigitalPortfolioPage';
 import { StudentMessagesPage } from './pages/student/StudentMessagesPage';
+import { PublicCertificateVerificationPage } from './pages/PublicCertificateVerificationPage';
 
 // Industry Pages
 import { IndustryDashboard } from './pages/industry/IndustryDashboard';
@@ -62,6 +65,7 @@ export const App: React.FC = () => {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/portfolio/public/:userId" element={<PublicPortfolioPage />} />
+                <Route path="/certificate/verify/:certificateId" element={<PublicCertificateVerificationPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/profile/settings" element={<ProfileSettingsPage />} />
 
@@ -72,6 +76,8 @@ export const App: React.FC = () => {
                 <Route path="/student/opportunities" element={<OpportunitiesMarketplace />} />
                 <Route path="/student/applications" element={<ApplicationsTrackerPage />} />
                 <Route path="/student/learning" element={<LearningProgramsPage />} />
+                <Route path="/courses/:courseId/player" element={<CoursePlayerPage />} />
+                <Route path="/courses/:courseId/assessment" element={<CourseAptitudeTestPage />} />
                 <Route path="/student/portfolio" element={<DigitalPortfolioPage />} />
                 <Route path="/student/messages" element={<StudentMessagesPage />} />
 
@@ -105,3 +111,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+

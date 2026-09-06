@@ -283,14 +283,84 @@ export async function ensureTablesExist(): Promise<void> {
       "content" TEXT NOT NULL,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
-    `CREATE TABLE IF NOT EXISTS "Notification" (
+    `CREATE TABLE IF NOT EXISTS "Module" (
       "id" TEXT NOT NULL PRIMARY KEY,
-      "userId" TEXT NOT NULL,
+      "courseId" TEXT NOT NULL,
       "title" TEXT NOT NULL,
-      "message" TEXT NOT NULL,
-      "type" TEXT NOT NULL DEFAULT 'INFO',
-      "read" BOOLEAN NOT NULL DEFAULT false,
+      "order" INTEGER NOT NULL DEFAULT 1,
+      "summary" TEXT NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS "Lesson" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "moduleId" TEXT NOT NULL,
+      "title" TEXT NOT NULL,
+      "order" INTEGER NOT NULL DEFAULT 1,
+      "content" TEXT NOT NULL,
+      "videoUrl" TEXT,
+      "duration" TEXT NOT NULL DEFAULT '15 mins',
+      "isCompulsory" BOOLEAN NOT NULL DEFAULT true
+    )`,
+    `CREATE TABLE IF NOT EXISTS "LearningResource" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "courseId" TEXT NOT NULL,
+      "lessonId" TEXT,
+      "title" TEXT NOT NULL,
+      "type" TEXT NOT NULL DEFAULT 'PDF',
+      "fileUrl" TEXT NOT NULL,
+      "fileSize" TEXT NOT NULL DEFAULT '2.4 MB',
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "LessonProgress" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "enrollmentId" TEXT NOT NULL,
+      "lessonId" TEXT NOT NULL,
+      "status" TEXT NOT NULL DEFAULT 'LOCKED',
+      "completedAt" TIMESTAMP(3),
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "CourseAssessment" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "courseId" TEXT NOT NULL,
+      "title" TEXT NOT NULL,
+      "passScorePercent" INTEGER NOT NULL DEFAULT 75,
+      "timeLimitMinutes" INTEGER NOT NULL DEFAULT 30,
+      "questionsJson" TEXT NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS "Certificate" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "certificateNumber" TEXT NOT NULL UNIQUE,
+      "enrollmentId" TEXT NOT NULL,
+      "studentId" TEXT NOT NULL,
+      "courseId" TEXT NOT NULL,
+      "studentName" TEXT NOT NULL,
+      "courseTitle" TEXT NOT NULL,
+      "providerName" TEXT NOT NULL,
+      "issueDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "score" INTEGER NOT NULL DEFAULT 85,
+      "verificationQrToken" TEXT NOT NULL,
+      "signatory" TEXT NOT NULL DEFAULT 'Ministry of AYUSH & AIIA Academic Cell',
+      "status" TEXT NOT NULL DEFAULT 'VALID',
+      "revocationReason" TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS "MentorshipSession" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "requestId" TEXT NOT NULL,
+      "studentId" TEXT NOT NULL,
+      "mentorId" TEXT NOT NULL,
+      "scheduledAt" TEXT NOT NULL,
+      "agenda" TEXT NOT NULL,
+      "notes" TEXT,
+      "status" TEXT NOT NULL DEFAULT 'SCHEDULED',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "AuditLog" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "actorId" TEXT NOT NULL,
+      "actorRole" TEXT NOT NULL,
+      "action" TEXT NOT NULL,
+      "targetEntity" TEXT NOT NULL,
+      "detailsJson" TEXT NOT NULL DEFAULT '{}',
+      "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`
   ];
 
