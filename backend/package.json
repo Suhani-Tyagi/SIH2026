@@ -4,8 +4,8 @@
   "description": "Backend API for AYUSH Setu - Academia Industry Collaboration Portal",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "vercel-build": "prisma db push && ts-node src/seed.ts && tsc",
+    "build": "npx prisma generate && tsc",
+    "vercel-build": "npx prisma generate && (prisma db push || true) && (ts-node src/seed.ts || true) && tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "db:push": "prisma db push",
