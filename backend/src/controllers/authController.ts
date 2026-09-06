@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, AuthRequest } from '../middleware/auth';
-import prisma, { isDatabaseConfigured } from '../prisma';
+import prisma, { isDatabaseConfigured, ensureTablesExist } from '../prisma';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,6 +14,8 @@ export const register = async (req: Request, res: Response) => {
     if (!isDatabaseConfigured) {
       return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
     }
+
+    await ensureTablesExist();
 
     const { email, password, name, role, system, institutionName, companyName, designation, degree } = req.body;
 
@@ -111,6 +113,8 @@ export const login = async (req: Request, res: Response) => {
     if (!isDatabaseConfigured) {
       return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
     }
+
+    await ensureTablesExist();
 
     const { email, password } = req.body;
 
