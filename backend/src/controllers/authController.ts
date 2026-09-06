@@ -7,7 +7,7 @@ import prisma, { isDatabaseConfigured } from '../prisma';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DB_NOT_CONFIGURED_MSG =
-  'Database Connection Needed: Please add the DATABASE_URL environment variable in your Vercel Project Settings (under Settings -> Environment Variables) to connect your hosted PostgreSQL database.';
+  'Database Setup Action Required: In your Vercel Dashboard -> Settings -> Environment Variables, please DELETE the existing empty "DATABASE_URL" variable, then go to the Storage tab and click "Connect" on Neon Postgres.';
 
 export const register = async (req: Request, res: Response) => {
   try {
