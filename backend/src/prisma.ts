@@ -5,27 +5,39 @@ dotenv.config();
 
 const globalForPrisma = global as unknown as { prisma?: PrismaClient };
 
-// Ensure DATABASE_URL is defined to prevent Prisma initialization crashes
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  'postgresql://neondb_owner:dummy@ep-placeholder.us-east-2.aws.neon.tech/neondb?sslmode=require';
+export function getCleanDatabaseUrl(): string | null {
+  const rawUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
 
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = databaseUrl;
+  // Strip surrounding quotes and whitespace
+  let clean = rawUrl.trim().replace(/^["']|["']$/g, '');
+
+  // Check for dummy placeholders or invalid protocols
+  if (
+    clean.includes('dummy') ||
+    clean.includes('placeholder') ||
+    clean.includes('ep-placeholder') ||
+    (!clean.startsWith('postgres://') && !clean.startsWith('postgresql://'))
+  ) {
+    return null;
+  }
+
+  return clean;
 }
 
-export const isDatabaseConfigured = Boolean(
-  process.env.DATABASE_URL &&
-    !process.env.DATABASE_URL.includes('dummy') &&
-    !process.env.DATABASE_URL.includes('placeholder')
-);
+const activeUrl = getCleanDatabaseUrl();
+export const isDatabaseConfigured = Boolean(activeUrl);
+
+// Safe, syntactically valid fallback URL for Prisma Client constructor
+const clientDatasourceUrl =
+  activeUrl || 'postgresql://postgres:postgres@localhost:5432/ayush_setu?sslmode=disable';
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
     datasources: {
       db: {
-        url: databaseUrl,
+        url: clientDatasourceUrl,
       },
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],

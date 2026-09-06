@@ -99,7 +99,7 @@ export const register = async (req: Request, res: Response) => {
     return res.status(201).json({ message: 'Registration successful!', token, user });
   } catch (error: any) {
     console.error('Registration server error:', error);
-    if (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server'))) {
+    if (!isDatabaseConfigured || (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server') || error.message.includes('Error parsing connection string')))) {
       return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
     }
     return res.status(500).json({ message: error.message || 'Database error occurred during registration. Please try again.' });
@@ -143,7 +143,7 @@ export const login = async (req: Request, res: Response) => {
     return res.json({ message: 'Login successful!', token, user });
   } catch (error: any) {
     console.error('Login server error:', error);
-    if (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server'))) {
+    if (!isDatabaseConfigured || (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server') || error.message.includes('Error parsing connection string')))) {
       return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
     }
     return res.status(500).json({ message: error.message || 'Server error occurred during login. Please try again.' });
@@ -164,6 +164,9 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     if (!user) return res.status(404).json({ message: 'User account not found' });
     return res.json({ user });
   } catch (error: any) {
+    if (!isDatabaseConfigured || (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server') || error.message.includes('Error parsing connection string')))) {
+      return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
+    }
     return res.status(500).json({ message: error.message || 'Server error' });
   }
 };
