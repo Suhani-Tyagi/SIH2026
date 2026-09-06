@@ -15,10 +15,8 @@ export function getCleanDatabaseUrl(): string | null {
     process.env.STORAGE_DATABASE_URL;
   if (!rawUrl || typeof rawUrl !== 'string') return null;
 
-  // Strip surrounding quotes and whitespace
   let clean = rawUrl.trim().replace(/^["']|["']$/g, '');
 
-  // Check for dummy placeholders or invalid protocols
   if (
     clean.includes('dummy') ||
     clean.includes('placeholder') ||
@@ -34,7 +32,6 @@ export function getCleanDatabaseUrl(): string | null {
 const activeUrl = getCleanDatabaseUrl();
 export const isDatabaseConfigured = Boolean(activeUrl);
 
-// Safe, syntactically valid fallback URL for Prisma Client constructor
 const clientDatasourceUrl =
   activeUrl || 'postgresql://postgres:postgres@localhost:5432/ayush_setu?sslmode=disable';
 
@@ -82,13 +79,53 @@ export async function ensureTablesExist(): Promise<void> {
       "phone" TEXT,
       "location" TEXT DEFAULT 'New Delhi, India',
       "skillScores" TEXT NOT NULL DEFAULT '{}',
-      "verifiedBadges" TEXT NOT NULL DEFAULT '[]'
+      "verifiedBadges" TEXT NOT NULL DEFAULT '[]',
+      "careerGoals" TEXT NOT NULL DEFAULT '[]'
     )`,
-    `CREATE TABLE IF NOT EXISTS "SkillAssessment" (
+    `CREATE TABLE IF NOT EXISTS "JobRole" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "title" TEXT NOT NULL,
+      "code" TEXT NOT NULL UNIQUE,
+      "system" TEXT NOT NULL DEFAULT 'AYURVEDA',
+      "summary" TEXT NOT NULL,
+      "careerPathway" TEXT NOT NULL,
+      "eligibleDegrees" TEXT NOT NULL,
+      "coreSkills" TEXT NOT NULL,
+      "secondarySkills" TEXT NOT NULL,
+      "typicalSalaryRange" TEXT NOT NULL,
+      "demandSignal" TEXT NOT NULL DEFAULT 'HIGH',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "TargetRole" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "studentId" TEXT NOT NULL,
+      "jobRoleId" TEXT NOT NULL,
+      "targetLevel" INTEGER NOT NULL DEFAULT 85,
+      "selectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "AssessmentQuestion" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "discipline" TEXT NOT NULL DEFAULT 'AYURVEDA',
+      "skillCategory" TEXT NOT NULL,
+      "questionType" TEXT NOT NULL DEFAULT 'MCQ',
+      "difficulty" TEXT NOT NULL DEFAULT 'INTERMEDIATE',
+      "weight" INTEGER NOT NULL DEFAULT 10,
+      "questionText" TEXT NOT NULL,
+      "options" TEXT NOT NULL,
+      "correctAnswer" TEXT NOT NULL,
+      "explanation" TEXT NOT NULL,
+      "referenceDoc" TEXT,
+      "active" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "AssessmentAttempt" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "studentId" TEXT NOT NULL,
+      "discipline" TEXT NOT NULL DEFAULT 'AYURVEDA',
+      "totalScore" INTEGER NOT NULL,
       "technicalScore" INTEGER NOT NULL,
       "softSkillScore" INTEGER NOT NULL,
+      "categoryBreakdown" TEXT NOT NULL,
       "answers" TEXT NOT NULL,
       "completedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
@@ -99,12 +136,23 @@ export async function ensureTablesExist(): Promise<void> {
       "companyName" TEXT NOT NULL,
       "companyId" TEXT NOT NULL,
       "system" TEXT NOT NULL DEFAULT 'ALL',
+      "department" TEXT NOT NULL DEFAULT 'R&D / Clinical Operations',
       "skillsRequired" TEXT NOT NULL,
+      "preferredSkills" TEXT NOT NULL DEFAULT '[]',
       "stipend" TEXT NOT NULL,
       "location" TEXT NOT NULL,
       "mode" TEXT NOT NULL DEFAULT 'ONSITE',
       "duration" TEXT NOT NULL,
+      "openings" INTEGER NOT NULL DEFAULT 5,
+      "applicationDeadline" TEXT DEFAULT '2026-10-31',
+      "joiningDate" TEXT DEFAULT '2026-11-15',
+      "minDegree" TEXT NOT NULL DEFAULT 'BAMS',
+      "eligibleBatch" INTEGER NOT NULL DEFAULT 2025,
       "description" TEXT NOT NULL,
+      "selectionStages" TEXT NOT NULL DEFAULT '["Application Review","Technical Interview","HR Fit"]',
+      "knockoutQuestions" TEXT NOT NULL DEFAULT '[]',
+      "status" TEXT NOT NULL DEFAULT 'PUBLISHED',
+      "companyVerified" BOOLEAN NOT NULL DEFAULT true,
       "active" BOOLEAN NOT NULL DEFAULT true,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
@@ -114,9 +162,21 @@ export async function ensureTablesExist(): Promise<void> {
       "studentId" TEXT NOT NULL,
       "status" TEXT NOT NULL DEFAULT 'APPLIED',
       "matchScore" INTEGER NOT NULL DEFAULT 80,
+      "matchSnapshot" TEXT NOT NULL DEFAULT '{}',
       "coverLetter" TEXT,
+      "answers" TEXT NOT NULL DEFAULT '{}',
+      "interviewDate" TEXT,
       "appliedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "TimelineEvent" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "applicationId" TEXT NOT NULL,
+      "actorName" TEXT NOT NULL,
+      "actorRole" TEXT NOT NULL,
+      "stage" TEXT NOT NULL,
+      "note" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE IF NOT EXISTS "Course" (
       "id" TEXT NOT NULL PRIMARY KEY,
@@ -125,11 +185,20 @@ export async function ensureTablesExist(): Promise<void> {
       "companyId" TEXT NOT NULL,
       "duration" TEXT NOT NULL,
       "level" TEXT NOT NULL DEFAULT 'Intermediate',
+      "deliveryMode" TEXT NOT NULL DEFAULT 'HYBRID',
+      "system" TEXT NOT NULL DEFAULT 'AYURVEDA',
       "skillsAcquired" TEXT NOT NULL,
       "description" TEXT NOT NULL,
+      "learningOutcomes" TEXT NOT NULL DEFAULT '[]',
+      "modulesJson" TEXT NOT NULL DEFAULT '[]',
+      "instructorDetails" TEXT NOT NULL DEFAULT '{}',
+      "capacity" INTEGER NOT NULL DEFAULT 100,
+      "registrationDeadline" TEXT DEFAULT '2026-11-30',
+      "passThreshold" INTEGER NOT NULL DEFAULT 70,
       "image" TEXT,
       "price" TEXT NOT NULL DEFAULT 'Free (Ministry Sponsored)',
       "enrollmentsCount" INTEGER NOT NULL DEFAULT 0,
+      "status" TEXT NOT NULL DEFAULT 'PUBLISHED',
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE IF NOT EXISTS "Enrollment" (
@@ -137,7 +206,24 @@ export async function ensureTablesExist(): Promise<void> {
       "courseId" TEXT NOT NULL,
       "studentId" TEXT NOT NULL,
       "status" TEXT NOT NULL DEFAULT 'ENROLLED',
-      "enrolledAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "progressPercent" INTEGER NOT NULL DEFAULT 0,
+      "quizScore" INTEGER,
+      "certificateHash" TEXT,
+      "completedAt" TIMESTAMP(3),
+      "enrolledAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "InternshipLifecycle" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "opportunityId" TEXT NOT NULL,
+      "studentId" TEXT NOT NULL,
+      "mentorName" TEXT NOT NULL,
+      "onboardingStatus" TEXT NOT NULL DEFAULT 'COMPLETED',
+      "weeklyLogs" TEXT NOT NULL DEFAULT '[]',
+      "midpointEvaluation" TEXT NOT NULL DEFAULT '{}',
+      "finalEvaluation" TEXT NOT NULL DEFAULT '{}',
+      "completionStatus" TEXT NOT NULL DEFAULT 'IN_PROGRESS',
+      "certificateHash" TEXT,
+      "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "completedAt" TIMESTAMP(3)
     )`,
     `CREATE TABLE IF NOT EXISTS "AcademicProgram" (
@@ -150,6 +236,44 @@ export async function ensureTablesExist(): Promise<void> {
       "targetAudience" TEXT NOT NULL DEFAULT 'AYUSH Faculty & Researchers',
       "status" TEXT NOT NULL DEFAULT 'OPEN',
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "DocumentVault" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "userId" TEXT NOT NULL,
+      "fileName" TEXT NOT NULL,
+      "fileCategory" TEXT NOT NULL,
+      "fileUrl" TEXT NOT NULL,
+      "fileSize" TEXT NOT NULL DEFAULT '1.2 MB',
+      "verificationStatus" TEXT NOT NULL DEFAULT 'VERIFIED',
+      "checksum" TEXT,
+      "uploadedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "MentorshipRequest" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "studentId" TEXT NOT NULL,
+      "mentorId" TEXT NOT NULL,
+      "topic" TEXT NOT NULL,
+      "notes" TEXT NOT NULL,
+      "status" TEXT NOT NULL DEFAULT 'PENDING',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "ResearchProposal" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "title" TEXT NOT NULL,
+      "academicianId" TEXT NOT NULL,
+      "industryOrg" TEXT NOT NULL,
+      "discipline" TEXT NOT NULL DEFAULT 'AYURVEDA',
+      "budget" TEXT NOT NULL DEFAULT '₹5,00,000',
+      "status" TEXT NOT NULL DEFAULT 'UNDER_REVIEW',
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`,
+    `CREATE TABLE IF NOT EXISTS "IntegrationLog" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "sourceSystem" TEXT NOT NULL,
+      "action" TEXT NOT NULL,
+      "itemsSynced" INTEGER NOT NULL DEFAULT 1,
+      "status" TEXT NOT NULL DEFAULT 'SUCCESS',
+      "syncedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`,
     `CREATE TABLE IF NOT EXISTS "Message" (
       "id" TEXT NOT NULL PRIMARY KEY,
@@ -174,7 +298,7 @@ export async function ensureTablesExist(): Promise<void> {
     for (const stmt of statements) {
       await prisma.$executeRawUnsafe(stmt);
     }
-    console.log('✅ PostgreSQL tables verified and created!');
+    console.log('✅ All AYUSH Setu PostgreSQL tables verified and created!');
     isTableCheckDone = true;
   } catch (sqlErr) {
     console.error('Failed to auto-create PostgreSQL tables:', sqlErr);

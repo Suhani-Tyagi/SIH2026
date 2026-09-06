@@ -20,14 +20,20 @@ model User {
   designation     String?
   createdAt       DateTime @default(now())
 
-  studentProfile  StudentProfile?
-  messagesSent    Message[] @relation("SentMessages")
-  messagesRecv    Message[] @relation("RecvMessages")
-  notifications   Notification[]
-  applications    Application[]
-  enrollments     Enrollment[]
-  opportunities   Opportunity[]
-  academicPrograms AcademicProgram[]
+  studentProfile       StudentProfile?
+  messagesSent         Message[] @relation("SentMessages")
+  messagesRecv         Message[] @relation("RecvMessages")
+  notifications        Notification[]
+  applications         Application[]
+  enrollments          Enrollment[]
+  opportunities        Opportunity[]
+  academicPrograms     AcademicProgram[]
+  targetRoles          TargetRole[]
+  assessmentAttempts   AssessmentAttempt[]
+  documents            DocumentVault[]
+  mentorshipsAsMentor  MentorshipRequest[] @relation("MentorUser")
+  mentorshipsAsStudent MentorshipRequest[] @relation("StudentUser")
+  researchProposals    ResearchProposal[]
 }
 
 model StudentProfile {
@@ -42,35 +48,95 @@ model StudentProfile {
   location       String?  @default("New Delhi, India")
   skillScores    String   @default("{}") // JSON string: { panchakarma: 85, herbal: 70, ... }
   verifiedBadges String   @default("[]") // JSON string array of earned certificates
+  careerGoals    String   @default("[]") // JSON string array of preferred career track IDs
 }
 
-model SkillAssessment {
-  id             String   @id @default(uuid())
-  studentId      String
-  technicalScore Int
-  softSkillScore Int
-  answers        String   // JSON string
-  completedAt    DateTime @default(now())
+model JobRole {
+  id                 String   @id @default(uuid())
+  title              String
+  code               String   @unique
+  system             String   @default("AYURVEDA") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  summary            String
+  careerPathway      String
+  eligibleDegrees    String   // JSON string array
+  coreSkills         String   // JSON string object: { skillName: benchmarkLevel }
+  secondarySkills    String   // JSON string array
+  typicalSalaryRange String   // e.g. "₹6.0 - ₹9.0 LPA"
+  demandSignal       String   @default("HIGH") // HIGH, VERY_HIGH, MODERATE
+  createdAt          DateTime @default(now())
+
+  targetRoles TargetRole[]
+}
+
+model TargetRole {
+  id           String   @id @default(uuid())
+  studentId    String
+  student      User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  jobRoleId    String
+  jobRole      JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+  targetLevel  Int      @default(85)
+  selectedAt   DateTime @default(now())
+}
+
+model AssessmentQuestion {
+  id            String   @id @default(uuid())
+  discipline    String   @default("AYURVEDA") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  skillCategory String   // e.g., panchakarma, herbalFormulation, clinicalDiagnostics, qaGmp
+  questionType  String   @default("MCQ") // MCQ, MULTI_SELECT, SCENARIO, ORDERING, SHORT_RESPONSE
+  difficulty    String   @default("INTERMEDIATE") // BEGINNER, INTERMEDIATE, ADVANCED
+  weight        Int      @default(10)
+  questionText  String
+  options       String   // JSON string array of options
+  correctAnswer String   // JSON string or string
+  explanation   String
+  referenceDoc  String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model AssessmentAttempt {
+  id                String   @id @default(uuid())
+  studentId         String
+  student           User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  discipline        String   @default("AYURVEDA")
+  totalScore        Int
+  technicalScore    Int
+  softSkillScore    Int
+  categoryBreakdown String   // JSON string object
+  answers           String   // JSON string object
+  completedAt       DateTime @default(now())
 }
 
 model Opportunity {
-  id             String   @id @default(uuid())
-  title          String
-  type           String   // INTERNSHIP, JOB, APPRENTICESHIP, RESEARCH_FELLOWSHIP
-  companyName    String
-  companyId      String
-  company        User     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  system         String   @default("ALL") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
-  skillsRequired String   // JSON string array
-  stipend        String   // e.g. "₹25,000 / month" or "₹6.5 LPA"
-  location       String
-  mode           String   @default("ONSITE") // REMOTE, ONSITE, HYBRID
-  duration       String   // e.g. "6 Months", "Full Time"
-  description    String
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now())
+  id                   String   @id @default(uuid())
+  title                String
+  type                 String   // INTERNSHIP, JOB, APPRENTICESHIP, RESEARCH_FELLOWSHIP, LIVE_PROJECT, FDP, WORKSHOP
+  companyName          String
+  companyId            String
+  company              User     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  system               String   @default("ALL") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  department           String   @default("R&D / Clinical Operations")
+  skillsRequired       String   // JSON string array / object
+  preferredSkills      String   @default("[]") // JSON string array
+  stipend              String   // e.g. "₹25,000 / month" or "₹6.5 LPA"
+  location             String
+  mode                 String   @default("ONSITE") // REMOTE, ONSITE, HYBRID
+  duration             String   // e.g. "6 Months", "Full Time"
+  openings             Int      @default(5)
+  applicationDeadline  String?  @default("2026-10-31")
+  joiningDate          String?  @default("2026-11-15")
+  minDegree            String   @default("BAMS")
+  eligibleBatch        Int      @default(2025)
+  description          String
+  selectionStages      String   @default("[\"Application Review\",\"Technical Interview\",\"HR Fit\"]") // JSON array
+  knockoutQuestions    String   @default("[]") // JSON string array
+  status               String   @default("PUBLISHED") // DRAFT, PUBLISHED, PAUSED, CLOSED, ARCHIVED
+  companyVerified      Boolean  @default(true)
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
 
   applications   Application[]
+  internships    InternshipLifecycle[]
 }
 
 model Application {
@@ -79,39 +145,83 @@ model Application {
   opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
   studentId     String
   student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status        String   @default("APPLIED") // APPLIED, SHORTLISTED, INTERVIEW, SELECTED, REJECTED
+  status        String   @default("APPLIED") // APPLIED, SHORTLISTED, INTERVIEW, OFFERED, ACCEPTED, REJECTED, COMPLETED
   matchScore    Int      @default(80)
+  matchSnapshot String   @default("{}") // JSON string of score components & breakdown
   coverLetter   String?
+  answers       String   @default("{}") // Knockout answers JSON
+  interviewDate String?
   appliedAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  timelineEvents TimelineEvent[]
+}
+
+model TimelineEvent {
+  id            String   @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  actorName     String
+  actorRole     String
+  stage         String
+  note          String
+  createdAt     DateTime @default(now())
 }
 
 model Course {
-  id              String   @id @default(uuid())
-  title           String
-  providerName    String
-  companyId       String
-  duration        String
-  level           String   @default("Intermediate")
-  skillsAcquired  String   // JSON string array
-  description     String
-  image           String?
-  price           String   @default("Free (Ministry Sponsored)")
-  enrollmentsCount Int     @default(0)
-  createdAt       DateTime @default(now())
+  id                   String   @id @default(uuid())
+  title                String
+  providerName         String
+  companyId            String
+  duration             String
+  level                String   @default("Intermediate")
+  deliveryMode         String   @default("HYBRID") // SELF_PACED, LIVE, HYBRID, IN_PERSON
+  system               String   @default("AYURVEDA")
+  skillsAcquired       String   // JSON string array
+  description          String
+  learningOutcomes     String   @default("[]") // JSON string array
+  modulesJson          String   @default("[]") // JSON string array of modules & lessons
+  instructorDetails    String   @default("{}") // JSON string
+  capacity             Int      @default(100)
+  registrationDeadline String?  @default("2026-11-30")
+  passThreshold        Int      @default(70)
+  image                String?
+  price                String   @default("Free (Ministry Sponsored)")
+  enrollmentsCount     Int      @default(0)
+  status               String   @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  createdAt            DateTime @default(now())
 
-  enrollments     Enrollment[]
+  enrollments          Enrollment[]
 }
 
 model Enrollment {
-  id          String    @id @default(uuid())
-  courseId    String
-  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  studentId   String
-  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status      String    @default("ENROLLED") // ENROLLED, COMPLETED
-  enrolledAt  DateTime  @default(now())
-  completedAt DateTime?
+  id              String    @id @default(uuid())
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status          String    @default("ENROLLED") // ENROLLED, COMPLETED
+  progressPercent Int       @default(0)
+  quizScore       Int?
+  completedAt     DateTime?
+  certificateHash String?
+  enrolledAt      DateTime  @default(now())
+}
+
+model InternshipLifecycle {
+  id                String    @id @default(uuid())
+  opportunityId     String
+  opportunity       Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId         String
+  mentorName        String
+  onboardingStatus  String    @default("COMPLETED")
+  weeklyLogs        String    @default("[]") // JSON array of weekly logs
+  midpointEvaluation String   @default("{}") // JSON object
+  finalEvaluation   String    @default("{}") // JSON object
+  completionStatus  String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, DISCONTINUED
+  certificateHash   String?
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
 }
 
 model AcademicProgram {
@@ -125,6 +235,52 @@ model AcademicProgram {
   targetAudience  String   @default("AYUSH Faculty & Researchers")
   status          String   @default("OPEN")
   createdAt       DateTime @default(now())
+}
+
+model DocumentVault {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName           String
+  fileCategory       String   // RESUME, ACADEMIC_TRANSCRIPT, CERTIFICATE, INTERNSHIP_REPORT
+  fileUrl            String
+  fileSize           String   @default("1.2 MB")
+  verificationStatus String   @default("VERIFIED") // PENDING, VERIFIED, REJECTED
+  checksum           String?
+  uploadedAt         DateTime @default(now())
+}
+
+model MentorshipRequest {
+  id           String   @id @default(uuid())
+  studentId    String
+  student      User     @relation("StudentUser", fields: [studentId], references: [id], onDelete: Cascade)
+  mentorId     String
+  mentor       User     @relation("MentorUser", fields: [mentorId], references: [id], onDelete: Cascade)
+  topic        String
+  notes        String
+  status       String   @default("PENDING") // PENDING, ACCEPTED, COMPLETED
+  createdAt    DateTime @default(now())
+}
+
+model ResearchProposal {
+  id            String   @id @default(uuid())
+  title         String
+  academicianId String
+  academician   User     @relation(fields: [academicianId], references: [id], onDelete: Cascade)
+  industryOrg   String
+  discipline    String   @default("AYURVEDA")
+  budget        String   @default("₹5,00,000")
+  status        String   @default("UNDER_REVIEW") // UNDER_REVIEW, APPROVED, IN_PROGRESS
+  createdAt     DateTime @default(now())
+}
+
+model IntegrationLog {
+  id            String   @id @default(uuid())
+  sourceSystem  String   // LMS_LTI, SIS_ERP, ATS_WEBHOOK
+  action        String
+  itemsSynced   Int      @default(1)
+  status        String   @default("SUCCESS")
+  syncedAt      DateTime @default(now())
 }
 
 model Message {

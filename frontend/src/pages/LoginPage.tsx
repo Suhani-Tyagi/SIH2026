@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Leaf, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { Leaf, Lock, Mail, ArrowRight, AlertCircle, UserCheck } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -12,6 +12,14 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const redirectByRole = (role?: string) => {
+    if (role === 'SUPER_ADMIN') navigate('/admin/dashboard');
+    else if (role === 'INSTITUTION_ADMIN') navigate('/institution/dashboard');
+    else if (role === 'ACADEMICIAN') navigate('/academician/dashboard');
+    else if (role === 'INDUSTRY') navigate('/industry/dashboard');
+    else navigate('/student/dashboard');
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -21,15 +29,38 @@ export const LoginPage: React.FC = () => {
     setLoading(false);
 
     if (result.success) {
-      navigate('/student/dashboard');
+      // Decode user role from local storage token or response
+      try {
+        const token = localStorage.getItem('ayush_token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          redirectByRole(payload.role);
+          return;
+        }
+      } catch (err) {}
+      redirectByRole('STUDENT');
     } else {
       setError(result.message || 'Login failed. Please check your email and password.');
     }
   };
 
+  const handleQuickDemo = async (demoEmail: string, roleName: string) => {
+    setEmail(demoEmail);
+    setPassword('password123');
+    setLoading(true);
+    setError('');
+    const result = await login(demoEmail, 'password123');
+    setLoading(false);
+    if (result.success) {
+      redirectByRole(roleName);
+    } else {
+      setError(result.message || 'Demo login error');
+    }
+  };
+
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full space-y-6">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
+      <div className="max-w-xl w-full space-y-6">
         
         {/* Header Branding */}
         <div className="text-center space-y-2">
@@ -40,8 +71,65 @@ export const LoginPage: React.FC = () => {
             Sign in to AYUSH Setu
           </h2>
           <p className="text-xs text-slate-500 font-medium">
-            Academia-Industry Collaboration & Skill Placement Portal
+            Ministry of AYUSH & AIIA National Academia-Industry Collaboration Platform
           </p>
+        </div>
+
+        {/* Demo Persona Quick Selectors */}
+        <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+              <UserCheck className="w-4 h-4 text-emerald-700" /> Quick Demo Role Sign-In:
+            </span>
+            <span className="text-[10px] text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full font-bold">Default Pass: password123</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickDemo('aarav.sharma@student.aiia.ac.in', 'STUDENT')}
+              className="p-2 text-left bg-white hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs transition-all"
+            >
+              <div className="font-extrabold text-slate-900">👨‍🎓 Student</div>
+              <div className="text-[10px] text-slate-500 truncate">Aarav Sharma (BAMS)</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickDemo('careers@daburayush.com', 'INDUSTRY')}
+              className="p-2 text-left bg-white hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs transition-all"
+            >
+              <div className="font-extrabold text-slate-900">🏭 Industry Partner</div>
+              <div className="text-[10px] text-slate-500 truncate">Dabur AYUSH R&D</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickDemo('dr.sharma@aiia-delhi.ac.in', 'ACADEMICIAN')}
+              className="p-2 text-left bg-white hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs transition-all"
+            >
+              <div className="font-extrabold text-slate-900">🎓 Academician</div>
+              <div className="text-[10px] text-slate-500 truncate">Prof. Rajesh Sharma</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickDemo('admin@aiia-delhi.ac.in', 'INSTITUTION_ADMIN')}
+              className="p-2 text-left bg-white hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs transition-all"
+            >
+              <div className="font-extrabold text-slate-900">🏛️ Institution</div>
+              <div className="text-[10px] text-slate-500 truncate">AIIA Academic Cell</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickDemo('admin@aiia.gov.in', 'SUPER_ADMIN')}
+              className="p-2 text-left bg-white hover:bg-emerald-100 border border-emerald-300 rounded-xl text-xs transition-all col-span-2 sm:col-span-2"
+            >
+              <div className="font-extrabold text-slate-900">👑 AIIA Super Admin</div>
+              <div className="text-[10px] text-slate-500 truncate">Dr. Tanuja Nesari (Director)</div>
+            </button>
+          </div>
         </div>
 
         {/* Regular Sign-In Form */}

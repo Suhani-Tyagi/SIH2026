@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Target, CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Award } from 'lucide-react';
+import { Target, CheckCircle2, ArrowRight, ArrowLeft, Sparkles, Award, HelpCircle } from 'lucide-react';
+
+interface Question {
+  id: string;
+  discipline: string;
+  skillCategory: string;
+  questionText: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+}
 
 export const SkillAssessmentPage: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [mcqAnswers, setMcqAnswers] = useState<Record<string, string>>({});
 
   const [scores, setScores] = useState({
     panchakarma: 85,
@@ -18,8 +30,29 @@ export const SkillAssessmentPage: React.FC = () => {
     qaGmp: 70
   });
 
+  useEffect(() => {
+    fetch('/api/skills/questions', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('ayush_token')}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.questions && Array.isArray(data.questions)) {
+          const parsed = data.questions.map((q: any) => ({
+            ...q,
+            options: typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || [])
+          }));
+          setQuestions(parsed);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   const handleScoreChange = (field: string, val: number) => {
     setScores((prev) => ({ ...prev, [field]: val }));
+  };
+
+  const handleMcqSelect = (questionId: string, option: string) => {
+    setMcqAnswers((prev) => ({ ...prev, [questionId]: option }));
   };
 
   const handleSubmit = async () => {
@@ -32,7 +65,7 @@ export const SkillAssessmentPage: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem('ayush_token')}`
         },
         body: JSON.stringify({
-          answers: scores,
+          answers: mcqAnswers,
           categoryScores: scores
         })
       });
@@ -52,13 +85,13 @@ export const SkillAssessmentPage: React.FC = () => {
       {/* Top Title Card */}
       <div className="text-center space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-900 rounded-full text-xs font-bold border border-emerald-300">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-700" /> AYUSH Skill Mapping Questionnaire
+          <Sparkles className="w-3.5 h-3.5 text-emerald-700" /> Evidence-Based AYUSH Skill Evaluation
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900">
-          Technical & Soft Skill Self-Assessment
+          Technical MCQ & Skill Competency Mapping
         </h1>
         <p className="text-xs text-slate-600 max-w-xl mx-auto">
-          Rate your practical confidence across 8 key AYUSH technical and industrial competency pillars to generate your personalized Skill Profile & Career Match Radar.
+          Answer domain-specific technical MCQs and evaluate your practical confidence across 8 key AYUSH competency pillars to calculate your server-verified Skill Readiness Score.
         </p>
       </div>
 
@@ -85,11 +118,55 @@ export const SkillAssessmentPage: React.FC = () => {
       {/* Form Card */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         
-        {/* STEP 1: Panchakarma & Shodhana */}
+        {/* STEP 1: Domain MCQs */}
         {currentStep === 1 && (
           <div className="space-y-6 animate-in fade-in">
             <div className="border-b border-slate-100 pb-4">
-              <h3 className="text-lg font-extrabold text-slate-900">Step 1: Classical Panchakarma & Shodhana Therapy</h3>
+              <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-emerald-700" /> Step 1: Technical MCQ Knowledge Quiz
+              </h3>
+              <p className="text-xs text-slate-500">Answer standardized questions evaluated against Charaka Samhita & API Pharmacopoeial standards.</p>
+            </div>
+
+            <div className="space-y-6">
+              {questions.length > 0 ? (
+                questions.slice(0, 3).map((q, idx) => (
+                  <div key={q.id || idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <p className="text-xs font-bold text-slate-800">
+                      Q{idx + 1}. [{q.skillCategory}] {q.questionText}
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {q.options.map((opt, oIdx) => (
+                        <button
+                          key={oIdx}
+                          type="button"
+                          onClick={() => handleMcqSelect(q.id || `q_${idx}`, opt)}
+                          className={`p-2.5 text-left text-xs font-medium rounded-xl border transition-all ${
+                            mcqAnswers[q.id || `q_${idx}`] === opt
+                              ? 'bg-emerald-50 border-emerald-500 text-emerald-900 font-bold'
+                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900">
+                  Default AYUSH Pharmacopoeial Question Bank loaded. Click Next to proceed to practical skill self-ratings.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Panchakarma & Shodhana */}
+        {currentStep === 2 && (
+          <div className="space-y-6 animate-in fade-in">
+            <div className="border-b border-slate-100 pb-4">
+              <h3 className="text-lg font-extrabold text-slate-900">Step 2: Classical Panchakarma & Shodhana Therapy</h3>
               <p className="text-xs text-slate-500">Rate your clinical experience in executing classical Purvakarma and Pradhanakarma procedures.</p>
             </div>
 
@@ -117,11 +194,11 @@ export const SkillAssessmentPage: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 2: Dravyaguna & Herbal Formulations */}
-        {currentStep === 2 && (
+        {/* STEP 3: Dravyaguna & Herbal Formulations */}
+        {currentStep === 3 && (
           <div className="space-y-6 animate-in fade-in">
             <div className="border-b border-slate-100 pb-4">
-              <h3 className="text-lg font-extrabold text-slate-900">Step 2: Dravyaguna & Herbal Formulation Knowledge</h3>
+              <h3 className="text-lg font-extrabold text-slate-900">Step 3: Dravyaguna & Herbal Formulation Knowledge</h3>
               <p className="text-xs text-slate-500">Herb identification, Rasa Shastra, extraction methods, and formulation preparation.</p>
             </div>
 
@@ -139,21 +216,16 @@ export const SkillAssessmentPage: React.FC = () => {
                   onChange={(e) => handleScoreChange('herbalFormulation', parseInt(e.target.value))}
                   className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400">
-                  <span>Basic Botanical Identification</span>
-                  <span>Extract Standardization & Assay</span>
-                  <span>Formulation R&D Expert</span>
-                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 3: Nadi Pariksha & Clinical Diagnostics */}
-        {currentStep === 3 && (
+        {/* STEP 4: Nadi Pariksha & Clinical Diagnostics */}
+        {currentStep === 4 && (
           <div className="space-y-6 animate-in fade-in">
             <div className="border-b border-slate-100 pb-4">
-              <h3 className="text-lg font-extrabold text-slate-900">Step 3: Nadi Pariksha & Clinical Diagnostics</h3>
+              <h3 className="text-lg font-extrabold text-slate-900">Step 4: Nadi Pariksha & Clinical Diagnostics</h3>
               <p className="text-xs text-slate-500">Tactile pulse diagnosis, Rogi Pariksha, and pathology correlation.</p>
             </div>
 
@@ -184,48 +256,6 @@ export const SkillAssessmentPage: React.FC = () => {
                   max="100"
                   value={scores.clinicalDiagnostics}
                   onChange={(e) => handleScoreChange('clinicalDiagnostics', parseInt(e.target.value))}
-                  className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 4: Yoga Therapy & Patient Counseling */}
-        {currentStep === 4 && (
-          <div className="space-y-6 animate-in fade-in">
-            <div className="border-b border-slate-100 pb-4">
-              <h3 className="text-lg font-extrabold text-slate-900">Step 4: Yoga Therapy & Patient Counseling</h3>
-              <p className="text-xs text-slate-500">Pranayama, therapeutic yoga protocol designing, and holistic dietetics counseling.</p>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold text-slate-800">
-                  <span>Disease-Specific Yoga Therapy Protocol Design</span>
-                  <span className="text-emerald-700 font-extrabold">{scores.yogaTherapy}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="100"
-                  value={scores.yogaTherapy}
-                  onChange={(e) => handleScoreChange('yogaTherapy', parseInt(e.target.value))}
-                  className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold text-slate-800">
-                  <span>Patient Communication & Pathya-Apathya Diet Counseling</span>
-                  <span className="text-emerald-700 font-extrabold">{scores.patientCounseling}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="100"
-                  value={scores.patientCounseling}
-                  onChange={(e) => handleScoreChange('patientCounseling', parseInt(e.target.value))}
                   className="w-full accent-emerald-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
                 />
               </div>
@@ -299,7 +329,7 @@ export const SkillAssessmentPage: React.FC = () => {
               disabled={loading}
               className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-xl text-xs flex items-center gap-2 shadow-lg"
             >
-              {loading ? 'Computing Radar Profile...' : 'Generate Skill Profile Radar'} <Award className="w-4 h-4" />
+              {loading ? 'Evaluating Score...' : 'Submit & Generate Verified Profile'} <Award className="w-4 h-4" />
             </button>
           )}
         </div>

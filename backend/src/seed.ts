@@ -10,9 +10,19 @@ async function main() {
   await prisma.academicProgram.deleteMany();
   await prisma.enrollment.deleteMany();
   await prisma.course.deleteMany();
+  await prisma.timelineEvent.deleteMany();
+  await prisma.internshipLifecycle.deleteMany();
+  await prisma.documentVault.deleteMany();
+  await prisma.mentorshipRequest.deleteMany();
+  await prisma.researchProposal.deleteMany();
+  await prisma.integrationLog.deleteMany();
   await prisma.application.deleteMany();
   await prisma.opportunity.deleteMany();
-  await prisma.skillAssessment.deleteMany();
+  await prisma.assessmentAttempt.deleteMany();
+  await prisma.assessmentQuestion.deleteMany();
+  await prisma.targetRole.deleteMany();
+  await prisma.jobRole.deleteMany();
+  await prisma.assessmentAttempt.deleteMany();
   await prisma.studentProfile.deleteMany();
   await prisma.user.deleteMany();
 
@@ -1162,6 +1172,147 @@ async function main() {
       type: 'INFO'
     }
   });
+
+  // 11. Job Roles Taxonomy (10 Career Tracks)
+  const jobRolesData = [
+    {
+      title: 'Herbal Formulation Scientist',
+      code: 'JR-HERBAL-RND-01',
+      system: 'AYURVEDA',
+      summary: 'Develops standardized herbal extract formulations, stability matrices, and botanical drug delivery systems.',
+      careerPathway: 'Assistant Scientist -> Lead Formulator -> VP R&D',
+      eligibleDegrees: JSON.stringify(['BAMS', 'MD (Ayurveda)', 'M.Sc Botany', 'B.Pharm (Ayurveda)']),
+      coreSkills: JSON.stringify(['Herbal Formulation', 'Phytochemistry', 'HPTLC Fingerprinting']),
+      secondarySkills: JSON.stringify(['QA/QC & GMP Compliance']),
+      typicalSalaryRange: '₹6.5 - ₹12.0 LPA',
+      demandSignal: 'VERY_HIGH'
+    },
+    {
+      title: 'Ayurvedic Medical Officer (Clinical)',
+      code: 'JR-CLINICAL-AMO-02',
+      system: 'AYURVEDA',
+      summary: 'Provides OPD and IPD diagnosis, classical Chikitsa prescription, and patient care management in hospitals.',
+      careerPathway: 'Resident Doctor -> Senior Medical Officer -> Chief Medical Officer',
+      eligibleDegrees: JSON.stringify(['BAMS', 'MD (Ayurveda)']),
+      coreSkills: JSON.stringify(['Clinical Diagnostics', 'Nadi Pariksha', 'Patient Counseling']),
+      secondarySkills: JSON.stringify(['Classical Formulations']),
+      typicalSalaryRange: '₹5.5 - ₹10.0 LPA',
+      demandSignal: 'VERY_HIGH'
+    },
+    {
+      title: 'Panchakarma Consultant & Specialist',
+      code: 'JR-PANCHAKARMA-03',
+      system: 'AYURVEDA',
+      summary: 'Designs and executes classical 5-fold detoxification and Shodhana protocols in wellness centers and hospitals.',
+      careerPathway: 'Panchakarma Physician -> Center Head -> Clinical Director',
+      eligibleDegrees: JSON.stringify(['BAMS', 'MD (Panchakarma)']),
+      coreSkills: JSON.stringify(['Panchakarma Techniques', 'Nadi Pariksha']),
+      secondarySkills: JSON.stringify(['Clinical Diagnostics', 'Patient Counseling']),
+      typicalSalaryRange: '₹7.0 - ₹14.0 LPA',
+      demandSignal: 'HIGH'
+    }
+  ];
+
+  for (const jr of jobRolesData) {
+    await prisma.jobRole.create({ data: jr });
+  }
+
+  // 12. Assessment Question Bank
+  const questionsData = [
+    {
+      discipline: 'AYURVEDA',
+      skillCategory: 'Panchakarma Techniques',
+      questionType: 'MCQ',
+      difficulty: 'INTERMEDIATE',
+      weight: 10,
+      questionText: 'Which Panchakarma procedure is specifically indicated for Pitta-predominant disorders according to Charaka Samhita?',
+      options: JSON.stringify(['Vamana (Emesis)', 'Virechana (Purgation)', 'Nasya (Nasal Instillation)', 'Raktamokshana (Bloodletting)']),
+      correctAnswer: 'Virechana (Purgation)',
+      explanation: 'Virechana (therapeutic purgation) is the primary Shodhana treatment for eliminating excess Pitta dosha from the gastrointestinal tract and body.'
+    },
+    {
+      discipline: 'AYURVEDA',
+      skillCategory: 'Herbal Formulation',
+      questionType: 'MCQ',
+      difficulty: 'ADVANCED',
+      weight: 10,
+      questionText: 'Which chromatographic method is mandated by the Ayurvedic Pharmacopoeia of India (API) for quantitative marker fingerprinting of herbal raw materials?',
+      options: JSON.stringify(['Paper Chromatography', 'Gas Chromatography (GC)', 'High-Performance Thin-Layer Chromatography (HPTLC)', 'Column Chromatography']),
+      correctAnswer: 'High-Performance Thin-Layer Chromatography (HPTLC)',
+      explanation: 'HPTLC is standard for API herb fingerprinting due to high throughput, visual color densitometry, and reproducibility.'
+    }
+  ];
+
+  for (const q of questionsData) {
+    await prisma.assessmentQuestion.create({ data: q });
+  }
+
+  // 13. Student Document Vault items
+  await prisma.documentVault.create({
+    data: {
+      userId: createdStudents[0].id,
+      fileName: 'BAMS Final Degree Certificate',
+      fileCategory: 'DEGREE_CERTIFICATE',
+      fileUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800',
+      fileSize: '1.5 MB',
+      verificationStatus: 'VERIFIED',
+      checksum: 'sha256-a1b2c3d4e5f67890'
+    }
+  });
+
+  // 14. Mentorship Requests
+  await prisma.mentorshipRequest.create({
+    data: {
+      studentId: createdStudents[0].id,
+      mentorId: aca1.id,
+      topic: 'Guidance on Phytochemistry R&D Career in Top Herbals',
+      notes: 'Professor Sharma agreed to review Aarav’s research proposal on Dravyaguna extract standardization.',
+      status: 'APPROVED'
+    }
+  });
+
+  // 15. Timeline Events for Applications
+  const apps = await prisma.application.findMany();
+  if (apps.length > 0) {
+    await prisma.timelineEvent.create({
+      data: {
+        applicationId: apps[0].id,
+        actorName: 'Aarav Sharma',
+        actorRole: 'STUDENT',
+        stage: 'APPLIED',
+        note: 'Candidate submitted verified credentials and tailored cover letter.'
+      }
+    });
+
+    await prisma.timelineEvent.create({
+      data: {
+        applicationId: apps[0].id,
+        actorName: 'Dabur AYUSH R&D Centre',
+        actorRole: 'INDUSTRY',
+        stage: 'SHORTLISTED',
+        note: 'Dabur R&D recruitment team shortlisted candidate based on 92% match fit score.'
+      }
+    });
+
+    // 16. Internship Lifecycle for selected application
+    const selectedApp = apps.find(a => a.status === 'SELECTED');
+    if (selectedApp) {
+      await prisma.internshipLifecycle.create({
+        data: {
+          opportunityId: selectedApp.opportunityId,
+          studentId: selectedApp.studentId,
+          mentorName: 'Dr. Meenakshi Sundaram (Academic Supervisor)',
+          onboardingStatus: 'COMPLETED',
+          weeklyLogs: JSON.stringify([
+            { week: 1, topic: 'Orientation & Safety protocols', log: 'Completed facility safety & ethics induction.' }
+          ]),
+          midpointEvaluation: JSON.stringify({ score: 94 }),
+          finalEvaluation: JSON.stringify({ score: 96 }),
+          completionStatus: 'IN_PROGRESS'
+        }
+      });
+    }
+  }
 
   console.log('✅ AYUSH Setu Seeding complete! Database is fully populated with:');
   console.log(' - 1 Super Admin (AIIA)');
