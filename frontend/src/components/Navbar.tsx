@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Leaf, Bell, LogOut, User as UserIcon, Shield, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Leaf, Bell, LogOut, User as UserIcon, Shield, ChevronDown } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
-  const { user, logout, demoLogin } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState<any[]>([]);
 
   useEffect(() => {
@@ -23,12 +22,6 @@ export const Navbar: React.FC = () => {
         .catch(() => {});
     }
   }, [user, location.pathname]);
-
-  const handleRoleSwitch = async (role: string, targetPath: string) => {
-    await demoLogin(role);
-    setRoleMenuOpen(false);
-    navigate(targetPath);
-  };
 
   const getDashboardPath = () => {
     if (!user) return '/login';
@@ -170,60 +163,10 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                {/* Demo Switcher Quick Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 text-xs font-bold transition-all shadow-xs"
-                    title="Switch persona instantly for demo"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-amber-700" />
-                    <span className="hidden sm:inline">Role:</span> {user.role.replace('_', ' ')}
-                    <ChevronDown className="w-3 h-3 text-amber-700" />
-                  </button>
-
-                  {roleMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95">
-                      <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                        Quick Demo Role Switcher
-                      </div>
-                      <button
-                        onClick={() => handleRoleSwitch('STUDENT', '/student/dashboard')}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center justify-between hover:bg-emerald-50 ${user.role === 'STUDENT' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700'}`}
-                      >
-                        <span>Student (BAMS Final Year)</span>
-                        {user.role === 'STUDENT' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      </button>
-                      <button
-                        onClick={() => handleRoleSwitch('INDUSTRY', '/industry/dashboard')}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center justify-between hover:bg-emerald-50 ${user.role === 'INDUSTRY' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700'}`}
-                      >
-                        <span>Industry Partner (Dabur R&D)</span>
-                        {user.role === 'INDUSTRY' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      </button>
-                      <button
-                        onClick={() => handleRoleSwitch('ACADEMICIAN', '/academician/dashboard')}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center justify-between hover:bg-emerald-50 ${user.role === 'ACADEMICIAN' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700'}`}
-                      >
-                        <span>Academician (AIIA Professor)</span>
-                        {user.role === 'ACADEMICIAN' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      </button>
-                      <button
-                        onClick={() => handleRoleSwitch('INSTITUTION_ADMIN', '/institution/dashboard')}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center justify-between hover:bg-emerald-50 ${user.role === 'INSTITUTION_ADMIN' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700'}`}
-                      >
-                        <span>Institution Admin (AIIA Cell)</span>
-                        {user.role === 'INSTITUTION_ADMIN' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      </button>
-                      <button
-                        onClick={() => handleRoleSwitch('SUPER_ADMIN', '/admin/dashboard')}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium flex items-center justify-between hover:bg-emerald-50 ${user.role === 'SUPER_ADMIN' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-700'}`}
-                      >
-                        <span>Super Admin (AIIA Director)</span>
-                        {user.role === 'SUPER_ADMIN' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                      </button>
-                    </div>
-                  )}
+                {/* Role Badge */}
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-bold shadow-xs">
+                  <Shield className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>{user.role.replace('_', ' ')}</span>
                 </div>
 
                 {/* Notifications Bell */}
@@ -254,7 +197,6 @@ export const Navbar: React.FC = () => {
                             <div key={n.id} className="p-3 hover:bg-slate-50">
                               <p className="text-xs font-bold text-slate-800">{n.title}</p>
                               <p className="text-[11px] text-slate-600 mt-0.5">{n.message}</p>
-                              <p className="text-[9px] text-slate-400 mt-1">Just now</p>
                             </div>
                           ))
                         )}

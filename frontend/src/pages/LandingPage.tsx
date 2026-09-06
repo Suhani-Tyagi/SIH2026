@@ -1,44 +1,29 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import {
-  Leaf,
   Target,
   Briefcase,
   BookOpen,
-  Award,
-  BarChart3,
   Users,
   Building2,
-  CheckCircle2,
+  BarChart3,
   ArrowRight,
-  Shield,
-  Sparkles,
-  Zap
+  Sparkles
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { demoLogin } = useAuth();
-  const navigate = useNavigate();
-
-  const handleQuickDemo = async (role: string, targetPath: string) => {
-    await demoLogin(role);
-    navigate(targetPath);
-  };
-
   return (
     <div className="space-y-16 pb-12">
       
       {/* HERO SECTION */}
       <section className="relative overflow-hidden bg-gradient-to-b from-emerald-950 via-ayush-dark to-emerald-900 text-white pt-16 pb-24 px-4 sm:px-6 lg:px-8">
-        {/* Subtle herbal background decoration */}
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-emerald-700/10 blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto text-center space-y-8 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold tracking-wide animate-pulse">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold tracking-wide">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            OFFICIAL ACADEMIA-INDUSTRY BRIDGE PORTAL FOR AYUSH
+            ACADEMIA-INDUSTRY COLLABORATION PORTAL FOR AYUSH
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight text-white max-w-4xl mx-auto">
@@ -68,55 +53,8 @@ export const LandingPage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Quick One-Click Demo Bar */}
-          <div className="pt-8 max-w-3xl mx-auto">
-            <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 space-y-3">
-              <div className="flex items-center justify-center gap-2 text-xs font-bold text-amber-300 uppercase tracking-wider">
-                <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-                SIH Judge 1-Click Instant Demo Login:
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                <button
-                  onClick={() => handleQuickDemo('STUDENT', '/student/dashboard')}
-                  className="px-3 py-2 bg-emerald-800/80 hover:bg-amber-500 hover:text-slate-950 text-emerald-100 rounded-xl font-bold transition-all border border-emerald-600/50 flex flex-col items-center gap-1"
-                >
-                  <span>👨‍🎓 Student</span>
-                  <span className="text-[10px] opacity-75">BAMS Final Year</span>
-                </button>
-                <button
-                  onClick={() => handleQuickDemo('INDUSTRY', '/industry/dashboard')}
-                  className="px-3 py-2 bg-emerald-800/80 hover:bg-amber-500 hover:text-slate-950 text-emerald-100 rounded-xl font-bold transition-all border border-emerald-600/50 flex flex-col items-center gap-1"
-                >
-                  <span>🏭 Industry</span>
-                  <span className="text-[10px] opacity-75">Dabur R&D</span>
-                </button>
-                <button
-                  onClick={() => handleQuickDemo('ACADEMICIAN', '/academician/dashboard')}
-                  className="px-3 py-2 bg-emerald-800/80 hover:bg-amber-500 hover:text-slate-950 text-emerald-100 rounded-xl font-bold transition-all border border-emerald-600/50 flex flex-col items-center gap-1"
-                >
-                  <span>🎓 Faculty</span>
-                  <span className="text-[10px] opacity-75">AIIA HOD</span>
-                </button>
-                <button
-                  onClick={() => handleQuickDemo('INSTITUTION_ADMIN', '/institution/dashboard')}
-                  className="px-3 py-2 bg-emerald-800/80 hover:bg-amber-500 hover:text-slate-950 text-emerald-100 rounded-xl font-bold transition-all border border-emerald-600/50 flex flex-col items-center gap-1"
-                >
-                  <span>🏛️ College</span>
-                  <span className="text-[10px] opacity-75">BHU Ayurveda</span>
-                </button>
-                <button
-                  onClick={() => handleQuickDemo('SUPER_ADMIN', '/admin/dashboard')}
-                  className="col-span-2 sm:col-span-1 px-3 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 rounded-xl font-bold transition-all shadow-md flex flex-col items-center gap-1"
-                >
-                  <span>🏛️ AIIA Admin</span>
-                  <span className="text-[10px] font-extrabold opacity-90">Super Admin</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           {/* Statistics Bar */}
-          <div className="pt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <div className="pt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             <div className="p-4 bg-emerald-900/40 rounded-xl border border-emerald-700/50">
               <div className="text-3xl font-extrabold text-amber-400">1,500+</div>
               <div className="text-xs text-emerald-200 font-medium">AYUSH Students</div>
@@ -268,16 +206,10 @@ export const LandingPage: React.FC = () => {
           <div className="pt-2 flex justify-center gap-4">
             <Link
               to="/register"
-              className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-lg transition-all text-xs"
+              className="px-8 py-3.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shadow-lg transition-all text-xs"
             >
               Create Portal Account
             </Link>
-            <button
-              onClick={() => handleQuickDemo('STUDENT', '/student/dashboard')}
-              className="px-6 py-3 bg-emerald-950 hover:bg-emerald-900 text-white font-bold rounded-xl border border-emerald-700 transition-all text-xs"
-            >
-              Try Instant Demo
-            </button>
           </div>
         </div>
       </section>

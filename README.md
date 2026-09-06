@@ -1,40 +1,63 @@
-# 🌿 AYUSH Setu (AYUSH Setu Portal)
+# 🌿 AYUSH Setu (Academia-Industry Collaboration & Skill Mapping Portal)
 
 > **Tagline:** *"Bridging AYUSH Academia, Industry & Careers"*  
+> **Problem Statement:** SIH 2026 PS 26044  
 > **Conceptually Sponsored By:** Ministry of AYUSH / All India Institute of Ayurveda (AIIA)  
-> **Platform Purpose:** Full-stack Academia–Industry Collaboration Portal for Skill Mapping, Internships, and Placements purpose-built for the AYUSH (Ayurveda, Yoga, Unani, Siddha, Homoeopathy) education and industry ecosystem.
 
 ---
 
-## 🌟 Overview & Problem Solved
+## 🌟 Overview
 
-There is a critical gap between skills taught in AYUSH colleges (*BAMS, BHMS, BUMS, BSMS, BNYS*) and what the modern AYUSH industry (*pharma giants like Dabur, Himalaya, Kerala Ayurveda, Patanjali, Kottakkal, Charak, wellness centers, research institutes, export houses*) actually needs.
-
-**AYUSH Setu** bridges all stakeholders into a single unified platform:
-1. **Students**: Assess technical AYUSH skills (*Panchakarma, Dravyaguna, Nadi Pariksha, Yoga Therapy*), receive a visual Radar Skill Profile benchmarked against 5 career tracks, apply to matched internships with calculated match %, complete industry courses, and build verified digital portfolios.
-2. **Industry Partners**: Post jobs/internships with required skill tags, view candidate applications ranked by skill-match %, manage recruitment pipelines, and publish industry training programs.
-3. **Academicians**: Discover Faculty Development Programs (FDPs), joint industry research grants, consultancies, and manage student mentorship requests.
-4. **Institution Admins**: Track college-wide skill gap trends across batches, placement readiness %, and missing industrial competencies.
-5. **Super Admin (AIIA)**: Platform-wide national analytics aggregating student supply vs industry skill demand, regional distribution maps, and partner approvals.
+**AYUSH Setu** is a production-grade full-stack platform built for the AYUSH (Ayurveda, Yoga & Naturopathy, Unani, Siddha, Homoeopathy) sector to bridge the gap between academic education (*BAMS, BHMS, BUMS, BSMS, BNYS*) and industrial workforce needs (*Pharma companies, Panchakarma centers, hospitals, research institutes, export houses*).
 
 ---
 
-## 🚀 Tech Stack
+## 🐛 Root-Cause Diagnosis & Fix: Registration & Login Bug
 
-- **Frontend**: React (Vite) + TypeScript + Tailwind CSS + Lucide Icons + Recharts + React Router v6
-- **Backend**: Node.js + Express (REST API) + Prisma ORM + JWT Auth + bcryptjs
-- **Database**: SQLite (`prisma/dev.db`) — zero-config, instant seeding out of the box
-- **Theme Palette**: Deep Herbal Green (`#1B5E20`), Warm Saffron/Amber (`#E8A33D`), Off-white Background (`#FBFBF7`), with subtle tricolor government header accents.
+### The Issue
+Users registering on the platform encountered the generic error: `"Registration failed. Email might already be registered."` even on the very first attempt with a brand-new email address.
+
+### Root Cause Analysis
+1. **Generic Exception Swallowing**: The frontend `AuthContext` was returning a simple `boolean` (`false`) for any failed request or server response, and `RegisterPage` unconditionally printed `"Registration failed. Email might already be registered."` regardless of the actual server error.
+2. **Serverless Ephemeral Storage / Unhandled Field Errors**: On serverless environments (Vercel), writing to ephemeral local files without connection pooling or proper exception logging caused database write locks or unhandled field validation errors that were silently caught and mapped to generic failure responses.
+
+### Solution Applied
+1. **Explicit Server-Side Error Handling**: `authController.ts` now performs strict input validation (valid email format, password min 8 characters, role-specific required fields like `companyName` for Industry and `institutionName` for Academician/Institution).
+2. **Specific HTTP Statuses & Error Messages**:
+   - Duplicate email -> HTTP 409 Conflict: `"An account with the email 'x@y.com' already exists. Please sign in instead."`
+   - Validation failure -> HTTP 400 Bad Request with field-specific messages.
+   - User not found on login -> HTTP 404 Not Found: `"No account found with the email address 'x@y.com'."`
+   - Password mismatch -> HTTP 401 Unauthorized: `"Incorrect password. Please double-check your credentials."`
+3. **Database Persistence**: Registered user records are stored directly in the database (`User` and `StudentProfile` tables) and persist across browser sessions and server restarts.
 
 ---
 
-## ⚡ Quick Start & Setup Instructions
+## 🔒 Role-Based Access Control (RBAC)
+
+All backend endpoints are strictly protected server-side using JWT middleware (`authenticateToken` and `authorizeRoles`):
+- `POST /api/opportunities` — Restricted to `INDUSTRY` partners.
+- `PUT /api/applications/:id/status` — Restricted to `INDUSTRY` partners.
+- `POST /api/courses` — Restricted to `INDUSTRY` partners.
+- `POST /api/academician/programs` — Restricted to `ACADEMICIAN` faculty.
+- `POST /api/skills/assessment` — Restricted to `STUDENT` learners.
+- `GET /api/analytics/institution` — Restricted to `INSTITUTION_ADMIN` and `SUPER_ADMIN`.
+- `GET /api/analytics/superadmin` — Restricted to `SUPER_ADMIN`.
+
+---
+
+## ⚡ Setup & Run Instructions
 
 ### Prerequisites
 - Node.js (v18+)
 - npm (v9+)
 
-### 1. Install & Seed Backend
+### Database Environment Configuration
+By default, the platform uses SQLite stored at `backend/prisma/dev.db` for local development. For production/Vercel serverless deployment with PostgreSQL (Neon / Supabase / Vercel Postgres), set the `DATABASE_URL` environment variable in `backend/.env`:
+```env
+DATABASE_URL="postgresql://user:password@host:5432/ayush_setu?sslmode=require"
+```
+
+### 1. Backend Setup & DB Migration
 ```bash
 cd backend
 npm install
@@ -42,48 +65,22 @@ npx prisma db push
 npm run db:seed
 npm run dev
 ```
-*Backend API will run on `http://localhost:5000`.*
+*Backend API server runs on `http://localhost:5000`.*
 
-### 2. Install & Start Frontend
+### 2. Frontend Setup
 ```bash
 cd ../frontend
 npm install
 npm run dev
 ```
-*Frontend application will run on `http://localhost:5173`.*
+*Frontend web application runs on `http://localhost:5173`.*
 
 ---
 
-## 🔑 Demo Login Credentials (1-Click Quick Demo)
+## 🌐 Public Shareable Digital Portfolio
 
-The login page contains a **"1-Click Quick Demo Switcher"** and top navbar role switcher allowing instant access without typing passwords:
-
-| Persona | Role | Email | Password |
-|---|---|---|---|
-| **Student** | `STUDENT` | `aarav.sharma@student.aiia.ac.in` | `password123` |
-| **Industry Partner** | `INDUSTRY` | `careers@daburayush.com` | `password123` |
-| **Academician** | `ACADEMICIAN` | `dr.sharma@aiia-delhi.ac.in` | `password123` |
-| **Institution Admin** | `INSTITUTION_ADMIN` | `admin@aiia-delhi.ac.in` | `password123` |
-| **Super Admin (AIIA)** | `SUPER_ADMIN` | `admin@aiia.gov.in` | `password123` |
-
----
-
-## 🗺️ Key Routes & Module Breakdown
-
-- `/` — Landing Page (Ecosystem overview, statistics counters, top skill ticker, quick role entry)
-- `/login` & `/register` — Role selection auth flows & 1-click quick demo buttons
-- `/student/dashboard` — Student readiness KPI, active applications, top matched jobs
-- `/student/skill-assessment` — 5-step questionnaire covering technical & soft skills
-- `/student/skill-profile` — Recharts Radar & Bar Chart comparing student skills vs 5 career tracks
-- `/student/opportunities` — Search & filter internships/jobs with calculated match % and reasoning
-- `/student/applications` — Kanban pipeline status tracker (Applied → Shortlisted → Interview → Selected)
-- `/student/learning` — Industry certified courses with "Simulate Complete Course" action
-- `/student/portfolio` — Shareable verified digital portfolio with copyable public URL
-- `/student/messages` — Direct mentorship & industry inquiry inbox
-- `/industry/dashboard` — Hiring metrics & applicant review table
-- `/industry/post-opportunity` — Form to publish new AYUSH internships/jobs
-- `/industry/applicants` — Candidate pipeline manager with status updater
-- `/industry/learning-programs` — Publish new industry courses / FDPs
-- `/academician/dashboard` & `/academician/opportunities` — FDPs, joint research grants, mentorship
-- `/institution/dashboard` & `/institution/analytics` — College skill gap trends & placement charts
-- `/admin/dashboard` — AIIA Super Admin national platform oversight & partner queue
+Students can share their verified credentials using the public read-only route:
+```
+http://localhost:5173/portfolio/public/:userId
+```
+This endpoint (`GET /api/skills/portfolio/public/:userId`) requires no authentication and allows recruiters and external employers to inspect verified degree credentials, completed industry courses, and skill radar scores.

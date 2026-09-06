@@ -20,13 +20,17 @@ export interface User {
   };
 }
 
+interface AuthResponse {
+  success: boolean;
+  message?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (data: any) => Promise<boolean>;
-  demoLogin: (role: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  register: (data: any) => Promise<AuthResponse>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -64,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -76,15 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('ayush_token', data.token);
         setToken(data.token);
         setUser(data.user);
-        return true;
+        return { success: true, message: data.message };
       }
-      return false;
-    } catch (err) {
-      return false;
+      return { success: false, message: data.message || 'Login failed. Please check your credentials.' };
+    } catch (err: any) {
+      return { success: false, message: 'Network error or server unreachable. Please try again.' };
     }
   };
 
-  const register = async (formData: any) => {
+  const register = async (formData: any): Promise<AuthResponse> => {
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
@@ -92,39 +96,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify(formData)
       });
       const data = await res.json();
-      if (res.ok && data.token) {
+      if ((res.ok || res.status === 201) && data.token) {
         localStorage.setItem('ayush_token', data.token);
         setToken(data.token);
         setUser(data.user);
-        return true;
+        return { success: true, message: data.message };
       }
-      return false;
-    } catch (err) {
-      return false;
-    }
-  };
-
-  const demoLogin = async (role: string) => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/auth/demo-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role })
-      });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        localStorage.setItem('ayush_token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        setLoading(false);
-        return true;
-      }
-      setLoading(false);
-      return false;
-    } catch (err) {
-      setLoading(false);
-      return false;
+      return { success: false, message: data.message || 'Registration failed. Please check the form data.' };
+    } catch (err: any) {
+      return { success: false, message: 'Network error or server unreachable. Please try again.' };
     }
   };
 
@@ -139,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, demoLogin, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

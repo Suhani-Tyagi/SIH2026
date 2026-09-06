@@ -12,6 +12,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
+import { PublicPortfolioPage } from './pages/PublicPortfolioPage';
 
 // Student Pages
 import { StudentDashboard } from './pages/student/StudentDashboard';
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/portfolio/public/:userId" element={<PublicPortfolioPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/profile/settings" element={<ProfileSettingsPage />} />
 

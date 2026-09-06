@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Leaf, User, Mail, Lock, Building, ArrowRight } from 'lucide-react';
+import { Leaf, User, Mail, Lock, Building, ArrowRight, AlertCircle } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -21,9 +21,15 @@ export const RegisterPage: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+
     setLoading(true);
 
-    const success = await register({
+    const result = await register({
       name,
       email,
       password,
@@ -35,13 +41,13 @@ export const RegisterPage: React.FC = () => {
     });
 
     setLoading(false);
-    if (success) {
+    if (result.success) {
       if (role === 'STUDENT') navigate('/student/skill-assessment');
       else if (role === 'INDUSTRY') navigate('/industry/dashboard');
       else if (role === 'ACADEMICIAN') navigate('/academician/dashboard');
       else navigate('/institution/dashboard');
     } else {
-      setError('Registration failed. Email might already be registered.');
+      setError(result.message || 'Registration failed. Please review your input.');
     }
   };
 
@@ -57,7 +63,7 @@ export const RegisterPage: React.FC = () => {
             Create Your AYUSH Setu Account
           </h2>
           <p className="text-xs text-slate-500 font-medium">
-            Join India's largest AYUSH Academia-Industry ecosystem
+            Join India's official AYUSH Academia-Industry collaboration network
           </p>
         </div>
 
@@ -66,7 +72,7 @@ export const RegisterPage: React.FC = () => {
           {/* Role Selector Tabs */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
-              Select Your User Persona:
+              Select Your Role / Persona:
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
@@ -124,8 +130,9 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium">
-              {error}
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -138,7 +145,7 @@ export const RegisterPage: React.FC = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Dr. / Student Name"
+                  placeholder="Dr. / Student Full Name"
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   required
                 />
@@ -175,7 +182,7 @@ export const RegisterPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Password (Min 8 Characters)</label>
                 <input
                   type="password"
                   value={password}
@@ -183,6 +190,7 @@ export const RegisterPage: React.FC = () => {
                   placeholder="••••••••"
                   className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   required
+                  minLength={8}
                 />
               </div>
             </div>

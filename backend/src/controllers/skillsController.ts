@@ -1,10 +1,10 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 
-// Career track benchmark benchmarks
+// Career track benchmarks
 const CAREER_BENCHMARKS = {
   clinicalPractitioner: {
     name: 'Clinical Practitioner',
@@ -132,6 +132,56 @@ export const submitAssessment = async (req: AuthRequest, res: Response) => {
       message: 'Skill assessment completed successfully!',
       readinessScore: overallReadiness,
       profile: updatedProfile
+    });
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+// Public read-only portfolio endpoint
+export const getPublicPortfolio = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        studentProfile: true,
+        enrollments: {
+          where: { status: 'COMPLETED' },
+          include: { course: true }
+        },
+        applications: {
+          where: { status: 'SELECTED' },
+          include: { opportunity: true }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Public portfolio user not found' });
+    }
+
+    let skillScores = {};
+    let verifiedBadges = [];
+    try {
+      if (user.studentProfile?.skillScores) skillScores = JSON.parse(user.studentProfile.skillScores);
+      if (user.studentProfile?.verifiedBadges) verifiedBadges = JSON.parse(user.studentProfile.verifiedBadges);
+    } catch (e) {}
+
+    return res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        system: user.system,
+        institutionName: user.institutionName,
+        avatar: user.avatar,
+        studentProfile: user.studentProfile,
+        skillScores,
+        verifiedBadges,
+        completedCourses: user.enrollments,
+        selectedApplications: user.applications
+      }
     });
   } catch (error: any) {
     return res.status(500).json({ message: error.message || 'Server error' });
