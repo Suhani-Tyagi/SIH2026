@@ -42,9 +42,11 @@ export const Navbar: React.FC = () => {
           
           {/* Logo & Branding */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-700 to-ayush-primary flex items-center justify-center text-amber-400 shadow-md group-hover:scale-105 transition-transform">
-              <Leaf className="w-6 h-6 stroke-[2.5]" />
-            </div>
+            <img 
+              src="/assets/logo-academia.png" 
+              alt="AYUSH Setu Logo" 
+              className="w-10 h-10 object-contain group-hover:scale-105 transition-transform" 
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-xl text-ayush-dark tracking-tight">AYUSH Setu</span>

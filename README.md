@@ -12,60 +12,82 @@
 
 ---
 
-## 🐛 Root-Cause Diagnosis & Fix: Registration & Login Bug
+## 🛠 Database Architecture & Production Migration (PostgreSQL)
 
-### The Issue
-Users registering on the platform encountered the generic error: `"Registration failed. Email might already be registered."` even on the very first attempt with a brand-new email address.
-
-### Root Cause Analysis
-1. **Generic Exception Swallowing**: The frontend `AuthContext` was returning a simple `boolean` (`false`) for any failed request or server response, and `RegisterPage` unconditionally printed `"Registration failed. Email might already be registered."` regardless of the actual server error.
-2. **Serverless Ephemeral Storage / Unhandled Field Errors**: On serverless environments (Vercel), writing to ephemeral local files without connection pooling or proper exception logging caused database write locks or unhandled field validation errors that were silently caught and mapped to generic failure responses.
-
-### Solution Applied
-1. **Explicit Server-Side Error Handling**: `authController.ts` now performs strict input validation (valid email format, password min 8 characters, role-specific required fields like `companyName` for Industry and `institutionName` for Academician/Institution).
-2. **Specific HTTP Statuses & Error Messages**:
-   - Duplicate email -> HTTP 409 Conflict: `"An account with the email 'x@y.com' already exists. Please sign in instead."`
-   - Validation failure -> HTTP 400 Bad Request with field-specific messages.
-   - User not found on login -> HTTP 404 Not Found: `"No account found with the email address 'x@y.com'."`
-   - Password mismatch -> HTTP 401 Unauthorized: `"Incorrect password. Please double-check your credentials."`
-3. **Database Persistence**: Registered user records are stored directly in the database (`User` and `StudentProfile` tables) and persist across browser sessions and server restarts.
+### Background & Serverless Compatibility Fix
+- **Previous Issue**: The platform previously used file-based SQLite (`dev.db`). On serverless platforms like Vercel, the local filesystem is read-only in production functions (except `/tmp`), causing `PrismaClient` initialization to fail with `Error code 14: Unable to open the database file` on authentication attempts.
+- **Hosted PostgreSQL Solution**: Migrated `backend/prisma/schema.prisma` datasource provider from `"sqlite"` to `"postgresql"`.
+- **Serverless Connection Pooling**: Implemented a global Prisma Client singleton (`backend/src/prisma.ts`) to prevent connection pool exhaustion across Vercel serverless function invocations.
 
 ---
 
-## 🔒 Role-Based Access Control (RBAC)
+## 🎨 Official Government Logos & Brand Assets
 
-All backend endpoints are strictly protected server-side using JWT middleware (`authenticateToken` and `authorizeRoles`):
-- `POST /api/opportunities` — Restricted to `INDUSTRY` partners.
-- `PUT /api/applications/:id/status` — Restricted to `INDUSTRY` partners.
-- `POST /api/courses` — Restricted to `INDUSTRY` partners.
-- `POST /api/academician/programs` — Restricted to `ACADEMICIAN` faculty.
-- `POST /api/skills/assessment` — Restricted to `STUDENT` learners.
-- `GET /api/analytics/institution` — Restricted to `INSTITUTION_ADMIN` and `SUPER_ADMIN`.
-- `GET /api/analytics/superadmin` — Restricted to `SUPER_ADMIN`.
+1. **Top Header Bar**:
+   - Replaced plain-text labels with official high-resolution emblems:
+     - **Government of India Emblem & Wordmark**: `public/assets/emblem-gov-india.png`
+     - **Ministry of AYUSH Emblem & Wordmark**: `public/assets/emblem-ministry-ayush.png`
+   - Rendered with responsive sizing, alt text, and proper alignment for both mobile and desktop screens.
+2. **Site Logo & Branding**:
+   - Updated product icon to the circular Academia logo mark (`public/assets/logo-academia.png`) featuring the graduation cap, briefcase, and gear elements.
+   - Maintained **AYUSH Setu** as the main brand title in header and navbar.
+   - Updated favicons and apple-touch-icons.
 
 ---
 
-## ⚡ Setup & Run Instructions
+## 🚀 Key Features Implemented (Backed by PostgreSQL DB)
 
-### Prerequisites
-- Node.js (v18+)
-- npm (v9+)
+- **A. Skill Assessment (Student)**: Multi-question technical + soft skills assessment persisting student skill profiles and rendering dynamic radar/bar gap charts.
+- **B. Skill Mapping & Recommendations**: Algorithmic match scoring comparing student skill profiles against opportunity requirements.
+- **C. Industry Opportunities & Applications**: Industry partners post job/internship listings; students apply with live match %; industry manages applicant pipeline status (`APPLIED` → `SHORTLISTED` → `INTERVIEW` → `SELECTED` / `REJECTED`).
+- **D. Industry Learning Programs**: Courses published by industry partners; student enrollments and completion update verified skill badges.
+- **E. Academician Portal**: Central feed for FDPs, joint research, consultancy, and faculty mentorship availability postings.
+- **F. Institution & AIIA Analytics**: Real-time SQL aggregations driving institutional dashboards for student readiness, placement rates, and skill gap metrics.
+- **G. Digital Portfolio**: Auto-generated student portfolio accessible via public read-only route (`/portfolio/public/:userId`).
+- **H. Collaboration & Messaging**: DB-backed internal messaging and automated event notifications.
+- **I. Server-Side RBAC**: JWT authorization middleware (`authenticateToken` and `authorizeRoles`) guarding all backend endpoints.
 
-### Database Environment Configuration
-By default, the platform uses SQLite stored at `backend/prisma/dev.db` for local development. For production/Vercel serverless deployment with PostgreSQL (Neon / Supabase / Vercel Postgres), set the `DATABASE_URL` environment variable in `backend/.env`:
+---
+
+## 🔒 Role-Based Access Control (RBAC) Endpoints
+
+- `POST /api/opportunities` — Restricted to `INDUSTRY`
+- `PUT /api/applications/:id/status` — Restricted to `INDUSTRY`
+- `POST /api/courses` — Restricted to `INDUSTRY`
+- `POST /api/academician/programs` — Restricted to `ACADEMICIAN`
+- `POST /api/skills/assessment` — Restricted to `STUDENT`
+- `GET /api/analytics/institution` — Restricted to `INSTITUTION_ADMIN` & `SUPER_ADMIN`
+
+---
+
+## ⚡ Environment & Setup Instructions
+
+### Environment Variables
+Configure the following in `backend/.env` and in Vercel Project Settings:
+
 ```env
+# Database Connections (Hosted PostgreSQL, e.g., Neon / Supabase / Vercel Postgres)
 DATABASE_URL="postgresql://user:password@host:5432/ayush_setu?sslmode=require"
+DIRECT_URL="postgresql://user:password@host:5432/ayush_setu?sslmode=require"
+
+# Server Configuration
+PORT=5000
+NODE_ENV=production
+
+# JWT Secret
+JWT_SECRET="ayush_setu_jwt_secret_sih_2026_production"
 ```
 
-### 1. Backend Setup & DB Migration
+### 1. Backend Setup & Migrations
 ```bash
 cd backend
 npm install
+npx prisma generate
 npx prisma db push
 npm run db:seed
 npm run dev
 ```
-*Backend API server runs on `http://localhost:5000`.*
+*Backend API runs on `http://localhost:5000`.*
 
 ### 2. Frontend Setup
 ```bash
@@ -73,14 +95,13 @@ cd ../frontend
 npm install
 npm run dev
 ```
-*Frontend web application runs on `http://localhost:5173`.*
+*Frontend application runs on `http://localhost:5173`.*
 
 ---
 
 ## 🌐 Public Shareable Digital Portfolio
 
-Students can share their verified credentials using the public read-only route:
+Share verified student credentials using the public URL:
 ```
 http://localhost:5173/portfolio/public/:userId
 ```
-This endpoint (`GET /api/skills/portfolio/public/:userId`) requires no authentication and allows recruiters and external employers to inspect verified degree credentials, completed industry courses, and skill radar scores.
