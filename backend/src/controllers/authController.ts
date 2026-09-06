@@ -2,12 +2,19 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, AuthRequest } from '../middleware/auth';
-import prisma from '../prisma';
+import prisma, { isDatabaseConfigured } from '../prisma';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const DB_NOT_CONFIGURED_MSG =
+  'Database Connection Needed: Please add the DATABASE_URL environment variable in your Vercel Project Settings (under Settings -> Environment Variables) to connect your hosted PostgreSQL database.';
+
 export const register = async (req: Request, res: Response) => {
   try {
+    if (!isDatabaseConfigured) {
+      return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
+    }
+
     const { email, password, name, role, system, institutionName, companyName, designation, degree } = req.body;
 
     // Server-side Input Validation
@@ -92,12 +99,19 @@ export const register = async (req: Request, res: Response) => {
     return res.status(201).json({ message: 'Registration successful!', token, user });
   } catch (error: any) {
     console.error('Registration server error:', error);
+    if (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server'))) {
+      return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
+    }
     return res.status(500).json({ message: error.message || 'Database error occurred during registration. Please try again.' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
+    if (!isDatabaseConfigured) {
+      return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
+    }
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -129,12 +143,19 @@ export const login = async (req: Request, res: Response) => {
     return res.json({ message: 'Login successful!', token, user });
   } catch (error: any) {
     console.error('Login server error:', error);
+    if (error.message && (error.message.includes('DATABASE_URL') || error.message.includes('Can\'t reach database server'))) {
+      return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
+    }
     return res.status(500).json({ message: error.message || 'Server error occurred during login. Please try again.' });
   }
 };
 
 export const getMe = async (req: AuthRequest, res: Response) => {
   try {
+    if (!isDatabaseConfigured) {
+      return res.status(503).json({ message: DB_NOT_CONFIGURED_MSG });
+    }
+
     if (!req.user) return res.status(401).json({ message: 'Authentication required' });
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -146,3 +167,4 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: error.message || 'Server error' });
   }
 };
+
