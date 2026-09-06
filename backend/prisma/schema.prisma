@@ -1,0 +1,150 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  name            String
+  role            String   // STUDENT, INDUSTRY, ACADEMICIAN, INSTITUTION_ADMIN, SUPER_ADMIN
+  system          String   @default("AYURVEDA") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  avatar          String?
+  institutionName String?
+  companyName     String?
+  designation     String?
+  createdAt       DateTime @default(now())
+
+  studentProfile  StudentProfile?
+  messagesSent    Message[] @relation("SentMessages")
+  messagesRecv    Message[] @relation("RecvMessages")
+  notifications   Notification[]
+  applications    Application[]
+  enrollments     Enrollment[]
+  opportunities   Opportunity[]
+  academicPrograms AcademicProgram[]
+}
+
+model StudentProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  degree         String   @default("BAMS") // BAMS, BHMS, BUMS, BSMS, BNYS, MD/MS (AYUSH)
+  passoutYear    Int      @default(2025)
+  readinessScore Int      @default(75)
+  bio            String?
+  phone          String?
+  location       String?  @default("New Delhi, India")
+  skillScores    String   @default("{}") // JSON string: { panchakarma: 85, herbal: 70, ... }
+  verifiedBadges String   @default("[]") // JSON string array of earned certificates
+}
+
+model SkillAssessment {
+  id             String   @id @default(uuid())
+  studentId      String
+  technicalScore Int
+  softSkillScore Int
+  answers        String   // JSON string
+  completedAt    DateTime @default(now())
+}
+
+model Opportunity {
+  id             String   @id @default(uuid())
+  title          String
+  type           String   // INTERNSHIP, JOB, APPRENTICESHIP, RESEARCH_FELLOWSHIP
+  companyName    String
+  companyId      String
+  company        User     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  system         String   @default("ALL") // AYURVEDA, YOGA, UNANI, SIDDHA, HOMEOPATHY, ALL
+  skillsRequired String   // JSON string array
+  stipend        String   // e.g. "₹25,000 / month" or "₹6.5 LPA"
+  location       String
+  mode           String   @default("ONSITE") // REMOTE, ONSITE, HYBRID
+  duration       String   // e.g. "6 Months", "Full Time"
+  description    String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  applications   Application[]
+}
+
+model Application {
+  id            String   @id @default(uuid())
+  opportunityId String
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status        String   @default("APPLIED") // APPLIED, SHORTLISTED, INTERVIEW, SELECTED, REJECTED
+  matchScore    Int      @default(80)
+  coverLetter   String?
+  appliedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Course {
+  id              String   @id @default(uuid())
+  title           String
+  providerName    String
+  companyId       String
+  duration        String
+  level           String   @default("Intermediate")
+  skillsAcquired  String   // JSON string array
+  description     String
+  image           String?
+  price           String   @default("Free (Ministry Sponsored)")
+  enrollmentsCount Int     @default(0)
+  createdAt       DateTime @default(now())
+
+  enrollments     Enrollment[]
+}
+
+model Enrollment {
+  id          String    @id @default(uuid())
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status      String    @default("ENROLLED") // ENROLLED, COMPLETED
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+}
+
+model AcademicProgram {
+  id              String   @id @default(uuid())
+  title           String
+  type            String   // FDP, JOINT_RESEARCH, CONSULTANCY, GUEST_LECTURE
+  academicianId   String
+  academician     User     @relation(fields: [academicianId], references: [id], onDelete: Cascade)
+  organizerName   String
+  description     String
+  targetAudience  String   @default("AYUSH Faculty & Researchers")
+  status          String   @default("OPEN")
+  createdAt       DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("RecvMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  senderName String
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
