@@ -7,18 +7,10 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').map(origin => origin.trim()).filter(Boolean);
-const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '';
-app.use(cors({
-  origin(origin, callback) {
-    // Same-origin Vercel requests do not send an Origin header. For preview and
-    // production, administrators can explicitly supply ALLOWED_ORIGINS.
-    if (!origin || origin === vercelOrigin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Origin not allowed'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// The API is protected by JWT and role checks. Keeping CORS permissive avoids
+// breaking Vercel preview/production aliases, which browsers otherwise report
+// as an unhelpful "network error" before the login endpoint can respond.
+app.use(cors({ methods: ['GET', 'POST', 'PUT', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use((_, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');

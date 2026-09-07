@@ -173,7 +173,6 @@ export const login = async (req: Request, res: Response) => {
     // Try Prisma DB first if configured
     if (isDatabaseConfigured) {
       try {
-        await ensureTablesExist();
         const user = await prisma.user.findUnique({
           where: { email: cleanEmail },
           include: { studentProfile: true }
