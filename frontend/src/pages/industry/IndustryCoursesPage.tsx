@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Send, Sparkles } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const IndustryCoursesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -11,6 +12,13 @@ export const IndustryCoursesPage: React.FC = () => {
   const [skillsAcquired, setSkillsAcquired] = useState('Panchakarma Techniques, Clinical Diagnostics, QA/QC & GMP Compliance');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [publishedCourses, setPublishedCourses] = useState<any[]>([]);
+  const { token, user } = useAuth();
+
+  const loadPublishedCourses = () => fetch('/api/courses', { headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` } })
+    .then(res => res.json()).then(data => setPublishedCourses((data.courses || []).filter((course: any) => course.companyId === user?.id))).catch(console.error);
+
+  useEffect(() => { loadPublishedCourses(); }, [token, user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +43,9 @@ export const IndustryCoursesPage: React.FC = () => {
       });
 
       if (res.ok) {
-        navigate('/student/learning');
+        setTitle('');
+        setDescription('');
+        loadPublishedCourses();
       }
     } catch (err) {
       console.error(err);
@@ -128,6 +138,17 @@ export const IndustryCoursesPage: React.FC = () => {
         </button>
 
       </form>
+
+      <section className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div><h2 className="text-lg font-extrabold text-slate-900">Your published learning programs</h2><p className="text-xs text-slate-500">These are visible to students in the learning catalogue.</p></div>
+        {publishedCourses.length === 0 ? <p className="text-xs text-slate-500 py-4">No courses published from this industry account yet.</p> : <div className="grid gap-3">
+          {publishedCourses.map(course => <article key={course.id} className="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <div className="flex flex-wrap justify-between gap-2"><h3 className="font-bold text-sm text-slate-900">{course.title}</h3><span className="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-900">PUBLISHED</span></div>
+            <p className="text-xs text-slate-600 mt-2">{course.description}</p>
+            <p className="text-[11px] text-slate-500 mt-2">{course.duration} · {course.level} · {(course.skillsList || []).join(', ')}</p>
+          </article>)}
+        </div>}
+      </section>
 
     </div>
   );

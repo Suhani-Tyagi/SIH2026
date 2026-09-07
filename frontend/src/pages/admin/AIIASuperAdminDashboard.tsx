@@ -33,6 +33,17 @@ export const AIIASuperAdminDashboard: React.FC = () => {
     setApprovals((prev) => prev.filter((a) => a.id !== id));
   };
 
+  const downloadNationalReport = async () => {
+    const res = await fetch('/api/analytics/superadmin/export', { headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` } });
+    if (!res.ok) return window.alert('The national report could not be generated. Please try again.');
+    const url = URL.createObjectURL(await res.blob());
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'AYUSH_Setu_National_Report.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <div className="p-8 text-center text-xs text-slate-500">Loading AIIA Super Admin platform metrics...</div>;
 
   return (
@@ -53,7 +64,7 @@ export const AIIASuperAdminDashboard: React.FC = () => {
         </div>
 
         <button
-          onClick={() => alert('Exporting AIIA National AYUSH Skill & Placement Report 2026 (PDF/CSV)...')}
+          onClick={downloadNationalReport}
           className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-2xl shadow-lg transition-all text-xs flex items-center gap-2 shrink-0"
         >
           <Download className="w-4 h-4" /> Download National Report

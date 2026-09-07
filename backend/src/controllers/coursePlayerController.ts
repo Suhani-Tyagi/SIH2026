@@ -181,10 +181,18 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
 
     if (isDatabaseConfigured) {
       try {
-        const enrollment = await prisma.enrollment.findFirst({
+        let enrollment = await prisma.enrollment.findFirst({
           where: { courseId, studentId }
         });
-        if (!enrollment) return res.status(400).json({ message: 'Must be enrolled in course first' });
+        // If a learner arrives from the course catalogue while an earlier
+        // enrolment request was interrupted, recover the intended enrolment
+        // before saving learning progress. This keeps the learning journey
+        // idempotent across slow mobile/serverless requests.
+        if (!enrollment) {
+          enrollment = await prisma.enrollment.create({
+            data: { courseId, studentId, status: 'ENROLLED', progressPercent: 0 }
+          });
+        }
 
         // Starter course lessons are intentionally generated at runtime for
         // legacy published courses. Persist their progress on the enrollment
@@ -241,8 +249,14 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
     }
 
     // Memory Fallback
-    const memEnr = memoryEnrollments.find(e => e.courseId === courseId && e.studentId === studentId);
-    if (!memEnr) return res.status(400).json({ message: 'Must be enrolled in course first' });
+    let memEnr = memoryEnrollments.find(e => e.courseId === courseId && e.studentId === studentId);
+    if (!memEnr) {
+      const createdEnrollment: MemoryEnrollment = {
+        id: `enr-mem-${Date.now()}`, courseId, studentId, status: 'ENROLLED', progressPercent: 0, enrolledAt: new Date()
+      };
+      memoryEnrollments.push(createdEnrollment);
+      memEnr = createdEnrollment;
+    }
 
     if (lessonId.startsWith(`${courseId}-l`)) {
       const lessonNumber = Number(lessonId.split('-l').pop()) || 1;

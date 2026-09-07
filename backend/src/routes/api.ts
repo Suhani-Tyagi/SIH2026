@@ -40,7 +40,7 @@ import {
   scheduleMentorshipSession,
   submitSessionEvaluation
 } from '../controllers/academicianController';
-import { getInstitutionAnalytics, getSuperAdminAnalytics, exportAnalyticsCSV } from '../controllers/analyticsController';
+import { getInstitutionAnalytics, getSuperAdminAnalytics, exportAnalyticsCSV, exportSuperAdminCSV } from '../controllers/analyticsController';
 import { getMessages, sendMessage } from '../controllers/messagesController';
 import { getNotifications, markRead } from '../controllers/notificationsController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
@@ -113,6 +113,7 @@ router.post('/academician/sessions/evaluate', authenticateToken, authorizeRoles(
 router.get('/analytics/institution', authenticateToken, authorizeRoles('INSTITUTION_ADMIN', 'SUPER_ADMIN'), getInstitutionAnalytics);
 router.get('/analytics/superadmin', authenticateToken, authorizeRoles('SUPER_ADMIN'), getSuperAdminAnalytics);
 router.get('/analytics/export-csv', authenticateToken, authorizeRoles('INSTITUTION_ADMIN', 'SUPER_ADMIN'), exportAnalyticsCSV);
+router.get('/analytics/superadmin/export', authenticateToken, authorizeRoles('SUPER_ADMIN'), exportSuperAdminCSV);
 
 // Communication & Notifications
 router.get('/messages', authenticateToken, getMessages);
@@ -121,4 +122,3 @@ router.get('/notifications', authenticateToken, getNotifications);
 router.post('/notifications/read', authenticateToken, markRead);
 
 export default router;
-

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, CheckCircle2, Award, Clock, ArrowRight, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export const LearningProgramsPage: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
@@ -8,6 +9,7 @@ export const LearningProgramsPage: React.FC = () => {
   const [message, setMessage] = useState('');
   const [busyCourseId, setBusyCourseId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   const fetchCourses = () => {
     fetch('/api/courses', {
@@ -32,14 +34,17 @@ export const LearningProgramsPage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('ayush_token')}`
+          Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}`
         },
         body: JSON.stringify({ courseId })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Unable to enrol in this course');
       setMessage(data.message || 'Enrolled successfully');
-      await fetchCourses();
+      await new Promise<void>((resolve) => {
+        fetch('/api/courses', { headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` } })
+          .then(r => r.json()).then(data => { setCourses(data.courses || []); resolve(); }).catch(() => resolve());
+      });
       navigate(`/courses/${courseId}/player`);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Unable to enrol in this course');

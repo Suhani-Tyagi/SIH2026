@@ -184,9 +184,15 @@ export const CoursePlayerPage: React.FC = () => {
               </div>
               <p className="text-[10px] font-bold tracking-[0.2em] text-amber-300 uppercase">Guided lesson studio</p>
               <h2 className="font-bold text-lg mt-2">{activeLesson?.title || 'Select a lesson'}</h2>
-              <p className="text-xs text-emerald-100 mt-3 leading-relaxed">{lessonStarted ? activeLesson?.content : 'Start the guided lesson to reveal the instruction, then use the reading, workbook and mentor forum to apply it.'}</p>
+              {lessonStarted ? (
+                <div className="mt-4 text-left bg-white/10 border border-white/15 rounded-lg p-4 space-y-2 text-xs text-emerald-50">
+                  <p><strong className="text-amber-200">Learn:</strong> {activeLesson?.content}</p>
+                  <p><strong className="text-amber-200">Apply:</strong> Open the Downloads tab, complete the matching learning pack, and post one question for a mentor.</p>
+                  <button onClick={() => setActiveTab('RESOURCES')} className="underline font-bold text-amber-200">Open lesson workbook</button>
+                </div>
+              ) : <p className="text-xs text-emerald-100 mt-3 leading-relaxed">Start this guided lesson for the key instruction and a direct path to the applied workbook.</p>}
               <button onClick={() => setLessonStarted(true)} className="mt-5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold rounded-lg">
-                {lessonStarted ? 'Lesson guidance open' : 'Start guided lesson'}
+                {lessonStarted ? 'Guidance is open' : 'Start guided lesson'}
               </button>
             </div>
           </div>
@@ -339,7 +345,7 @@ export const CoursePlayerPage: React.FC = () => {
                     return (
                       <button
                         key={les.id || lIdx}
-                        onClick={() => { if (!isLocked) { setActiveLesson(les); setLessonStarted(false); } }}
+                      onClick={() => { if (!isLocked) { setActiveLesson(les); setLessonStarted(false); } }}
                         disabled={isLocked}
                         className={`w-full text-left p-3 text-xs flex items-center justify-between transition ${
                           isActive ? 'bg-emerald-50/80 border-l-4 border-emerald-600 font-semibold' : 'hover:bg-gray-50'

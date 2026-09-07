@@ -1,22 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { GraduationCap, BookOpen, Users, Sparkles, Plus, ArrowRight, Building2 } from 'lucide-react';
+import { GraduationCap, BookOpen, Users, Sparkles, Plus, ArrowRight, Building2, CalendarDays, Handshake } from 'lucide-react';
 
 export const AcademicianDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [programs, setPrograms] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/academician/programs')
+    const headers = { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` };
+    fetch('/api/academician/programs', { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.programs) setPrograms(data.programs);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+    fetch('/api/academician/mentorship', { headers }).then(res => res.json()).then(data => setRequests(data.mentorshipRequests || [])).catch(console.error);
+    fetch('/api/academician/sessions', { headers }).then(res => res.json()).then(data => setSessions(data.sessions || [])).catch(console.error);
+  }, [token]);
+
+  const programsOfType = (type: string) => programs.filter(program => program.type === type);
 
   return (
     <div className="space-y-8">
@@ -47,27 +54,38 @@ export const AcademicianDashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Active FDPs</span>
-          <div className="text-2xl font-extrabold text-slate-900">3 FDPs</div>
+          <div className="text-2xl font-extrabold text-slate-900">{programsOfType('FDP').length}</div>
           <div className="text-[11px] text-emerald-600 font-semibold">Faculty Development</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Joint R&D Projects</span>
-          <div className="text-2xl font-extrabold text-slate-900">2 Active</div>
+          <div className="text-2xl font-extrabold text-slate-900">{programsOfType('JOINT_RESEARCH').length}</div>
           <div className="text-[11px] text-amber-600 font-semibold">Pharma-Academia Grants</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Mentorship Requests</span>
-          <div className="text-2xl font-extrabold text-slate-900">12 Students</div>
+          <div className="text-2xl font-extrabold text-slate-900">{requests.length}</div>
           <div className="text-[11px] text-slate-500">Career Guidance</div>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Guest Lectures</span>
-          <div className="text-2xl font-extrabold text-slate-900">5 Scheduled</div>
+          <div className="text-2xl font-extrabold text-slate-900">{programsOfType('GUEST_LECTURE').length + sessions.filter(session => session.status === 'SCHEDULED').length}</div>
           <div className="text-[11px] text-emerald-600 font-semibold">Industry Webinars</div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h3 className="font-extrabold text-slate-900 flex items-center gap-2"><Handshake className="w-4 h-4 text-emerald-700" /> Mentorship requests</h3>
+          {requests.length === 0 ? <p className="text-xs text-slate-500">No open mentorship requests.</p> : requests.map(request => <div className="p-3 border rounded-xl bg-stone-50" key={request.id}><p className="font-bold text-xs">{request.student?.name || 'AYUSH student'} - {request.topic}</p><p className="text-xs text-slate-600 mt-1">{request.notes}</p><p className="text-[10px] mt-2 text-emerald-800 font-bold">{request.status} {request.meetingDate ? `· ${request.meetingDate}` : ''}</p></div>)}
+        </section>
+        <section className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h3 className="font-extrabold text-slate-900 flex items-center gap-2"><CalendarDays className="w-4 h-4 text-emerald-700" /> Guest lectures & mentoring calendar</h3>
+          {sessions.length === 0 ? <p className="text-xs text-slate-500">No sessions scheduled.</p> : sessions.map(session => <div className="p-3 border rounded-xl bg-stone-50" key={session.id}><p className="font-bold text-xs">{session.topic || session.agenda}</p><p className="text-xs text-slate-600 mt-1">{session.agenda}</p><p className="text-[10px] mt-2 text-emerald-800 font-bold">{new Date(session.scheduledAt).toLocaleString()} · {session.status}</p></div>)}
+        </section>
       </div>
 
       {/* Programs List */}

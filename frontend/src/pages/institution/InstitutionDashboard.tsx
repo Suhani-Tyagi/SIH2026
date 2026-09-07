@@ -91,6 +91,21 @@ export const InstitutionDashboard: React.FC = () => {
         </div>
       </div>
 
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+          <h2 className="font-extrabold text-slate-900">Priority skill interventions</h2>
+          <p className="text-xs text-slate-500 mt-1">Use these curriculum signals to plan workshops, industry mentoring and targeted learning cohorts.</p>
+          <div className="mt-4 grid sm:grid-cols-2 gap-3">
+            {(data?.topDeficientSkills || []).map((item: any) => <div key={item.skill} className="rounded-xl border border-stone-200 bg-stone-50 p-4"><p className="font-bold text-xs text-slate-900">{item.skill}</p><p className="text-[11px] text-slate-600 mt-2">{item.studentsAffected} of the current cohort need support</p><span className="inline-block mt-2 text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded">{item.severity} priority</span></div>)}
+          </div>
+        </div>
+        <div className="bg-stone-900 text-stone-50 p-6 rounded-3xl shadow-sm">
+          <h2 className="font-extrabold">Institution actions</h2>
+          <ul className="mt-4 space-y-3 text-xs text-stone-200"><li>1. Export the roster for placement-cell review.</li><li>2. Assign at-risk students to a verified industry learning program.</li><li>3. Review the Analytics Matrix before the next curriculum meeting.</li></ul>
+          <Link to="/institution/analytics" className="inline-block mt-6 text-xs font-bold text-amber-300 underline">Open analytics matrix</Link>
+        </div>
+      </section>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">

@@ -808,6 +808,15 @@ export const memoryAcademicPrograms: MemoryAcademicProgram[] = [
     targetAudience: 'AYUSH College Assistant & Associate Professors',
     description: '5-Day intensive hands-on faculty development workshop on LC-MS, HPTLC, and Atomic Absorption Spectroscopy.',
     createdAt: new Date()
+  },
+  {
+    id: 'pgm-2', title: 'Faculty Development Program: Clinical Research Methods & GCP', type: 'FDP', academicianId: 'usr-aca-1', organizerName: 'AIIA Clinical Research Unit & Himalaya Wellness', targetAudience: 'AYUSH Faculty, PG Scholars and Clinical Mentors', description: 'A five-session FDP on protocol writing, informed consent, adverse-event reporting and evidence-based teaching practice.', createdAt: new Date()
+  },
+  {
+    id: 'pgm-3', title: 'Joint R&D: Standardised Ashwagandha Extract Stability Study', type: 'JOINT_RESEARCH', academicianId: 'usr-aca-1', organizerName: 'AIIA Dravyaguna Department & Dabur R&D', targetAudience: 'Faculty Researchers and Final-Year PG Scholars', description: 'A collaborative stability and marker-fingerprinting study with shared laboratory SOPs, milestone reviews and an industry mentor panel.', createdAt: new Date()
+  },
+  {
+    id: 'pgm-4', title: 'Industry Guest Lecture: From AYUSH Lab Notebook to GMP Batch Record', type: 'GUEST_LECTURE', academicianId: 'usr-aca-1', organizerName: 'Charak Pharma Quality Institute', targetAudience: 'Final-Year BAMS, B.Pharm and Quality Interns', description: 'Live industry webinar on traceable documentation, deviations, CAPA and entry-level quality roles.', createdAt: new Date()
   }
 ];
 

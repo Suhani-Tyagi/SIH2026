@@ -84,13 +84,18 @@ export const getMentorshipRequests = async (req: AuthRequest, res: Response) => 
       try {
         const requests = await prisma.mentorshipRequest.findMany({
           where: { OR: [{ studentId: userId }, { mentorId: userId }] },
+          include: { student: true, mentor: true },
           orderBy: { createdAt: 'desc' }
         });
         if (requests.length > 0) return res.json({ mentorshipRequests: requests });
       } catch (e) {}
     }
 
-    const memRequests = memoryMentorshipRequests.filter(r => r.studentId === userId || r.mentorId === userId);
+    const memRequests = memoryMentorshipRequests.filter(r => r.studentId === userId || r.mentorId === userId).map(request => ({
+      ...request,
+      student: memoryUsers.find(user => user.id === request.studentId),
+      mentor: memoryUsers.find(user => user.id === request.mentorId)
+    }));
     return res.json({ mentorshipRequests: memRequests });
   } catch (error: any) {
     return res.status(500).json({ message: error.message || 'Server error' });
@@ -298,5 +303,4 @@ export const submitSessionEvaluation = async (req: AuthRequest, res: Response) =
     return res.status(500).json({ message: error.message || 'Server error' });
   }
 };
-
 

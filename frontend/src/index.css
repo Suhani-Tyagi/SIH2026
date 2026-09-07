@@ -4,9 +4,22 @@
 
 @layer base {
   body {
-    background-color: #FBFBF7;
-    color: #1E293B;
+    background-color: #f7f6f2;
+    color: #263238;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+/* Deliberately restrained surfaces: content, not decorative gradients, leads. */
+::selection { background: #cce8d7; color: #163b2b; }
+:focus-visible { outline: 3px solid #b7791f; outline-offset: 3px; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+@media (max-width: 640px) {
+  html { font-size: 16px; }
+  button, a { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
 .tricolor-strip {
