@@ -20,20 +20,26 @@ import {
   MemoryAuditLog
 } from '../store/inMemoryStore';
 
-const COURSE_YOUTUBE_VIDEOS: Record<string, string> = {
-  'crs-1': 'https://www.youtube-nocookie.com/embed/lfXAk9rK4w8?rel=0',
-  'crs-2': 'https://www.youtube-nocookie.com/embed/fqaCEdeP4AA?rel=0',
-  'crs-3': 'https://www.youtube-nocookie.com/embed/xpfTIoDqsJw?rel=0',
-  'crs-4': 'https://www.youtube-nocookie.com/embed/v7AYKMP6rOE?rel=0',
-  'crs-5': 'https://www.youtube-nocookie.com/embed/P2R9P5NkP34?rel=0',
-  'crs-6': 'https://www.youtube-nocookie.com/embed/5MgBikgcWnY?rel=0',
-  'crs-7': 'https://www.youtube-nocookie.com/embed/fqaCEdeP4AA?rel=0',
-  'crs-8': 'https://www.youtube-nocookie.com/embed/7pQvO3oB2x4?rel=0',
-  'crs-9': 'https://www.youtube-nocookie.com/embed/4Cj7k1YF7yM?rel=0',
-  'crs-10': 'https://www.youtube-nocookie.com/embed/2uK1EJSmV0o?rel=0'
+// Direct embeds are deliberately disabled until each lecture has completed a
+// human content, source and age-appropriateness review.  Search links give
+// learners a useful YouTube route without silently endorsing a guessed ID.
+const COURSE_YOUTUBE_SEARCH_TERMS: Record<string, string> = {
+  'crs-1': 'HPTLC herbal drug standardisation lecture',
+  'crs-2': 'Kerala Ayurveda Panchakarma clinical training lecture',
+  'crs-3': 'Good Clinical Practice principles lecture',
+  'crs-4': 'yoga therapy metabolic disorders lecture',
+  'crs-5': 'GMP batch manufacturing records lecture',
+  'crs-6': 'herbal product export compliance dossier writing lecture',
+  'crs-7': 'Nadi Pariksha Ashtavidha Pariksha lecture',
+  'crs-8': 'patient counselling clinical communication lecture',
+  'crs-9': 'in vitro assay controls laboratory lecture',
+  'crs-10': 'scientific writing manuscript peer review lecture'
 };
 
-const courseVideoUrl = (courseId: string) => COURSE_YOUTUBE_VIDEOS[courseId] || 'https://www.youtube-nocookie.com/embed/xpfTIoDqsJw?rel=0';
+const courseVideoSearchUrl = (courseId: string) => {
+  const term = COURSE_YOUTUBE_SEARCH_TERMS[courseId] || 'AYUSH clinical laboratory professional lecture';
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(term)}`;
+};
 
 // Published courses must remain usable even when an industry author has not
 // supplied a bespoke module plan yet. These are full starter lessons, not blank
@@ -43,16 +49,16 @@ const buildStarterModules = (courseId: string, courseTitle: string) => [
     id: `${courseId}-foundation`, courseId, title: 'Foundation: concepts, safety and scope', order: 1,
     summary: `Build a safe, evidence-aware foundation for ${courseTitle}.`,
     lessons: [
-      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
-      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
+      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, videoSearchUrl: courseVideoSearchUrl(courseId), content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
+      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, videoSearchUrl: courseVideoSearchUrl(courseId), content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
     ]
   },
   {
     id: `${courseId}-practice`, courseId, title: 'Applied practice and case review', order: 2,
     summary: 'Apply the framework to a supervised case and consolidate your evidence.',
     lessons: [
-      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
-      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
+      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, videoSearchUrl: courseVideoSearchUrl(courseId), content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
+      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, videoSearchUrl: courseVideoSearchUrl(courseId), content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
     ]
   }
 ];
@@ -140,7 +146,11 @@ export const getCourseDetailsWithModules = async (req: AuthRequest, res: Respons
       ...module,
       lessons: (module.lessons || []).map((lesson: any) => ({
         ...lesson,
-        videoUrl: lesson.videoUrl || courseVideoUrl(courseId)
+        // Do not pass through legacy or guessed embeds. A course author may
+        // submit a reviewed URL in a future moderation workflow; until then,
+        // expose the contextual search link only.
+        videoUrl: undefined,
+        videoSearchUrl: courseVideoSearchUrl(courseId)
       }))
     }));
 

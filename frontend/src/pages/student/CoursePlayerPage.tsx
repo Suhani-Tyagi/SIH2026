@@ -176,12 +176,21 @@ export const CoursePlayerPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Lesson Player & Workspace */}
         <div className="lg:col-span-2 space-y-4">
-          {/* YouTube lecture player with a usable in-product fallback */}
-          <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900 rounded-xl overflow-hidden shadow-md relative aspect-video flex items-center justify-center">
-            {activeLesson?.videoUrl ? <iframe src={activeLesson.videoUrl} title={`${activeLesson.title} YouTube lecture`} className="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : <div className="p-8 text-center text-white">Select a lesson to play its lecture.</div>}
+          {/* No third-party video is embedded until it has passed editorial review. */}
+          <div className="bg-stone-900 rounded-xl overflow-hidden shadow-md relative aspect-video flex items-center justify-center">
+            <div className="max-w-lg p-8 text-center text-stone-50">
+              <PlayCircle className="w-11 h-11 mx-auto mb-3 text-amber-300" aria-hidden="true" />
+              <h2 className="text-lg font-bold">Choose a lecture from YouTube</h2>
+              <p className="mt-2 text-sm leading-relaxed text-stone-300">Direct embeds are paused while every suggested lecture is reviewed for relevance and appropriateness. Your course notes and workbook are available here now.</p>
+              {activeLesson?.videoSearchUrl && (
+                <a href={activeLesson.videoSearchUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2.5 text-sm font-bold text-stone-900 hover:bg-amber-200 focus-visible:outline-white">
+                  <PlayCircle className="w-4 h-4" aria-hidden="true" /> Open YouTube lecture search
+                </a>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
-            <span className="text-stone-600">Lecture supplied through YouTube. If playback is blocked, use the detailed notes and workbook below.</span>
+            <span className="text-stone-600">No unreviewed video plays inside AYUSH Setu. Use the course-specific YouTube search or study the detailed notes and workbook.</span>
             <button onClick={() => { setLessonStarted(!lessonStarted); setActiveTab('CONTENT'); }} className="font-bold text-emerald-800 underline">{lessonStarted ? 'Hide lesson notes' : 'Show lesson notes'}</button>
           </div>
 

@@ -652,7 +652,6 @@ export const memoryLessons: MemoryLesson[] = [
     title: 'Lesson 1.1: Introduction to API Pharmacopoeial Standards',
     order: 1,
     content: 'Detailed breakdown of Schedules T & Y, foreign matter limits, total ash, and acid-insoluble ash determinations.',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     duration: '15 mins',
     isCompulsory: true
   },
@@ -662,7 +661,6 @@ export const memoryLessons: MemoryLesson[] = [
     title: 'Lesson 1.2: Supercritical Extraction & Solvent Selection SOPs',
     order: 2,
     content: 'Polarity index matrices, hydro-alcoholic maceration protocols, and batch yield calculation.',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     duration: '20 mins',
     isCompulsory: true
   },
@@ -672,7 +670,6 @@ export const memoryLessons: MemoryLesson[] = [
     title: 'Lesson 2.1: HPTLC Instrumentation Calibration & Mobile Phase Setup',
     order: 1,
     content: 'CAMAG HPTLC applicator setup, chamber saturation parameters, and derivative spraying techniques.',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     duration: '25 mins',
     isCompulsory: true
   }
