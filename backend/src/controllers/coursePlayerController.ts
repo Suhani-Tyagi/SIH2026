@@ -20,6 +20,21 @@ import {
   MemoryAuditLog
 } from '../store/inMemoryStore';
 
+const COURSE_YOUTUBE_VIDEOS: Record<string, string> = {
+  'crs-1': 'https://www.youtube-nocookie.com/embed/lfXAk9rK4w8?rel=0',
+  'crs-2': 'https://www.youtube-nocookie.com/embed/fqaCEdeP4AA?rel=0',
+  'crs-3': 'https://www.youtube-nocookie.com/embed/xpfTIoDqsJw?rel=0',
+  'crs-4': 'https://www.youtube-nocookie.com/embed/v7AYKMP6rOE?rel=0',
+  'crs-5': 'https://www.youtube-nocookie.com/embed/P2R9P5NkP34?rel=0',
+  'crs-6': 'https://www.youtube-nocookie.com/embed/5MgBikgcWnY?rel=0',
+  'crs-7': 'https://www.youtube-nocookie.com/embed/fqaCEdeP4AA?rel=0',
+  'crs-8': 'https://www.youtube-nocookie.com/embed/7pQvO3oB2x4?rel=0',
+  'crs-9': 'https://www.youtube-nocookie.com/embed/4Cj7k1YF7yM?rel=0',
+  'crs-10': 'https://www.youtube-nocookie.com/embed/2uK1EJSmV0o?rel=0'
+};
+
+const courseVideoUrl = (courseId: string) => COURSE_YOUTUBE_VIDEOS[courseId] || 'https://www.youtube-nocookie.com/embed/xpfTIoDqsJw?rel=0';
+
 // Published courses must remain usable even when an industry author has not
 // supplied a bespoke module plan yet. These are full starter lessons, not blank
 // placeholders, and are also used by the serverless demo data.
@@ -28,16 +43,16 @@ const buildStarterModules = (courseId: string, courseTitle: string) => [
     id: `${courseId}-foundation`, courseId, title: 'Foundation: concepts, safety and scope', order: 1,
     summary: `Build a safe, evidence-aware foundation for ${courseTitle}.`,
     lessons: [
-      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
-      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
+      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
+      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
     ]
   },
   {
     id: `${courseId}-practice`, courseId, title: 'Applied practice and case review', order: 2,
     summary: 'Apply the framework to a supervised case and consolidate your evidence.',
     lessons: [
-      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
-      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
+      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
+      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, videoUrl: courseVideoUrl(courseId), content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
     ]
   }
 ];
@@ -119,6 +134,14 @@ export const getCourseDetailsWithModules = async (req: AuthRequest, res: Respons
     resources = resources.map((resource: any) => ({
       ...resource,
       fileUrl: String(resource.fileUrl || '').includes('dummy.pdf') ? `/assets/worksheets/${courseId}-workbook.pdf` : resource.fileUrl
+    }));
+
+    modules = modules.map((module: any) => ({
+      ...module,
+      lessons: (module.lessons || []).map((lesson: any) => ({
+        ...lesson,
+        videoUrl: lesson.videoUrl || courseVideoUrl(courseId)
+      }))
     }));
 
     // Map progress status onto lessons

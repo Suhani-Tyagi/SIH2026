@@ -36,7 +36,7 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <nav aria-label="Primary navigation" className="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           
@@ -176,6 +176,8 @@ export const Navbar: React.FC = () => {
                   <button
                     onClick={() => setNotificationsOpen(!notificationsOpen)}
                     className="p-2 text-slate-600 hover:text-emerald-800 hover:bg-slate-100 rounded-full relative transition-colors"
+                    aria-label="Open notifications"
+                    aria-expanded={notificationsOpen}
                   >
                     <Bell className="w-5 h-5" />
                     {unreadNotifications.length > 0 && (
@@ -221,6 +223,7 @@ export const Navbar: React.FC = () => {
                     }}
                     className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="Sign Out"
+                    aria-label="Sign out"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>

@@ -176,32 +176,20 @@ export const CoursePlayerPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Lesson Player & Workspace */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Self-contained guided lesson player - available on every Vercel deployment */}
+          {/* YouTube lecture player with a usable in-product fallback */}
           <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900 rounded-xl overflow-hidden shadow-md relative aspect-video flex items-center justify-center">
-            <div className="max-w-xl p-8 text-center text-white">
-              <div className="w-14 h-14 rounded-full bg-amber-400/15 border border-amber-300/40 flex items-center justify-center mx-auto mb-4">
-                <PlayCircle className="w-7 h-7 text-amber-300" />
-              </div>
-              <p className="text-[10px] font-bold tracking-[0.2em] text-amber-300 uppercase">Guided lesson studio</p>
-              <h2 className="font-bold text-lg mt-2">{activeLesson?.title || 'Select a lesson'}</h2>
-              {lessonStarted ? (
-                <div className="mt-4 text-left bg-white/10 border border-white/15 rounded-lg p-4 space-y-2 text-xs text-emerald-50">
-                  <p><strong className="text-amber-200">Learn:</strong> {activeLesson?.content}</p>
-                  <p><strong className="text-amber-200">Apply:</strong> Open the Downloads tab, complete the matching learning pack, and post one question for a mentor.</p>
-                  <button onClick={() => setActiveTab('RESOURCES')} className="underline font-bold text-amber-200">Open lesson workbook</button>
-                </div>
-              ) : <p className="text-xs text-emerald-100 mt-3 leading-relaxed">Start this guided lesson for the key instruction and a direct path to the applied workbook.</p>}
-              <button onClick={() => setLessonStarted(true)} className="mt-5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold rounded-lg">
-                {lessonStarted ? 'Guidance is open' : 'Start guided lesson'}
-              </button>
-            </div>
+            {activeLesson?.videoUrl ? <iframe src={activeLesson.videoUrl} title={`${activeLesson.title} YouTube lecture`} className="w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /> : <div className="p-8 text-center text-white">Select a lesson to play its lecture.</div>}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
+            <span className="text-stone-600">Lecture supplied through YouTube. If playback is blocked, use the detailed notes and workbook below.</span>
+            <button onClick={() => { setLessonStarted(!lessonStarted); setActiveTab('CONTENT'); }} className="font-bold text-emerald-800 underline">{lessonStarted ? 'Hide lesson notes' : 'Show lesson notes'}</button>
           </div>
 
           {/* Lesson Action Header */}
           <div className="bg-white rounded-xl p-5 border shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{activeLesson?.title || 'Module Overview'}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{activeLesson?.title || 'Module Overview'}</h2>
                 <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {activeLesson?.duration || '15 mins'}</span>
                   <span>•</span>
@@ -249,6 +237,7 @@ export const CoursePlayerPage: React.FC = () => {
             {activeTab === 'CONTENT' && (
               <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed pt-2">
                 <p>{activeLesson?.content || 'Select a lesson from the syllabus sidebar to read standard operating procedures, clinical guidelines, and industry formulation specs.'}</p>
+                {lessonStarted && <div className="mt-4 rounded-xl bg-stone-50 border border-stone-200 p-4 text-xs"><strong>Study instruction:</strong> Write down the three decisions that need evidence, one safety or ethics checkpoint, and one question to take to a mentor. The matching learning pack contains detailed notes and practice questions.</div>}
                 
                 <div className="mt-4 p-4 bg-emerald-50/50 rounded-lg border border-emerald-100">
                   <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider mb-1">Key Learning Outcomes</h4>

@@ -7,6 +7,7 @@
     "build": "cd backend && npm install && npx prisma generate && npm run build && cd ../frontend && npm install && npm run build",
     "build:backend": "cd backend && npm install && npx prisma generate && npm run build",
     "build:frontend": "cd frontend && npm install && npm run build",
+    "test": "cd backend && npx ts-node src/tests/platform.test.ts",
     "start": "cd backend && npm start",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev"
