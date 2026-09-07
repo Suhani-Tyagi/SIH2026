@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 import { BarChart3, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const InstitutionAnalyticsPage: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
 
   useEffect(() => {
-    fetch('/api/analytics/institution')
+    fetch('/api/analytics/institution', { headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` } })
       .then((res) => res.json())
       .then((resData) => setData(resData))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   if (loading) return <div className="p-8 text-center text-xs text-slate-500">Loading analytics...</div>;
 

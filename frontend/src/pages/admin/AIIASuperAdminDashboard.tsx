@@ -10,14 +10,16 @@ import {
   Legend
 } from 'recharts';
 import { Shield, Users, Building2, Briefcase, CheckCircle2, Sparkles, Download, Flame } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const AIIASuperAdminDashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [approvals, setApprovals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
 
   useEffect(() => {
-    fetch('/api/analytics/superadmin')
+    fetch('/api/analytics/superadmin', { headers: { Authorization: `Bearer ${token || localStorage.getItem('ayush_token')}` } })
       .then((res) => res.json())
       .then((resData) => {
         setData(resData);
@@ -25,7 +27,7 @@ export const AIIASuperAdminDashboard: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [token]);
 
   const handleApprove = (id: string) => {
     setApprovals((prev) => prev.filter((a) => a.id !== id));

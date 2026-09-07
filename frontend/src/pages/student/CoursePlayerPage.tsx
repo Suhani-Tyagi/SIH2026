@@ -266,11 +266,11 @@ export const CoursePlayerPage: React.FC = () => {
                         <FileText className="w-5 h-5 text-emerald-600" />
                         <div>
                           <p className="font-semibold text-gray-900">{r.title}</p>
-                          <p className="text-gray-500 text-[11px]">{r.fileType || 'PDF Document'}</p>
+                          <p className="text-gray-500 text-[11px]">{r.type || 'PDF Document'} • {r.fileSize || 'Resource'}</p>
                         </div>
                       </div>
                       <a
-                        href={r.url || '#'}
+                        href={r.fileUrl || '#'}
                         target="_blank"
                         rel="noreferrer"
                         className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-100 rounded font-medium text-gray-700"

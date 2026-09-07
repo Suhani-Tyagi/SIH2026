@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, AlertOctagon, CheckCircle2, Award, Calendar, User, BookOpen, Building2, QrCode } from 'lucide-react';
+import { ShieldCheck, AlertOctagon, CheckCircle2, Award, Calendar, User, BookOpen, Building2, QrCode, Download } from 'lucide-react';
 
 export const PublicCertificateVerificationPage: React.FC = () => {
   const { certificateId } = useParams<{ certificateId: string }>();
@@ -34,6 +34,7 @@ export const PublicCertificateVerificationPage: React.FC = () => {
 
   const cert = data?.certificate;
   const isValid = data?.isValid;
+  const printCertificate = () => window.print();
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 py-8 px-4">
@@ -69,76 +70,25 @@ export const PublicCertificateVerificationPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Certificate Details Document Card */}
+      {/* Printable certificate document */}
       {cert ? (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative">
-          {/* Top Decorative Border */}
-          <div className="h-3 bg-gradient-to-r from-emerald-800 via-amber-500 to-emerald-900"></div>
-
-          <div className="p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-6 gap-4">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Certificate Identifier</span>
-                <h3 className="text-2xl font-mono font-extrabold text-gray-900">{cert.certificateNumber}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Issued under Ministry of AYUSH Skill Standardisation Framework</p>
-              </div>
-
-              <div className="p-3 bg-gray-50 rounded-lg border text-center font-mono text-[10px] text-gray-600 space-y-1">
-                <QrCode className="w-8 h-8 mx-auto text-gray-700" />
-                <span>{cert.verificationQrToken || 'VERIFIED-QR'}</span>
-              </div>
+        <div className="space-y-3">
+          <div className="flex justify-end print:hidden"><button onClick={printCertificate} className="px-4 py-2 bg-emerald-800 text-white rounded-lg text-xs font-bold flex items-center gap-2"><Download className="w-4 h-4" /> Print / Save Certificate</button></div>
+          <div className="bg-[#fffdf5] shadow-xl border-[10px] border-emerald-900 outline outline-2 outline-amber-500 outline-offset-[-18px] overflow-hidden relative text-center px-8 py-12 sm:px-16 sm:py-16">
+            <div className="absolute top-7 left-8 text-left"><p className="text-[9px] tracking-[0.22em] font-bold text-emerald-900">MINISTRY OF AYUSH • GOVERNMENT OF INDIA</p><p className="text-[10px] text-slate-500">AIIA National Skill Framework</p></div>
+            <div className="absolute top-8 right-8 w-16 h-16 border-2 border-emerald-800 rounded-full flex items-center justify-center"><QrCode className="w-9 h-9 text-emerald-800" /></div>
+            <Award className="w-14 h-14 text-amber-600 mx-auto mb-3" />
+            <p className="text-xs uppercase tracking-[0.35em] text-emerald-800 font-bold">This is to certify that</p>
+            <h2 className="font-serif text-4xl sm:text-5xl text-emerald-950 mt-5 border-b border-amber-500 inline-block pb-2 px-8">{cert.studentName}</h2>
+            <p className="text-sm text-slate-600 mt-6">has successfully completed the industry-certified programme</p>
+            <h3 className="font-serif font-bold text-xl sm:text-2xl text-slate-900 mt-3 max-w-2xl mx-auto">{cert.courseTitle}</h3>
+            <p className="text-sm text-slate-600 mt-5">with a final assessed score of <strong className="text-emerald-800">{cert.score}%</strong>, satisfying the required 75% standard.</p>
+            <div className="mt-10 grid grid-cols-3 gap-3 text-[10px] text-slate-600">
+              <div className="border-t border-slate-400 pt-2"><strong className="block text-slate-800">{new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>Date of issue</div>
+              <div className="border-t border-slate-400 pt-2"><strong className="block text-slate-800">{cert.providerName}</strong>Issuing partner</div>
+              <div className="border-t border-slate-400 pt-2"><strong className="block text-slate-800">{cert.signatory || 'AIIA Academic Cell'}</strong>Authorised signatory</div>
             </div>
-
-            {/* Main Certificate Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-              <div className="flex items-start gap-3 p-4 bg-emerald-50/50 rounded-lg border border-emerald-100">
-                <User className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-xs text-gray-500 block">Candidate Name</span>
-                  <strong className="text-base text-gray-900">{cert.studentName}</strong>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-4 bg-emerald-50/50 rounded-lg border border-emerald-100">
-                <BookOpen className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-xs text-gray-500 block">Industry Course Program</span>
-                  <strong className="text-base text-gray-900">{cert.courseTitle}</strong>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
-                <Building2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-xs text-gray-500 block">Issuing Provider / Partner</span>
-                  <strong className="text-gray-900">{cert.providerName}</strong>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
-                <Award className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-xs text-gray-500 block">Aptitude Score & Threshold</span>
-                  <strong className="text-gray-900">{cert.score}% (Pass Threshold: 75%)</strong>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
-                <Calendar className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-xs text-gray-500 block">Issue Date</span>
-                  <strong className="text-gray-900">{new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
-                <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                <div>
-                  <span className="text-xs text-gray-500 block">Official Attestation Authority</span>
-                  <strong className="text-gray-900">{cert.signatory || 'Ministry of AYUSH & AIIA Academic Cell'}</strong>
-                </div>
-              </div>
-            </div>
+            <p className="mt-8 font-mono text-[10px] text-slate-500">Certificate No. {cert.certificateNumber} • Verification token: {cert.verificationQrToken}</p>
 
             {/* Revocation Warning if Revoked */}
             {cert.status === 'REVOKED' && (

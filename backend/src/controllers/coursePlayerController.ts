@@ -20,6 +20,38 @@ import {
   MemoryAuditLog
 } from '../store/inMemoryStore';
 
+// Published courses must remain usable even when an industry author has not
+// supplied a bespoke module plan yet. These are full starter lessons, not blank
+// placeholders, and are also used by the serverless demo data.
+const buildStarterModules = (courseId: string, courseTitle: string) => [
+  {
+    id: `${courseId}-foundation`, courseId, title: 'Foundation: concepts, safety and scope', order: 1,
+    summary: `Build a safe, evidence-aware foundation for ${courseTitle}.`,
+    lessons: [
+      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
+      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
+    ]
+  },
+  {
+    id: `${courseId}-practice`, courseId, title: 'Applied practice and case review', order: 2,
+    summary: 'Apply the framework to a supervised case and consolidate your evidence.',
+    lessons: [
+      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
+      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
+    ]
+  }
+];
+
+const buildStarterAssessment = (courseId: string, courseTitle = 'this course') => ({
+  id: `${courseId}-assessment`, courseId, title: `${courseTitle} — Final Aptitude Assessment`, passScorePercent: 75, timeLimitMinutes: 20,
+  questionsJson: JSON.stringify([
+    { id: 'q1', question: 'What is the first action before beginning a supervised AYUSH clinical or laboratory protocol?', options: ['Document identity, consent and eligibility checks', 'Skip directly to the procedure', 'Record results after completion only', 'Ask a marketing team to approve it'], correctAnswer: 'Document identity, consent and eligibility checks' },
+    { id: 'q2', question: 'Why is contemporaneous documentation important in an industry learning workflow?', options: ['It creates a traceable and reviewable record', 'It replaces quality checks', 'It is optional after certification', 'It prevents any supervisor review'], correctAnswer: 'It creates a traceable and reviewable record' },
+    { id: 'q3', question: 'When an observation falls outside the approved protocol, what is the appropriate response?', options: ['Pause, record it and escalate to the supervisor', 'Ignore it to maintain timing', 'Change the record later', 'Continue without a checklist'], correctAnswer: 'Pause, record it and escalate to the supervisor' },
+    { id: 'q4', question: 'Which evidence best supports safe completion of a learning case?', options: ['Completed checklist, observations and reflective rationale', 'Only a verbal summary', 'An unverified social-media post', 'No records are required'], correctAnswer: 'Completed checklist, observations and reflective rationale' }
+  ])
+});
+
 export const getCourseDetailsWithModules = async (req: AuthRequest, res: Response) => {
   try {
     const { courseId } = req.params;
@@ -77,6 +109,11 @@ export const getCourseDetailsWithModules = async (req: AuthRequest, res: Respons
     }
 
     if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    if (modules.length === 0) {
+      modules = buildStarterModules(courseId, course.title);
+      resources = [{ id: `${courseId}-resource`, courseId, title: 'Course workbook: protocol checklist and case reflection', type: 'WORKSHEET', fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', fileSize: '0.1 MB' }];
+    }
 
     // Map progress status onto lessons
     const progressMap = new Map(lessonProgressList.map(lp => [lp.lessonId, lp]));
@@ -239,7 +276,7 @@ export const getCourseAssessment = async (req: AuthRequest, res: Response) => {
     }
 
     if (!enrollment) return res.status(400).json({ message: 'Must be enrolled in course to take aptitude test' });
-    if (!assessment) return res.status(404).json({ message: 'No aptitude test configured for this course yet' });
+    if (!assessment) assessment = buildStarterAssessment(courseId, memoryCourses.find(c => c.id === courseId)?.title);
 
     // Strip answers from returned questions for security
     let questionsList: any[] = [];
@@ -292,7 +329,7 @@ export const submitCourseAssessment = async (req: AuthRequest, res: Response) =>
       studentUser = memoryUsers.find(u => u.id === studentId);
     }
 
-    if (!assessment) return res.status(404).json({ message: 'Aptitude test not found' });
+    if (!assessment) assessment = buildStarterAssessment(courseId, course?.title);
     if (!enrollment) return res.status(400).json({ message: 'Enrollment not found' });
 
     // Server-side grading logic

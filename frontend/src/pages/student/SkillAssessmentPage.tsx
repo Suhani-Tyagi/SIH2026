@@ -130,7 +130,7 @@ export const SkillAssessmentPage: React.FC = () => {
 
             <div className="space-y-6">
               {questions.length > 0 ? (
-                questions.slice(0, 3).map((q, idx) => (
+                questions.slice(0, 5).map((q, idx) => (
                   <div key={q.id || idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <p className="text-xs font-bold text-slate-800">
                       Q{idx + 1}. [{q.skillCategory}] {q.questionText}

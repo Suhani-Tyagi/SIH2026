@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { BookOpen, CheckCircle2, Award, Sparkles, Clock, ArrowRight } from 'lucide-react';
+import { BookOpen, CheckCircle2, Award, Clock, ArrowRight, PlayCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const LearningProgramsPage: React.FC = () => {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [busyCourseId, setBusyCourseId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const fetchCourses = () => {
     fetch('/api/courses', {
@@ -23,6 +26,7 @@ export const LearningProgramsPage: React.FC = () => {
   }, []);
 
   const handleEnroll = async (courseId: string) => {
+    setBusyCourseId(courseId);
     try {
       const res = await fetch('/api/courses/enroll', {
         method: 'POST',
@@ -33,28 +37,14 @@ export const LearningProgramsPage: React.FC = () => {
         body: JSON.stringify({ courseId })
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Unable to enrol in this course');
       setMessage(data.message || 'Enrolled successfully');
-      fetchCourses();
+      await fetchCourses();
+      navigate(`/courses/${courseId}/player`);
     } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleSimulateComplete = async (courseId: string) => {
-    try {
-      const res = await fetch('/api/courses/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('ayush_token')}`
-        },
-        body: JSON.stringify({ courseId })
-      });
-      const data = await res.json();
-      setMessage(data.message || 'Course completed!');
-      fetchCourses();
-    } catch (err) {
-      console.error(err);
+      setMessage(err instanceof Error ? err.message : 'Unable to enrol in this course');
+    } finally {
+      setBusyCourseId(null);
     }
   };
 
@@ -134,16 +124,18 @@ export const LearningProgramsPage: React.FC = () => {
                     {!course.isEnrolled && (
                       <button
                         onClick={() => handleEnroll(course.id)}
+                        disabled={busyCourseId === course.id}
                         className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition-colors"
                       >
-                        Enroll Now
+                        {busyCourseId === course.id ? 'Enrolling...' : 'Enroll Now'}
                       </button>
                     )}
                     <button
-                      onClick={() => handleSimulateComplete(course.id)}
-                      className="col-span-2 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-xl text-xs shadow-xs transition-all flex items-center justify-center gap-1.5"
+                      onClick={() => course.isEnrolled ? navigate(`/courses/${course.id}/player`) : handleEnroll(course.id)}
+                      disabled={busyCourseId === course.id}
+                      className={`${course.isEnrolled ? 'col-span-2' : ''} py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-extrabold rounded-xl text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-60`}
                     >
-                      <Sparkles className="w-4 h-4" /> Simulate Complete & Boost Radar Score
+                      <PlayCircle className="w-4 h-4" /> {course.isEnrolled ? 'Continue Learning' : 'Enrol & Start Course'}
                     </button>
                   </div>
                 )}

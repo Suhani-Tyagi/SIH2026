@@ -485,6 +485,15 @@ export const memoryQuestions: MemoryQuestion[] = [
     explanation: 'HPTLC is standard for API herb fingerprinting due to high throughput and reproducibility.',
     difficulty: 'ADVANCED',
     system: 'AYURVEDA'
+  },
+  {
+    id: 'q-3', category: 'Clinical Diagnostics', question: 'In Ashtavidha Pariksha, which examination specifically observes the patient’s voice and speech?', optionA: 'Nadi Pariksha', optionB: 'Shabda Pariksha', optionC: 'Drik Pariksha', optionD: 'Aakriti Pariksha', correctOption: 'B', explanation: 'Shabda Pariksha assesses voice, speech quality and related audible clinical signs.', difficulty: 'INTERMEDIATE', system: 'AYURVEDA'
+  },
+  {
+    id: 'q-4', category: 'Research Methodology', question: 'Which document records the planned objectives, methods and safety monitoring for a clinical study?', optionA: 'Batch manufacturing record', optionB: 'Clinical trial protocol', optionC: 'Marketing brochure', optionD: 'Discharge summary', correctOption: 'B', explanation: 'A study protocol defines the approved plan for conducting and monitoring clinical research.', difficulty: 'INTERMEDIATE', system: 'AYURVEDA'
+  },
+  {
+    id: 'q-5', category: 'QA/GMP', question: 'What is the main purpose of a batch manufacturing record in GMP operations?', optionA: 'To advertise a product', optionB: 'To document traceable production and quality checks', optionC: 'To replace laboratory testing', optionD: 'To set staff leave schedules', correctOption: 'B', explanation: 'The BMR provides traceability for materials, process steps, deviations and release checks.', difficulty: 'BEGINNER', system: 'AYURVEDA'
   }
 ];
 
@@ -585,6 +594,30 @@ export const memoryCourses: MemoryCourse[] = [
     image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600',
     description: 'Step-by-step practical masterclass covering Shirodhara, Pizhichil, Navarakizhi, Nasyam, and Vasti dosage computation according to classical Samhitas.',
     createdAt: new Date()
+  },
+  {
+    id: 'crs-3', companyId: 'usr-ind-2', providerName: 'Himalaya Clinical Learning', title: 'Good Clinical Practice (GCP) in Herbal Therapeutics', duration: '3 Weeks (15 Hours)', level: 'Beginner', price: 'Free (Ministry Sponsored)', skillsAcquired: JSON.stringify(['Research Methodology', 'Clinical Diagnostics', 'Patient Counseling']), image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600', description: 'Ethical clinical trials, protocol design, participant safety, and evidence documentation for AYUSH therapeutics.', createdAt: new Date()
+  },
+  {
+    id: 'crs-4', companyId: 'usr-ind-3', providerName: 'Patanjali Research Institute', title: 'Clinical Yoga Therapy for Lifestyle & Metabolic Disorders', duration: '5 Weeks (25 Hours)', level: 'Intermediate', price: 'Free (AIIA Partnered)', skillsAcquired: JSON.stringify(['Yoga Therapy', 'Patient Counseling', 'Research Methodology']), image: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=600', description: 'Evidence-led yoga protocol design for diabetes, hypertension, obesity, anxiety and lifestyle conditions.', createdAt: new Date()
+  },
+  {
+    id: 'crs-5', companyId: 'usr-ind-1', providerName: 'Charak Pharma Quality Institute', title: 'AYUSH Manufacturing Practices (GMP) & Regulatory Compliance', duration: '4 Weeks (20 Hours)', level: 'Advanced', price: 'Free', skillsAcquired: JSON.stringify(['QA/QC & GMP Compliance', 'AYUSH Regulatory Standards', 'Herbal Formulation']), image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600', description: 'Schedule T, quality systems, batch records, stability testing and regulatory inspection readiness.', createdAt: new Date()
+  },
+  {
+    id: 'crs-6', companyId: 'usr-ind-1', providerName: 'KAPL Global Academy', title: 'International Export Compliance & Herbal Dossier Writing', duration: '4 Weeks (18 Hours)', level: 'Advanced', price: 'Free', skillsAcquired: JSON.stringify(['AYUSH Regulatory Standards', 'QA/QC & GMP Compliance']), image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600', description: 'Build export-ready botanical dossiers, labeling evidence and market-specific compliance packs.', createdAt: new Date()
+  },
+  {
+    id: 'crs-7', companyId: 'usr-ind-3', providerName: 'Kottakkal Learning Division', title: 'Pulse Diagnosis (Nadi Pariksha) & Ashtavidha Pariksha', duration: '3 Weeks (12 Hours)', level: 'Intermediate', price: 'Free', skillsAcquired: JSON.stringify(['Nadi Pariksha', 'Clinical Diagnostics', 'Patient Counseling']), image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=600', description: 'Structured diagnostic observation and supervised clinical reasoning through classical examination methods.', createdAt: new Date()
+  },
+  {
+    id: 'crs-8', companyId: 'usr-ind-2', providerName: 'Soukya Holistic Institute', title: 'Holistic Patient Counseling & Integrative Communication', duration: '2 Weeks (10 Hours)', level: 'Beginner', price: 'Free', skillsAcquired: JSON.stringify(['Patient Counseling', 'Clinical Diagnostics']), image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600', description: 'Practical, ethical communication for shared decision-making, lifestyle support and patient follow-up.', createdAt: new Date()
+  },
+  {
+    id: 'crs-9', companyId: 'usr-ind-1', providerName: 'Dabur Research Academy', title: 'Safety Evaluation & In-Vitro Assays for Botanical Drugs', duration: '5 Weeks (25 Hours)', level: 'Advanced', price: 'Free', skillsAcquired: JSON.stringify(['Research Methodology', 'Phytochemistry', 'QA/QC & GMP Compliance']), image: 'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600', description: 'Learn safety screening, assay planning, data integrity and interpretation for botanical research.', createdAt: new Date()
+  },
+  {
+    id: 'crs-10', companyId: 'usr-ind-1', providerName: 'Patanjali Research Institute', title: 'Scientific Writing & Publishing in AYUSH Journals', duration: '3 Weeks (15 Hours)', level: 'Intermediate', price: 'Free', skillsAcquired: JSON.stringify(['Research Methodology', 'Scientific Communication']), image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600', description: 'Prepare robust AYUSH manuscripts, use reporting guidelines and respond professionally to peer review.', createdAt: new Date()
   }
 ];
 

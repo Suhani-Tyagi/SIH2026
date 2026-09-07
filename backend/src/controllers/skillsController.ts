@@ -59,10 +59,36 @@ export const getAssessmentQuestions = async (req: Request, res: Response) => {
             ...(category ? { skillCategory: String(category) } : {})
           }
         });
-        if (questions.length > 0) return res.json({ questions });
+        // A compact database may contain only the original two seed questions.
+        // Supplement it with the maintained fallback bank so the assessment is
+        // always a meaningful five-question experience.
+        if (questions.length >= 5) return res.json({ questions });
+        if (questions.length > 0) {
+          const existingCategories = new Set(questions.map(q => q.skillCategory));
+          const supplement = memoryQuestions.filter(q => !existingCategories.has(q.category)).map((q) => ({
+            id: q.id, discipline: q.system, skillCategory: q.category, questionText: q.question,
+            options: [q.optionA, q.optionB, q.optionC, q.optionD], correctAnswer: q.correctOption,
+            explanation: q.explanation, difficulty: q.difficulty
+          }));
+          return res.json({ questions: [...questions, ...supplement].slice(0, 5) });
+        }
       } catch (e) {}
     }
-    return res.json({ questions: memoryQuestions });
+    // Keep the fallback question bank on the same public contract as Prisma.
+    // The former memory records use optionA..optionD while the UI consumes an
+    // options array, which made every question appear blank in serverless mode.
+    return res.json({
+      questions: memoryQuestions.map((q) => ({
+        id: q.id,
+        discipline: q.system,
+        skillCategory: q.category,
+        questionText: q.question,
+        options: [q.optionA, q.optionB, q.optionC, q.optionD],
+        correctAnswer: q.correctOption,
+        explanation: q.explanation,
+        difficulty: q.difficulty
+      }))
+    });
   } catch (error: any) {
     return res.status(500).json({ message: error.message || 'Server error' });
   }
