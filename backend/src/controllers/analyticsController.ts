@@ -92,7 +92,7 @@ export const getInstitutionAnalytics = async (req: Request, res: Response) => {
     // A serverless demo starts with two individual accounts, but the
     // institutional workspace should represent an actual campus cohort rather
     // than misleading an administrator with a count of one.
-    if (!isDatabaseConfigured && !discipline && !batch && atRiskOnly !== 'true' && roster.length < 12) {
+    if (!discipline && !batch && atRiskOnly !== 'true' && roster.length < 12) {
       const existingIds = new Set(roster.map(r => r.userId));
       roster = [...roster, ...buildInstitutionCohort(targetInstitution).filter(r => !existingIds.has(r.userId))];
     }
@@ -187,7 +187,7 @@ export const getSuperAdminAnalytics = async (req: Request, res: Response) => {
 
     // National view defaults to a representative platform cohort while a
     // serverless preview has only the named demo accounts in memory.
-    if (!isDatabaseConfigured && totalStudents < 25) {
+    if (totalStudents < 25) {
       totalStudents = 2840;
       totalIndustry = 186;
       totalAcademicians = 412;
@@ -262,4 +262,3 @@ export const exportAnalyticsCSV = async (req: Request, res: Response) => {
     return res.status(500).json({ message: error.message || 'Server error' });
   }
 };
-

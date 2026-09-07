@@ -28,16 +28,16 @@ const buildStarterModules = (courseId: string, courseTitle: string) => [
     id: `${courseId}-foundation`, courseId, title: 'Foundation: concepts, safety and scope', order: 1,
     summary: `Build a safe, evidence-aware foundation for ${courseTitle}.`,
     lessons: [
-      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
-      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
+      { id: `${courseId}-l1`, title: 'Orientation and learning outcomes', order: 1, duration: '12 mins', isCompulsory: true, content: `Welcome to ${courseTitle}. This lesson explains the clinical or laboratory context, expected competencies, professional boundaries and how the course assessment is evaluated.` },
+      { id: `${courseId}-l2`, title: 'Standards, documentation and safe practice', order: 2, duration: '18 mins', isCompulsory: true, content: 'Study the required quality checks, record keeping, consent, adverse-event escalation and the relevant AYUSH/industry standard operating procedures before applying a protocol.' }
     ]
   },
   {
     id: `${courseId}-practice`, courseId, title: 'Applied practice and case review', order: 2,
     summary: 'Apply the framework to a supervised case and consolidate your evidence.',
     lessons: [
-      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
-      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, videoUrl: 'https://www.youtube.com/embed/2e0k3Yw0YbQ', content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
+      { id: `${courseId}-l3`, title: 'Guided protocol walkthrough', order: 1, duration: '20 mins', isCompulsory: true, content: 'Follow the workflow step by step: prepare materials, verify the checklist, document observations, interpret findings and identify when referral or supervisor review is required.' },
+      { id: `${courseId}-l4`, title: 'Case study, reflection and assessment preparation', order: 2, duration: '15 mins', isCompulsory: true, content: 'Review a realistic case scenario, compare your decisions to the model answer, note gaps in your evidence and revise the key controls before attempting the final aptitude assessment.' }
     ]
   }
 ];
@@ -110,21 +110,31 @@ export const getCourseDetailsWithModules = async (req: AuthRequest, res: Respons
 
     if (!course) return res.status(404).json({ message: 'Course not found' });
 
-    if (modules.length === 0) {
+    const usesStarterModules = modules.length === 0;
+    if (usesStarterModules) {
       modules = buildStarterModules(courseId, course.title);
-      resources = [{ id: `${courseId}-resource`, courseId, title: 'Course workbook: protocol checklist and case reflection', type: 'WORKSHEET', fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', fileSize: '0.1 MB' }];
+      resources = [{ id: `${courseId}-resource`, courseId, title: 'Course workbook: protocol checklist and case reflection', type: 'WORKSHEET', fileUrl: `/assets/worksheets/${courseId}-workbook.pdf`, fileSize: '3 KB' }];
     }
+
+    resources = resources.map((resource: any) => ({
+      ...resource,
+      fileUrl: String(resource.fileUrl || '').includes('dummy.pdf') ? `/assets/worksheets/${courseId}-workbook.pdf` : resource.fileUrl
+    }));
 
     // Map progress status onto lessons
     const progressMap = new Map(lessonProgressList.map(lp => [lp.lessonId, lp]));
     let totalLessonsCount = 0;
     let completedLessonsCount = 0;
 
+    const starterCompletedCount = usesStarterModules ? Math.round((enrollment?.progressPercent || 0) / 25) : 0;
     const modulesWithProgress = modules.map((mod: any, mIdx: number) => {
       const lessonsWithStatus = (mod.lessons || []).map((les: any, lIdx: number) => {
         totalLessonsCount++;
         const prog = progressMap.get(les.id);
-        let status = prog ? prog.status : (mIdx === 0 && lIdx === 0 ? 'AVAILABLE' : 'LOCKED');
+        const lessonNumber = totalLessonsCount;
+        let status = prog ? prog.status : usesStarterModules
+          ? (lessonNumber <= starterCompletedCount ? 'COMPLETED' : lessonNumber === starterCompletedCount + 1 ? 'AVAILABLE' : 'LOCKED')
+          : (mIdx === 0 && lIdx === 0 ? 'AVAILABLE' : 'LOCKED');
         if (status === 'COMPLETED') completedLessonsCount++;
         return {
           ...les,
@@ -176,6 +186,17 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
         });
         if (!enrollment) return res.status(400).json({ message: 'Must be enrolled in course first' });
 
+        // Starter course lessons are intentionally generated at runtime for
+        // legacy published courses. Persist their progress on the enrollment
+        // itself rather than attempting to create a foreign-key record for a
+        // generated lesson id.
+        if (lessonId.startsWith(`${courseId}-l`)) {
+          const lessonNumber = Number(lessonId.split('-l').pop()) || 1;
+          const percent = Math.min(100, Math.max(enrollment.progressPercent || 0, lessonNumber * 25));
+          await prisma.enrollment.update({ where: { id: enrollment.id }, data: { progressPercent: percent } });
+          return res.json({ message: 'Lesson marked complete', progressPercent: percent });
+        }
+
         let prog = await prisma.lessonProgress.findFirst({
           where: { enrollmentId: enrollment.id, lessonId }
         });
@@ -222,6 +243,13 @@ export const updateLessonProgress = async (req: AuthRequest, res: Response) => {
     // Memory Fallback
     const memEnr = memoryEnrollments.find(e => e.courseId === courseId && e.studentId === studentId);
     if (!memEnr) return res.status(400).json({ message: 'Must be enrolled in course first' });
+
+    if (lessonId.startsWith(`${courseId}-l`)) {
+      const lessonNumber = Number(lessonId.split('-l').pop()) || 1;
+      const percent = Math.min(100, Math.max(memEnr.progressPercent || 0, lessonNumber * 25));
+      memEnr.progressPercent = percent;
+      return res.json({ message: 'Lesson marked complete', progressPercent: percent });
+    }
 
     let memProg = memoryLessonProgress.find(lp => lp.enrollmentId === memEnr.id && lp.lessonId === lessonId);
     if (!memProg) {

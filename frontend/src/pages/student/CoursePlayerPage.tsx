@@ -28,6 +28,7 @@ export const CoursePlayerPage: React.FC = () => {
   const [activeLesson, setActiveLesson] = useState<any>(null);
   const [updating, setUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState<'CONTENT' | 'RESOURCES' | 'QA'>('CONTENT');
+  const [lessonStarted, setLessonStarted] = useState(false);
 
   // Q&A state
   const [questions, setQuestions] = useState<{ author: string; role: string; text: string; date: string }[]>([
@@ -87,6 +88,9 @@ export const CoursePlayerPage: React.FC = () => {
       });
       if (res.ok) {
         await fetchCourseDetails();
+      } else {
+        const data = await res.json();
+        window.alert(data.message || 'Unable to save lesson progress. Please try again.');
       }
     } catch (e) {
       console.error(e);
@@ -172,23 +176,19 @@ export const CoursePlayerPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Lesson Player & Workspace */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Media / Video Player Box */}
-          <div className="bg-gray-900 rounded-xl overflow-hidden shadow-md relative aspect-video flex items-center justify-center">
-            {activeLesson?.videoUrl ? (
-              <iframe
-                src={activeLesson.videoUrl}
-                title={activeLesson.title}
-                className="w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            ) : (
-              <div className="p-8 text-center text-gray-300">
-                <PlayCircle className="w-16 h-16 text-emerald-400 mx-auto mb-2 opacity-80" />
-                <p className="font-semibold text-lg">{activeLesson?.title || 'Select a Lesson'}</p>
-                <p className="text-xs text-gray-400 mt-1">Interactive Clinical & Standardisation Module</p>
+          {/* Self-contained guided lesson player - available on every Vercel deployment */}
+          <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900 rounded-xl overflow-hidden shadow-md relative aspect-video flex items-center justify-center">
+            <div className="max-w-xl p-8 text-center text-white">
+              <div className="w-14 h-14 rounded-full bg-amber-400/15 border border-amber-300/40 flex items-center justify-center mx-auto mb-4">
+                <PlayCircle className="w-7 h-7 text-amber-300" />
               </div>
-            )}
+              <p className="text-[10px] font-bold tracking-[0.2em] text-amber-300 uppercase">Guided lesson studio</p>
+              <h2 className="font-bold text-lg mt-2">{activeLesson?.title || 'Select a lesson'}</h2>
+              <p className="text-xs text-emerald-100 mt-3 leading-relaxed">{lessonStarted ? activeLesson?.content : 'Start the guided lesson to reveal the instruction, then use the reading, workbook and mentor forum to apply it.'}</p>
+              <button onClick={() => setLessonStarted(true)} className="mt-5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-emerald-950 text-xs font-bold rounded-lg">
+                {lessonStarted ? 'Lesson guidance open' : 'Start guided lesson'}
+              </button>
+            </div>
           </div>
 
           {/* Lesson Action Header */}
@@ -339,7 +339,7 @@ export const CoursePlayerPage: React.FC = () => {
                     return (
                       <button
                         key={les.id || lIdx}
-                        onClick={() => !isLocked && setActiveLesson(les)}
+                        onClick={() => { if (!isLocked) { setActiveLesson(les); setLessonStarted(false); } }}
                         disabled={isLocked}
                         className={`w-full text-left p-3 text-xs flex items-center justify-between transition ${
                           isActive ? 'bg-emerald-50/80 border-l-4 border-emerald-600 font-semibold' : 'hover:bg-gray-50'
