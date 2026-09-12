@@ -29,7 +29,18 @@ export const getOpportunities = async (req: AuthRequest, res: Response) => {
     if (oppList.length === 0) {
       oppList = memoryOpportunities.filter(opp => {
         if (type && type !== 'ALL' && opp.type !== type) return false;
-        if (system && system !== 'ALL' && opp.system !== system) return false;
+        if (system && system !== 'ALL') {
+          const sysReq = String(system).toUpperCase().trim();
+          const oppSys = String(opp.system || 'AYURVEDA').toUpperCase().trim();
+          const isHomeoReq = sysReq.includes('HOMEO') || sysReq.includes('HOMOEO');
+          const isHomeoOpp = oppSys.includes('HOMEO') || oppSys.includes('HOMOEO');
+
+          if (isHomeoReq) {
+            if (!isHomeoOpp && oppSys !== 'ALL') return false;
+          } else if (oppSys !== sysReq && oppSys !== 'ALL') {
+            return false;
+          }
+        }
         if (mode && mode !== 'ALL' && opp.mode !== mode) return false;
         if (search) {
           const q = String(search).toLowerCase();

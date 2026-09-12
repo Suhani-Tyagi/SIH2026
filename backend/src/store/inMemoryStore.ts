@@ -491,6 +491,54 @@ export const memoryJobRoles: MemoryJobRole[] = [
     marketDemand: 'HIGH',
     avgSalaryRange: '₹7.0 - ₹14.0 LPA',
     createdAt: new Date()
+  },
+  {
+    id: 'jr-4',
+    title: 'Clinical Yoga & Naturopathy Specialist',
+    category: 'CLINICAL',
+    system: 'YOGA',
+    description: 'Designs therapeutic Asana, Pranayama, Hydrotherapy, and Naturopathy diet plans for lifestyle and psychosomatic conditions.',
+    requiredSkills: JSON.stringify(['Yoga Therapy', 'Clinical Diagnostics', 'Patient Counseling', 'Research Methodology']),
+    eligibilityDegrees: JSON.stringify(['BNYS', 'M.Sc Yoga', 'MD (Naturopathy)']),
+    marketDemand: 'VERY_HIGH',
+    avgSalaryRange: '₹6.0 - ₹11.5 LPA',
+    createdAt: new Date()
+  },
+  {
+    id: 'jr-5',
+    title: 'Unani Regimenal Therapy Specialist',
+    category: 'CLINICAL',
+    system: 'UNANI',
+    description: 'Administers classical Ilaj-bit-Tadbeer protocols including Hijama, Cupping, Dalk, and Unani compound drug therapy.',
+    requiredSkills: JSON.stringify(['Unani Regimenal Therapy', 'Clinical Diagnostics', 'Patient Counseling', 'Phytochemistry']),
+    eligibilityDegrees: JSON.stringify(['BUMS', 'MD (Unani)']),
+    marketDemand: 'HIGH',
+    avgSalaryRange: '₹5.8 - ₹10.5 LPA',
+    createdAt: new Date()
+  },
+  {
+    id: 'jr-6',
+    title: 'Siddha Maruthuvam & Varmam Specialist',
+    category: 'CLINICAL',
+    system: 'SIDDHA',
+    description: 'Diagnoses through Naadi & Neerkuri, administers Varmam vital point stimulation, and prescribes classical Gunapadam medicines.',
+    requiredSkills: JSON.stringify(['Siddha Varmam', 'Clinical Diagnostics', 'Patient Counseling', 'Herbal Formulation']),
+    eligibilityDegrees: JSON.stringify(['BSMS', 'MD (Siddha)']),
+    marketDemand: 'HIGH',
+    avgSalaryRange: '₹6.2 - ₹11.0 LPA',
+    createdAt: new Date()
+  },
+  {
+    id: 'jr-7',
+    title: 'Homoeopathic Medical Officer & Potentization Lead',
+    category: 'CLINICAL',
+    system: 'HOMEOPATHY',
+    description: 'Conducts classical case taking, Miasmatic evaluation, computer-assisted Repertorization, and oversees mother tincture QA.',
+    requiredSkills: JSON.stringify(['Repertory & Case Taking', 'Clinical Diagnostics', 'Patient Counseling', 'QA/QC & GMP Compliance']),
+    eligibilityDegrees: JSON.stringify(['BHMS', 'MD (Homoeopathy)']),
+    marketDemand: 'VERY_HIGH',
+    avgSalaryRange: '₹6.0 - ₹12.0 LPA',
+    createdAt: new Date()
   }
 ];
 
@@ -533,6 +581,7 @@ export const memoryQuestions: MemoryQuestion[] = [
 ];
 
 export const memoryOpportunities: MemoryOpportunity[] = [
+  // AYURVEDA OPPORTUNITIES
   {
     id: 'opp-1',
     companyId: 'usr-ind-1',
@@ -576,6 +625,196 @@ export const memoryOpportunities: MemoryOpportunity[] = [
     mode: 'ONSITE',
     duration: 'Full Time',
     description: 'Direct patient care at Kerala Ayurveda flagship resort and hospital. Oversee classical Shodhana therapies.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-ayur-4',
+    companyId: 'usr-ind-1',
+    companyName: 'Baidyanath Ayurveda',
+    title: 'Ayurvedic Pharmacovigilance & Quality Officer',
+    type: 'JOB',
+    system: 'AYURVEDA',
+    skillsRequired: JSON.stringify(['QA/QC & GMP Compliance', 'AYUSH Regulatory Standards', 'Clinical Diagnostics']),
+    stipend: '₹5.8 - ₹7.5 LPA',
+    location: 'Kolkata, WB',
+    mode: 'ONSITE',
+    duration: 'Full Time',
+    description: 'Oversee classical batch safety records, heavy metal testing compliance, and adverse drug event reporting under Ministry of AYUSH norms.',
+    createdAt: new Date()
+  },
+
+  // YOGA & NATUROPATHY (BNYS) OPPORTUNITIES
+  {
+    id: 'opp-yoga-1',
+    companyId: 'usr-ind-2',
+    companyName: 'Patanjali Research Institute',
+    title: 'Clinical Yoga Therapist & Metabolic Wellness Specialist',
+    type: 'JOB',
+    system: 'YOGA',
+    skillsRequired: JSON.stringify(['Yoga Therapy', 'Patient Counseling', 'Clinical Diagnostics', 'Research Methodology']),
+    stipend: '₹6.0 - ₹9.0 LPA',
+    location: 'Haridwar, Uttarakhand',
+    mode: 'ONSITE',
+    duration: 'Full Time',
+    description: 'Design clinical yoga and Naturopathy intervention protocols for Type-2 Diabetes, Hypertension, and Metabolic Syndrome patients.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-yoga-2',
+    companyId: 'usr-ind-1',
+    companyName: 'Morarji Desai National Institute of Yoga (MDNIY)',
+    title: 'Yoga & Naturopathy Clinical Research Fellow (BNYS)',
+    type: 'INTERNSHIP',
+    system: 'YOGA',
+    skillsRequired: JSON.stringify(['Yoga Therapy', 'Research Methodology', 'Patient Counseling', 'Good Clinical Practice (GCP)']),
+    stipend: '₹25,000 / month',
+    location: 'New Delhi',
+    mode: 'HYBRID',
+    duration: '6 Months',
+    description: 'Conduct physiological and electro-encephalographic (EEG) impact measurements on clinical yoga practitioners under Ministry guidelines.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-yoga-3',
+    companyId: 'usr-ind-3',
+    companyName: 'Soukya Holistic Health Centre',
+    title: 'Integrative Naturopathy & Hydrotherapy Medical Officer',
+    type: 'JOB',
+    system: 'YOGA',
+    skillsRequired: JSON.stringify(['Yoga Therapy', 'Clinical Diagnostics', 'Patient Counseling']),
+    stipend: '₹7.0 - ₹11.0 LPA',
+    location: 'Bengaluru, Karnataka',
+    mode: 'ONSITE',
+    duration: 'Full Time',
+    description: 'Oversee holistic BNYS treatments including Hydrotherapy, Mud Therapy, Dietetics, and Therapeutic Asana routines in an international resort clinic.',
+    createdAt: new Date()
+  },
+
+  // UNANI MEDICINE (BUMS) OPPORTUNITIES
+  {
+    id: 'opp-unani-1',
+    companyId: 'usr-ind-1',
+    companyName: 'Hamdard Laboratories India',
+    title: 'Unani Ilaj-bit-Tadbeer Clinical Specialist',
+    type: 'JOB',
+    system: 'UNANI',
+    skillsRequired: JSON.stringify(['Unani Regimenal Therapy', 'Clinical Diagnostics', 'Patient Counseling', 'Phytochemistry']),
+    stipend: '₹6.2 - ₹8.8 LPA',
+    location: 'New Delhi / Manesar',
+    mode: 'ONSITE',
+    duration: 'Full Time',
+    description: 'Lead classical Unani Regimenal Therapy (Hijama, Cupping, Hamam, and Dalk) administration for chronic inflammatory and musculoskeletal conditions.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-unani-2',
+    companyId: 'usr-ind-2',
+    companyName: 'Central Council for Research in Unani Medicine (CCRUM)',
+    title: 'Unani Phytotherapy & Drug Standardization Fellow (BUMS)',
+    type: 'INTERNSHIP',
+    system: 'UNANI',
+    skillsRequired: JSON.stringify(['Phytochemistry', 'Research Methodology', 'QA/QC & GMP Compliance']),
+    stipend: '₹24,000 / month',
+    location: 'Hyderabad, Telangana',
+    mode: 'ONSITE',
+    duration: '6 Months',
+    description: 'Assist in single and compound Unani pharmacopoeial drug standardization, thin-layer chromatography, and marker identification.',
+    createdAt: new Date()
+  },
+
+  // SIDDHA MEDICINE (BSMS) OPPORTUNITIES
+  {
+    id: 'opp-siddha-1',
+    companyId: 'usr-ind-3',
+    companyName: 'National Institute of Siddha (NIS)',
+    title: 'Siddha Maruthuvam & Gunapadam Clinical Specialist',
+    type: 'JOB',
+    system: 'SIDDHA',
+    skillsRequired: JSON.stringify(['Siddha Varmam', 'Clinical Diagnostics', 'Patient Counseling', 'Herbal Formulation']),
+    stipend: '₹6.5 - ₹9.5 LPA',
+    location: 'Chennai, Tamil Nadu',
+    mode: 'ONSITE',
+    duration: 'Full Time',
+    description: 'Manage OPD/IPD consultations utilizing Naadi Parikshai, Neerkuri, and classical Siddha Pariksha; administer Varmam and Thokkanam therapies.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-siddha-2',
+    companyId: 'usr-ind-1',
+    companyName: 'SKM Siddha & Ayurvedic Medicines',
+    title: 'Siddha Herbal Formulations R&D Intern (BSMS)',
+    type: 'INTERNSHIP',
+    system: 'SIDDHA',
+    skillsRequired: JSON.stringify(['Herbal Formulation', 'QA/QC & GMP Compliance', 'Phytochemistry']),
+    stipend: '₹20,000 / month',
+    location: 'Erode, Tamil Nadu',
+    mode: 'HYBRID',
+    duration: '6 Months',
+    description: 'Standardize classical Siddha Parpam, Chendooram, and Chooranam preparations under GMP and heavy metal compliance norms.',
+    createdAt: new Date()
+  },
+
+  // HOMOEOPATHY (BHMS) OPPORTUNITIES
+  {
+    id: 'opp-homeo-1',
+    companyId: 'usr-ind-1',
+    companyName: 'SBL Global Homoeopathy Ltd.',
+    title: 'Homoeopathic Potentization & QA/QC Specialist',
+    type: 'JOB',
+    system: 'HOMEOPATHY',
+    skillsRequired: JSON.stringify(['QA/QC & GMP Compliance', 'Phytochemistry', 'Research Methodology']),
+    stipend: '₹6.0 - ₹8.5 LPA',
+    location: 'Jaipur, Rajasthan',
+    mode: 'ONSITE',
+    duration: 'Full Time',
+    description: 'Supervise mother tincture extraction, decimal/centesimal dilution potentization, alcohol purity testing, and finished product quality release.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-homeo-2',
+    companyId: 'usr-ind-2',
+    companyName: "Dr. Batra's Healthcare",
+    title: 'Clinical Homoeopathy Resident Physician (BHMS)',
+    type: 'INTERNSHIP',
+    system: 'HOMEOPATHY',
+    skillsRequired: JSON.stringify(['Clinical Diagnostics', 'Patient Counseling', 'Repertory & Case Taking']),
+    stipend: '₹22,500 / month',
+    location: 'Mumbai, Maharashtra',
+    mode: 'ONSITE',
+    duration: '6 Months',
+    description: 'Perform detailed classical case taking, Miasmatic analysis, computer-assisted Repertorization, and follow-up evaluation in a multi-specialty Homoeopathy clinic.',
+    createdAt: new Date()
+  },
+  {
+    id: 'opp-homeo-3',
+    companyId: 'usr-ind-3',
+    companyName: 'National Institute of Homoeopathy (NIH)',
+    title: 'Homoeopathic Repertory & Pharmacovigilance Fellow',
+    type: 'JOB',
+    system: 'HOMEOPATHY',
+    skillsRequired: JSON.stringify(['Research Methodology', 'Good Clinical Practice (GCP)', 'Patient Counseling']),
+    stipend: '₹7.0 - ₹10.0 LPA',
+    location: 'Kolkata, WB',
+    mode: 'HYBRID',
+    duration: 'Full Time',
+    description: 'Document clinical proving data, Repertorial synthesis, and drug safety signal monitoring under Central Council for Research in Homoeopathy (CCRH).',
+    createdAt: new Date()
+  },
+
+  // ALL AYUSH DISCIPLINES / INTERDISCIPLINARY
+  {
+    id: 'opp-all-1',
+    companyId: 'usr-ind-1',
+    companyName: 'Ministry of AYUSH & AIIA Centre of Excellence',
+    title: 'National Interdisciplinary AYUSH Clinical Trial Fellow',
+    type: 'INTERNSHIP',
+    system: 'ALL',
+    skillsRequired: JSON.stringify(['Research Methodology', 'Good Clinical Practice (GCP)', 'Clinical Diagnostics', 'Patient Counseling']),
+    stipend: '₹30,000 / month',
+    location: 'New Delhi',
+    mode: 'HYBRID',
+    duration: '6 Months',
+    description: 'Prestigious national fellowship for top BAMS, BNYS, BUMS, BSMS, and BHMS graduates to conduct multi-center integrative health research.',
     createdAt: new Date()
   }
 ];
@@ -653,6 +892,15 @@ export const memoryCourses: MemoryCourse[] = [
   },
   {
     id: 'crs-10', companyId: 'usr-ind-1', providerName: 'Patanjali Research Institute', title: 'Scientific Writing & Publishing in AYUSH Journals', duration: '3 Weeks (15 Hours)', level: 'Intermediate', price: 'Free', skillsAcquired: JSON.stringify(['Research Methodology', 'Scientific Communication']), image: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600', description: 'Prepare robust AYUSH manuscripts, use reporting guidelines and respond professionally to peer review.', createdAt: new Date()
+  },
+  {
+    id: 'crs-11', companyId: 'usr-ind-1', providerName: 'Hamdard Unani Academy', title: 'Classical Unani Formulation & Regimenal Therapy SOPs', duration: '4 Weeks (20 Hours)', level: 'Intermediate', price: 'Free', skillsAcquired: JSON.stringify(['Unani Regimenal Therapy', 'Phytochemistry', 'Clinical Diagnostics']), image: 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=600', description: 'Master classical Unani Ilaj-bit-Tadbeer protocols, Hijama cupping standards, and Kushta standardization.', createdAt: new Date()
+  },
+  {
+    id: 'crs-12', companyId: 'usr-ind-3', providerName: 'NIS Siddha Academy', title: 'Siddha Gunapadam & Varmam Clinical Applications', duration: '5 Weeks (25 Hours)', level: 'Advanced', price: 'Free', skillsAcquired: JSON.stringify(['Siddha Varmam', 'Clinical Diagnostics', 'Herbal Formulation']), image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600', description: 'In-depth clinical masterclass on Siddha vital Varmam point manipulation, Thokkanam massage, and Gunapadam formulation.', createdAt: new Date()
+  },
+  {
+    id: 'crs-13', companyId: 'usr-ind-2', providerName: 'SBL Homoeopathy Institute', title: 'Homoeopathic Potentization & Case Repertorization', duration: '4 Weeks (18 Hours)', level: 'Intermediate', price: 'Free', skillsAcquired: JSON.stringify(['Repertory & Case Taking', 'QA/QC & GMP Compliance', 'Clinical Diagnostics']), image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600', description: 'Learn decimal/centesimal scale potentization techniques, mother tincture quality testing, and radar repertory synthesis.', createdAt: new Date()
   }
 ];
 
