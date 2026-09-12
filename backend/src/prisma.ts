@@ -21,6 +21,8 @@ export function getCleanDatabaseUrl(): string | null {
     clean.includes('dummy') ||
     clean.includes('placeholder') ||
     clean.includes('ep-placeholder') ||
+    clean.includes('ep-damp-flower') ||
+    clean.includes('ep-damp') ||
     (!clean.startsWith('postgres://') && !clean.startsWith('postgresql://'))
   ) {
     return null;

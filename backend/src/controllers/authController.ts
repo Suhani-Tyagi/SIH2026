@@ -7,6 +7,32 @@ import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, s
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+async function findUserByEmail(cleanEmail: string) {
+  // 1. Check in-memory / persistent file store first for fast, reliable lookup
+  const memUser = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  if (memUser) {
+    const memProfile = memoryStudentProfiles.find(p => p.userId === memUser.id);
+    return { source: 'MEMORY', user: memUser, profile: memProfile || null };
+  }
+
+  // 2. Check Prisma DB if configured
+  if (isDatabaseConfigured) {
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: cleanEmail },
+        include: { studentProfile: true }
+      });
+      if (dbUser) {
+        return { source: 'DB', user: dbUser, profile: dbUser.studentProfile || null };
+      }
+    } catch (e) {
+      console.warn('Prisma DB lookup error in findUserByEmail:', e);
+    }
+  }
+
+  return null;
+}
+
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, name, role, system, institutionName, companyName, designation, degree } = req.body;
@@ -40,16 +66,20 @@ export const register = async (req: Request, res: Response) => {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // Try Prisma DB first
+    // Check unified account lookup
+    const existing = await findUserByEmail(cleanEmail);
+    if (existing) {
+      return res.status(409).json({ message: `An account with the email "${cleanEmail}" already exists. Please sign in instead.` });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    let userRecord: any = null;
+    let studentProfData: any = null;
+
+    // Attempt Prisma DB insert if configured
     if (isDatabaseConfigured) {
       try {
         await ensureTablesExist();
-        const existingUser = await prisma.user.findUnique({ where: { email: cleanEmail } });
-        if (existingUser) {
-          return res.status(409).json({ message: `An account with the email "${cleanEmail}" already exists. Please sign in instead.` });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
           data: {
             email: cleanEmail,
@@ -64,7 +94,6 @@ export const register = async (req: Request, res: Response) => {
           }
         });
 
-        let studentProfData: any = null;
         if (user.role === 'STUDENT') {
           studentProfData = await prisma.studentProfile.create({
             data: {
@@ -86,61 +115,15 @@ export const register = async (req: Request, res: Response) => {
             }
           });
         }
-
-        // Sync to memory store so lookups succeed even during DB fallback
-        if (!memoryUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
-          memoryUsers.push({
-            id: user.id,
-            email: cleanEmail,
-            password: hashedPassword,
-            name: user.name,
-            role: user.role as any,
-            system: user.system,
-            institutionName: user.institutionName || undefined,
-            companyName: user.companyName || undefined,
-            designation: user.designation || undefined,
-            avatar: user.avatar || undefined,
-            createdAt: user.createdAt
-          });
-          if (user.role === 'STUDENT' && studentProfData) {
-            memoryStudentProfiles.push({
-              id: studentProfData.id,
-              userId: user.id,
-              degree: studentProfData.degree,
-              passoutYear: studentProfData.passoutYear,
-              readinessScore: studentProfData.readinessScore,
-              bio: 'Student registered on AYUSH Setu platform.',
-              phone: '+91 98765 00000',
-              location: 'New Delhi, India',
-              skillScores: studentProfData.skillScores,
-              verifiedBadges: studentProfData.verifiedBadges,
-              careerGoals: JSON.stringify(['Herbal Formulation Scientist'])
-            });
-          }
-          saveMemoryStoreToDisk();
-        }
-
-        const token = jwt.sign(
-          { id: user.id, email: user.email, role: user.role, name: user.name },
-          JWT_SECRET,
-          { expiresIn: '7d' }
-        );
-
-        return res.status(201).json({ message: 'Registration successful!', token, user });
+        userRecord = user;
       } catch (dbErr: any) {
         console.warn('Prisma DB unavailable during registration, utilizing memory fallback:', dbErr?.message);
       }
     }
 
-    // Memory Store Fallback
-    const existingMemUser = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
-    if (existingMemUser) {
-      return res.status(409).json({ message: `An account with the email "${cleanEmail}" already exists. Please sign in instead.` });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Always ensure account is saved in persistent memory store
     const newMemUser: MemoryUser = {
-      id: `usr-mem-${Date.now()}`,
+      id: userRecord?.id || `usr-mem-${Date.now()}`,
       email: cleanEmail,
       password: hashedPassword,
       name: name.trim(),
@@ -156,7 +139,7 @@ export const register = async (req: Request, res: Response) => {
 
     if (newMemUser.role === 'STUDENT') {
       const newProf: MemoryStudentProfile = {
-        id: `prof-mem-${Date.now()}`,
+        id: studentProfData?.id || `prof-mem-${Date.now()}`,
         userId: newMemUser.id,
         degree: degree || 'BAMS',
         passoutYear: 2025,
@@ -181,14 +164,15 @@ export const register = async (req: Request, res: Response) => {
     }
 
     saveMemoryStoreToDisk();
+    const finalUser = userRecord || newMemUser;
 
     const token = jwt.sign(
-      { id: newMemUser.id, email: newMemUser.email, role: newMemUser.role, name: newMemUser.name },
+      { id: finalUser.id, email: finalUser.email, role: finalUser.role, name: finalUser.name },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    return res.status(201).json({ message: 'Registration successful!', token, user: newMemUser });
+    return res.status(201).json({ message: 'Registration successful!', token, user: finalUser });
 
   } catch (error: any) {
     console.error('Registration server error:', error);
@@ -206,75 +190,29 @@ export const login = async (req: Request, res: Response) => {
 
     const cleanEmail = String(email).trim().toLowerCase();
 
-    // Try Prisma DB first if configured
-    if (isDatabaseConfigured) {
-      try {
-        const user = await prisma.user.findUnique({
-          where: { email: cleanEmail },
-          include: { studentProfile: true }
-        });
-
-        if (user) {
-          const isValidPassword = await bcrypt.compare(password, user.password);
-          if (!isValidPassword) {
-            return res.status(401).json({ message: 'Incorrect password. Please double-check your credentials and try again.' });
-          }
-
-          // Also ensure in-memory store has this user synced for offline fallback
-          if (!memoryUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
-            memoryUsers.push({
-              id: user.id,
-              email: user.email,
-              password: user.password,
-              name: user.name,
-              role: user.role as any,
-              system: user.system,
-              institutionName: user.institutionName || undefined,
-              companyName: user.companyName || undefined,
-              designation: user.designation || undefined,
-              avatar: user.avatar || undefined,
-              createdAt: user.createdAt
-            });
-            saveMemoryStoreToDisk();
-          }
-
-          const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role, name: user.name },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-          );
-
-          return res.json({ message: 'Login successful!', token, user });
-        }
-      } catch (dbErr: any) {
-        console.warn('Prisma DB error during login, trying memory store fallback:', dbErr?.message);
-      }
-    }
-
-    // Memory Store Fallback
-    const memUser = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
-    if (!memUser) {
+    // Unified account lookup
+    const account = await findUserByEmail(cleanEmail);
+    if (!account) {
       return res.status(404).json({ message: `No registered account found with email "${cleanEmail}". Please check your email or sign up.` });
     }
 
-    const isValidPassword = await bcrypt.compare(password, memUser.password);
+    const isValidPassword = await bcrypt.compare(password, account.user.password);
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Incorrect password. Please double-check your credentials and try again.' });
     }
 
-    const memProfile = memoryStudentProfiles.find(p => p.userId === memUser.id);
-    const userWithProf = {
-      ...memUser,
-      studentProfile: memProfile || null
+    const fullUser = {
+      ...account.user,
+      studentProfile: account.profile || null
     };
 
     const token = jwt.sign(
-      { id: memUser.id, email: memUser.email, role: memUser.role, name: memUser.name },
+      { id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    return res.json({ message: 'Login successful!', token, user: userWithProf });
+    return res.json({ message: 'Login successful!', token, user: fullUser });
   } catch (error: any) {
     console.error('Login server error:', error);
     return res.status(500).json({ message: error.message || 'Server error occurred during login.' });

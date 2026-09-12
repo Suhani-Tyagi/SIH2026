@@ -910,7 +910,19 @@ export const memoryAuditLogs: MemoryAuditLog[] = [
   }
 ];
 
-const PERSISTENT_DB_FILE = path.join(__dirname, 'persistent_user_store.json');
+import os from 'os';
+
+const PERSISTENT_DB_FILE_PRIMARY = path.join(__dirname, 'persistent_user_store.json');
+const PERSISTENT_DB_FILE_FALLBACK = path.join(os.tmpdir(), 'ayush_setu_users.json');
+
+function getWritableDbFile(): string {
+  try {
+    fs.writeFileSync(PERSISTENT_DB_FILE_PRIMARY, fs.existsSync(PERSISTENT_DB_FILE_PRIMARY) ? fs.readFileSync(PERSISTENT_DB_FILE_PRIMARY) : '{}');
+    return PERSISTENT_DB_FILE_PRIMARY;
+  } catch (e) {
+    return PERSISTENT_DB_FILE_FALLBACK;
+  }
+}
 
 export function saveMemoryStoreToDisk(): void {
   try {
@@ -918,34 +930,42 @@ export function saveMemoryStoreToDisk(): void {
       users: memoryUsers,
       profiles: memoryStudentProfiles
     };
-    fs.writeFileSync(PERSISTENT_DB_FILE, JSON.stringify(dataToSave, null, 2), 'utf-8');
+    const content = JSON.stringify(dataToSave, null, 2);
+    try {
+      fs.writeFileSync(PERSISTENT_DB_FILE_PRIMARY, content, 'utf-8');
+    } catch (e) {
+      fs.writeFileSync(PERSISTENT_DB_FILE_FALLBACK, content, 'utf-8');
+    }
   } catch (err) {
     console.warn('Failed to persist memory store to disk:', err);
   }
 }
 
 export function loadMemoryStoreFromDisk(): void {
-  try {
-    if (fs.existsSync(PERSISTENT_DB_FILE)) {
-      const raw = fs.readFileSync(PERSISTENT_DB_FILE, 'utf-8');
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed.users)) {
-        parsed.users.forEach((u: MemoryUser) => {
-          if (!memoryUsers.some(existing => existing.email.toLowerCase() === u.email.toLowerCase())) {
-            memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
-          }
-        });
+  const filesToTry = [PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_FALLBACK];
+  for (const file of filesToTry) {
+    try {
+      if (fs.existsSync(file)) {
+        const raw = fs.readFileSync(file, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.users)) {
+          parsed.users.forEach((u: MemoryUser) => {
+            if (!memoryUsers.some(existing => existing.email.toLowerCase() === u.email.toLowerCase())) {
+              memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
+            }
+          });
+        }
+        if (Array.isArray(parsed.profiles)) {
+          parsed.profiles.forEach((p: MemoryStudentProfile) => {
+            if (!memoryStudentProfiles.some(existing => existing.id === p.id || existing.userId === p.userId)) {
+              memoryStudentProfiles.push(p);
+            }
+          });
+        }
       }
-      if (Array.isArray(parsed.profiles)) {
-        parsed.profiles.forEach((p: MemoryStudentProfile) => {
-          if (!memoryStudentProfiles.some(existing => existing.id === p.id || existing.userId === p.userId)) {
-            memoryStudentProfiles.push(p);
-          }
-        });
-      }
+    } catch (err) {
+      console.warn(`Failed to load memory store from ${file}:`, err);
     }
-  } catch (err) {
-    console.warn('Failed to load memory store from disk:', err);
   }
 }
 
