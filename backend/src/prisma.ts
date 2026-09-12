@@ -85,9 +85,15 @@ export async function ensureTablesExist(): Promise<void> {
       "phone" TEXT,
       "location" TEXT DEFAULT 'New Delhi, India',
       "skillScores" TEXT NOT NULL DEFAULT '{}',
+      "assessedSkills" TEXT NOT NULL DEFAULT '{}',
+      "coursePassedSkills" TEXT NOT NULL DEFAULT '{}',
+      "mentorVerifiedSkills" TEXT NOT NULL DEFAULT '{}',
       "verifiedBadges" TEXT NOT NULL DEFAULT '[]',
       "careerGoals" TEXT NOT NULL DEFAULT '[]'
     )`,
+    `ALTER TABLE "StudentProfile" ADD COLUMN IF NOT EXISTS "assessedSkills" TEXT NOT NULL DEFAULT '{}'`,
+    `ALTER TABLE "StudentProfile" ADD COLUMN IF NOT EXISTS "coursePassedSkills" TEXT NOT NULL DEFAULT '{}'`,
+    `ALTER TABLE "StudentProfile" ADD COLUMN IF NOT EXISTS "mentorVerifiedSkills" TEXT NOT NULL DEFAULT '{}'`,
     `CREATE TABLE IF NOT EXISTS "JobRole" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "title" TEXT NOT NULL,
