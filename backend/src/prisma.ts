@@ -35,9 +35,7 @@ const activeUrl = getCleanDatabaseUrl();
 export const isDatabaseConfigured = Boolean(activeUrl);
 
 if (!isDatabaseConfigured) {
-  console.warn(
-    'WARNING: No DATABASE_URL configured — falling back to ephemeral in-memory/tmp storage. User accounts WILL NOT reliably persist across serverless instances. Set DATABASE_URL in your deployment environment variables.'
-  );
+  console.warn('[AYUSH SETU] WARNING: No DATABASE_URL configured. Falling back to ephemeral in-memory/tmp storage. Password hashes and accounts WILL NOT reliably persist or stay consistent across serverless instances. Set DATABASE_URL (or POSTGRES_URL / POSTGRES_PRISMA_URL) in your deployment environment variables to fix this permanently.');
 }
 
 const clientDatasourceUrl =

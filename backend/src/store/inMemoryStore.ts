@@ -1193,24 +1193,16 @@ export const memoryAuditLogs: MemoryAuditLog[] = [
 
 import os from 'os';
 
-// Fallback path resolution: On serverless platforms like Vercel, the bundled project
-// filesystem is read-only except for /tmp. We verify write permissions on the bundled directory first,
-// and fall back to os.tmpdir() (/tmp) where serverless execution environments are writable.
+// Fallback path resolution: Vercel's deployed bundle filesystem is read-only except for /tmp.
+// Because /tmp is instance-local (not shared across serverless instances), this file-based
+// persistence is a best-effort safety-net fallback, not a durable distributed store.
 function resolvePersistentStorePath(): string {
   const bundledPath = path.resolve(__dirname, '../../../persistent_user_store.json');
   try {
     fs.accessSync(path.dirname(bundledPath), fs.constants.W_OK);
     return bundledPath;
   } catch {
-    const tmpPath = path.join(os.tmpdir(), 'ayush_setu_persistent_user_store.json');
-    try {
-      if (!fs.existsSync(tmpPath) && fs.existsSync(bundledPath)) {
-        fs.copyFileSync(bundledPath, tmpPath);
-      }
-    } catch {
-      // Ignore copy error, will write on next save
-    }
-    return tmpPath;
+    return path.join(os.tmpdir(), 'ayush_setu_persistent_user_store.json');
   }
 }
 

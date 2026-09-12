@@ -26,3 +26,4 @@ backend/prisma/dev.db-journal
 .cache
 .DS_Store
 scratch/
+persistent_user_store.json

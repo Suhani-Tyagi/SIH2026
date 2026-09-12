@@ -23,6 +23,7 @@ export interface User {
 interface AuthResponse {
   success: boolean;
   message?: string;
+  allowReset?: boolean;
 }
 
 interface AuthContextType {
@@ -96,7 +97,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(data.user);
         return { success: true, message: data.message };
       }
-      return { success: false, message: data.message || 'Login failed. Please check your credentials.' };
+      return { 
+        success: false, 
+        message: data.message || 'Login failed. Please check your credentials.',
+        allowReset: Boolean(data?.allowReset)
+      };
     } catch (err: any) {
       return { success: false, message: 'Network error or server unreachable. Please try again.' };
     }

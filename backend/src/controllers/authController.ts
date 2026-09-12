@@ -213,9 +213,12 @@ export const login = async (req: Request, res: Response) => {
 
     if (!isValidPassword) {
       console.warn(`[AUTH LOGIN FAILED] Email: "${cleanEmail}", password entered did not match stored hash.`);
+      const isResetEligible = !account.user.password || !account.user.password.startsWith('$2');
       return res.status(401).json({ 
-        message: 'Incorrect password. Please double-check your credentials and try again.',
-        allowReset: true
+        message: isResetEligible
+          ? 'Account has no usable password set. Please set your password to continue.'
+          : 'Incorrect password. Please double-check your credentials and try again.',
+        allowReset: isResetEligible
       });
     }
 

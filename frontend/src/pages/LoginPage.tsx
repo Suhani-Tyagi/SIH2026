@@ -14,6 +14,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [allowReset, setAllowReset] = useState(false);
 
   useEffect(() => {
     try {
@@ -34,6 +35,7 @@ export const LoginPage: React.FC = () => {
 
   const handleEmailChange = (val: string) => {
     setEmail(val);
+    setAllowReset(false);
   };
 
   const saveOrClearCredentials = (emailVal: string) => {
@@ -63,6 +65,7 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+    setAllowReset(false);
     setLoading(true);
 
     const cleanEmail = email.trim();
@@ -84,12 +87,14 @@ export const LoginPage: React.FC = () => {
       redirectByRole('STUDENT');
     } else {
       setError(result.message || 'Login failed. Please check your email and password.');
+      setAllowReset(Boolean(result.allowReset));
     }
   };
 
   const handleResetAndLogin = async () => {
     setError('');
     setSuccessMessage('');
+    setAllowReset(false);
 
     if (!email.trim() || !password) {
       setError('Please enter your email and the password you wish to use.');
@@ -223,7 +228,7 @@ export const LoginPage: React.FC = () => {
                 <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
                 <span>{error}</span>
               </div>
-              {error.toLowerCase().includes('password') && (
+              {allowReset && (
                 <div className="pt-2 border-t border-red-200 flex items-center justify-between gap-2">
                   <span className="text-[11px] text-red-800">Forgot or need to update your password?</span>
                   <button
