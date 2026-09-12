@@ -20,7 +20,10 @@ import {
   Sparkles,
   CheckCircle2,
   Tv,
-  Activity
+  Activity,
+  Volume2,
+  VolumeX,
+  Video
 } from 'lucide-react';
 
 export const CoursePlayerPage: React.FC = () => {
@@ -41,7 +44,30 @@ export const CoursePlayerPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0); // 0 to 100%
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [videoMode, setVideoMode] = useState<'3D_CANVAS' | 'YOUTUBE_3D'>('3D_CANVAS');
+  const [isMuted, setIsMuted] = useState(false);
   const videoDurationSec = 25; // Animated demo lecture playback duration
+
+  // Audio Voiceover Speech Synthesis
+  const speakNarration = (text: string) => {
+    if (isMuted || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = playbackSpeed;
+      utterance.pitch = 1.0;
+      utterance.volume = 0.95;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (!isPlaying && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, [isPlaying]);
 
   // Q&A state
   const [questions, setQuestions] = useState<{ author: string; role: string; text: string; date: string }[]>([
@@ -58,6 +84,7 @@ export const CoursePlayerPage: React.FC = () => {
   useEffect(() => {
     setIsPlaying(false);
     setVideoProgress(activeLesson?.status === 'COMPLETED' ? 100 : 0);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   }, [activeLesson?.id]);
 
   // Video Animation Timer & Auto-Completion Detection
@@ -68,8 +95,19 @@ export const CoursePlayerPage: React.FC = () => {
         setVideoProgress((prev) => {
           const step = (100 / videoDurationSec) * 0.2 * playbackSpeed;
           const next = prev + step;
+
+          // Trigger narration voiceover at scene boundaries
+          if (prev < 5 && next >= 5) {
+            speakNarration(`Welcome to ${activeLesson?.title || 'this lecture'}. Scene 1: Introduction and core standards.`);
+          } else if (prev < 35 && next >= 35) {
+            speakNarration("Scene 2: Demonstrating practical analytical extraction, active marker fingerprinting, and clinical guidelines.");
+          } else if (prev < 75 && next >= 75) {
+            speakNarration("Scene 3: Completing final verification. All parameters match pharmacopoeial standards.");
+          }
+
           if (next >= 100) {
             setIsPlaying(false);
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             handleAutoMarkComplete();
             return 100;
           }
@@ -80,7 +118,7 @@ export const CoursePlayerPage: React.FC = () => {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isPlaying, playbackSpeed, activeLesson?.id]);
+  }, [isPlaying, playbackSpeed, activeLesson?.id, isMuted]);
 
   const fetchCourseDetails = async () => {
     setLoading(true);
@@ -548,6 +586,25 @@ export const CoursePlayerPage: React.FC = () => {
     );
   };
 
+  const getYouTube3DVideoUrl = () => {
+    const title = (activeLesson?.title || course?.title || '').toLowerCase();
+    const discipline = (course?.discipline || '').toLowerCase();
+
+    if (title.includes('hptlc') || title.includes('hplc') || title.includes('quality') || title.includes('analytical') || title.includes('standard')) {
+      return 'https://www.youtube.com/embed/wQI6Y8_Y1Y4?autoplay=1&enablejsapi=1';
+    }
+    if (title.includes('shirodhara') || title.includes('panchakarma') || title.includes('ayurvedic') || discipline.includes('ayurveda')) {
+      return 'https://www.youtube.com/embed/iASOF7MLQHo?autoplay=1&enablejsapi=1';
+    }
+    if (title.includes('yoga') || title.includes('pranayama') || title.includes('hrv') || discipline.includes('yoga')) {
+      return 'https://www.youtube.com/embed/z-Fm8o5dO68?autoplay=1&enablejsapi=1';
+    }
+    if (title.includes('homoeopath') || title.includes('potentiz') || discipline.includes('homeopathy')) {
+      return 'https://www.youtube.com/embed/_8u-t1xG98M?autoplay=1&enablejsapi=1';
+    }
+    return 'https://www.youtube.com/embed/iASOF7MLQHo?autoplay=1&enablejsapi=1';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -616,13 +673,43 @@ export const CoursePlayerPage: React.FC = () => {
         {/* Left 2 Cols: Lesson Player & Workspace */}
         <div className="lg:col-span-2 space-y-4">
           
+          {/* Video Player Header Mode Switcher Bar */}
+          <div className="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 text-xs">
+            <span className="text-slate-300 font-bold flex items-center gap-1.5">
+              <Video className="w-4 h-4 text-emerald-400" /> Animated Video Lecture Mode:
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setVideoMode('3D_CANVAS')}
+                className={`px-3 py-1 rounded-lg font-bold text-[11px] transition flex items-center gap-1 border ${
+                  videoMode === '3D_CANVAS'
+                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md'
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> 3D Motion Graphics & Voiceover
+              </button>
+              <button
+                onClick={() => { setVideoMode('YOUTUBE_3D'); setIsPlaying(true); }}
+                className={`px-3 py-1 rounded-lg font-bold text-[11px] transition flex items-center gap-1 border ${
+                  videoMode === 'YOUTUBE_3D'
+                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+                }`}
+              >
+                <Tv className="w-3.5 h-3.5" /> HD 3D Educational Video (Stream)
+              </button>
+            </div>
+          </div>
+
           {/* Animated Video Lecture Player Canvas */}
           <div className="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 relative aspect-video flex flex-col justify-between group">
             
             {/* Header Overlay Badge */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-none">
-              <span className="px-3 py-1 bg-slate-900/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold rounded-full flex items-center gap-1.5 shadow-md">
-                <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" /> Animated Video Lecture: {activeLesson?.title || 'AYUSH Module'}
+              <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-md text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold rounded-full flex items-center gap-1.5 shadow-md">
+                <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                {videoMode === '3D_CANVAS' ? '3D Animated Graphics Engine' : 'HD 3D Video Stream'}: {activeLesson?.title || 'AYUSH Module'}
               </span>
               {activeLesson?.status === 'COMPLETED' || videoProgress >= 100 ? (
                 <span className="px-3 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg">
@@ -635,20 +722,35 @@ export const CoursePlayerPage: React.FC = () => {
               )}
             </div>
 
-            {/* Center Animation Scenes Container */}
+            {/* Center Animation Scenes Container / YouTube Embed Container */}
             <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-950">
-              {renderAnimatedVideoVisualizer()}
+              {videoMode === 'YOUTUBE_3D' ? (
+                <iframe
+                  className="w-full h-full border-0"
+                  src={getYouTube3DVideoUrl()}
+                  title="3D Animated Biology & AYUSH Lecture Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <>
+                  {renderAnimatedVideoVisualizer()}
 
-              {/* Large Play Button Overlay when Paused */}
-              {!isPlaying && videoProgress < 100 && (
-                <button
-                  onClick={() => setIsPlaying(true)}
-                  className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center group-hover:bg-slate-950/40 transition-all z-20"
-                >
-                  <div className="w-16 h-16 rounded-full bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all">
-                    <Play className="w-8 h-8 ml-1 fill-current" />
-                  </div>
-                </button>
+                  {/* Large Play Button Overlay when Paused */}
+                  {!isPlaying && videoProgress < 100 && (
+                    <button
+                      onClick={() => {
+                        setIsPlaying(true);
+                        speakNarration(`Welcome to ${activeLesson?.title || 'this lecture'}. Starting video explanation.`);
+                      }}
+                      className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center group-hover:bg-slate-950/40 transition-all z-20"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all">
+                        <Play className="w-8 h-8 ml-1 fill-current" />
+                      </div>
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
@@ -676,7 +778,15 @@ export const CoursePlayerPage: React.FC = () => {
               <div className="flex items-center justify-between text-xs text-slate-300">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    onClick={() => {
+                      const nextPlay = !isPlaying;
+                      setIsPlaying(nextPlay);
+                      if (nextPlay) {
+                        speakNarration(`Resuming video explanation for ${activeLesson?.title || 'lecture'}.`);
+                      } else if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                      }
+                    }}
                     className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors font-bold flex items-center gap-1.5"
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -684,11 +794,30 @@ export const CoursePlayerPage: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => { setVideoProgress(0); setIsPlaying(true); }}
+                    onClick={() => {
+                      setVideoProgress(0);
+                      setIsPlaying(true);
+                      speakNarration(`Restarting video lecture for ${activeLesson?.title || 'topic'}.`);
+                    }}
                     className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
                     title="Restart Video"
                   >
                     <RotateCcw className="w-4 h-4" />
+                  </button>
+
+                  {/* Mute / Voiceover Audio Toggle */}
+                  <button
+                    onClick={() => {
+                      const nextMute = !isMuted;
+                      setIsMuted(nextMute);
+                      if (nextMute && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                    }}
+                    className={`p-1.5 rounded-lg border transition ${
+                      isMuted ? 'bg-rose-950/80 border-rose-700 text-rose-300' : 'bg-slate-800 border-slate-700 text-emerald-400 hover:text-white'
+                    }`}
+                    title={isMuted ? 'Unmute Audio Narration' : 'Mute Audio Narration'}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
 
                   <span className="font-mono text-[11px] text-slate-400">
