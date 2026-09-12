@@ -31,6 +31,17 @@ export const LoginPage: React.FC = () => {
     }
   }, []);
 
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    try {
+      const savedEmail = localStorage.getItem('ayush_saved_email');
+      if (savedEmail && val.trim().toLowerCase() !== savedEmail.trim().toLowerCase()) {
+        setPassword('');
+        setAutoLoaded(false);
+      }
+    } catch (e) {}
+  };
+
   const saveOrClearCredentials = (emailVal: string, passVal: string) => {
     try {
       if (rememberMe) {
@@ -211,7 +222,7 @@ export const LoginPage: React.FC = () => {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleEmailChange(e.target.value)}
                   placeholder="name@domain.com"
                   className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none"
                   required

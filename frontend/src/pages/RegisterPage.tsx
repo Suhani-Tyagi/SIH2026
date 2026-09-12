@@ -42,6 +42,12 @@ export const RegisterPage: React.FC = () => {
 
     setLoading(false);
     if (result.success) {
+      try {
+        localStorage.setItem('ayush_remember_me', 'true');
+        localStorage.setItem('ayush_saved_email', email.trim());
+        localStorage.setItem('ayush_saved_password', password);
+      } catch (e) {}
+
       if (role === 'STUDENT') navigate('/student/skill-assessment');
       else if (role === 'INDUSTRY') navigate('/industry/dashboard');
       else if (role === 'ACADEMICIAN') navigate('/academician/dashboard');
