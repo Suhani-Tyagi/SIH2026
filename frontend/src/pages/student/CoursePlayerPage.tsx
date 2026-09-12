@@ -102,7 +102,13 @@ export const CoursePlayerPage: React.FC = () => {
     setVideoProgress(activeLesson?.status === 'COMPLETED' ? 100 : 0);
     setActiveSlideIndex(0);
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-  }, [activeLesson?.id]);
+    if (activeLesson?.id && user) {
+      const userKey = user.email || user.id;
+      try {
+        localStorage.setItem(`ayush_last_lesson_${userKey}_${courseId}`, activeLesson.id);
+      } catch (e) {}
+    }
+  }, [activeLesson?.id, user, courseId]);
 
   // Video Animation Timer & Auto-Completion Detection
   useEffect(() => {
@@ -136,21 +142,58 @@ export const CoursePlayerPage: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
+        
+        // Retrieve local backup progress for this user & course
+        const userKey = user?.email || user?.id || 'guest';
+        const localKey = `ayush_progress_${userKey}_${courseId}`;
+        let localCompleted: Record<string, boolean> = {};
+        try {
+          localCompleted = JSON.parse(localStorage.getItem(localKey) || '{}');
+        } catch (e) {}
+
+        // Merge local completed status with server modules
+        const mergedModules = (data.modules || []).map((mod: any) => ({
+          ...mod,
+          lessons: (mod.lessons || []).map((les: any) => {
+            const isLocallyCompleted = localCompleted[les.id] === true;
+            return {
+              ...les,
+              status: isLocallyCompleted ? 'COMPLETED' : les.status
+            };
+          })
+        }));
+
         setCourse(data.course);
-        setModules(data.modules || []);
+        setModules(mergedModules);
         setResources(data.resources || []);
 
-        // Default to first available or in-progress lesson
+        // Restore last active lesson or default to first available/in-progress
+        const savedLastLessonId = localStorage.getItem(`ayush_last_lesson_${userKey}_${courseId}`);
         let foundLesson: any = null;
-        for (const mod of data.modules || []) {
-          for (const les of mod.lessons || []) {
-            if (!foundLesson && (les.status === 'AVAILABLE' || les.status === 'IN_PROGRESS')) {
-              foundLesson = les;
+
+        if (savedLastLessonId) {
+          for (const mod of mergedModules) {
+            for (const les of mod.lessons || []) {
+              if (les.id === savedLastLessonId) {
+                foundLesson = les;
+                break;
+              }
             }
           }
         }
-        if (!foundLesson && data.modules?.[0]?.lessons?.[0]) {
-          foundLesson = data.modules[0].lessons[0];
+
+        if (!foundLesson) {
+          for (const mod of mergedModules) {
+            for (const les of mod.lessons || []) {
+              if (!foundLesson && (les.status === 'AVAILABLE' || les.status === 'IN_PROGRESS')) {
+                foundLesson = les;
+              }
+            }
+          }
+        }
+
+        if (!foundLesson && mergedModules[0]?.lessons?.[0]) {
+          foundLesson = mergedModules[0].lessons[0];
         }
         setActiveLesson(foundLesson);
       }
@@ -164,6 +207,19 @@ export const CoursePlayerPage: React.FC = () => {
   const handleAutoMarkComplete = async () => {
     if (!activeLesson || updating || activeLesson.status === 'COMPLETED') return;
     setUpdating(true);
+    const userKey = user?.email || user?.id || 'guest';
+
+    // Persist progress backup locally immediately
+    try {
+      const localKey = `ayush_progress_${userKey}_${courseId}`;
+      const localCompleted = JSON.parse(localStorage.getItem(localKey) || '{}');
+      localCompleted[activeLesson.id] = true;
+      localStorage.setItem(localKey, JSON.stringify(localCompleted));
+      localStorage.setItem(`ayush_last_lesson_${userKey}_${courseId}`, activeLesson.id);
+    } catch (e) {
+      console.error('Failed to update local progress backup', e);
+    }
+
     try {
       const res = await fetch(`/api/courses/${courseId}/lessons/${activeLesson.id}/progress`, {
         method: 'POST',
@@ -173,11 +229,23 @@ export const CoursePlayerPage: React.FC = () => {
         },
         body: JSON.stringify({ status: 'COMPLETED' })
       });
+
       if (res.ok) {
         await fetchCourseDetails();
+      } else {
+        // Fallback UI update if network has delay
+        setModules((prevMods) =>
+          prevMods.map((mod) => ({
+            ...mod,
+            lessons: (mod.lessons || []).map((les: any) =>
+              les.id === activeLesson.id ? { ...les, status: 'COMPLETED' } : les
+            )
+          }))
+        );
+        setActiveLesson((prev: any) => (prev ? { ...prev, status: 'COMPLETED' } : prev));
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to post lesson progress to server', e);
     } finally {
       setUpdating(false);
     }

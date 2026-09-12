@@ -109,6 +109,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    if (user) {
+      try {
+        localStorage.setItem('ayush_last_logout_user', JSON.stringify({
+          email: user.email,
+          id: user.id,
+          timestamp: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.error('Failed to save logout user state', e);
+      }
+    }
     localStorage.removeItem('ayush_token');
     setToken(null);
     setUser(null);
