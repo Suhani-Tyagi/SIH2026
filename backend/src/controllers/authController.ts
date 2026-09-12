@@ -3,12 +3,16 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, AuthRequest } from '../middleware/auth';
 import prisma, { isDatabaseConfigured, ensureTablesExist } from '../prisma';
-import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, saveMemoryStoreToDisk } from '../store/inMemoryStore';
+import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, saveMemoryStoreToDisk, loadMemoryStoreFromDisk } from '../store/inMemoryStore';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function findUserByEmail(cleanEmail: string) {
   const normalized = cleanEmail.trim().toLowerCase();
+  
+  // Always ensure memory store is synced from disk before email lookup
+  loadMemoryStoreFromDisk();
+
   // 1. Check in-memory / persistent file store first for fast, reliable lookup
   const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === normalized);
   if (memUser) {
@@ -136,7 +140,12 @@ export const register = async (req: Request, res: Response) => {
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name.trim())}`,
       createdAt: new Date()
     };
-    memoryUsers.push(newMemUser);
+    const existingIdx = memoryUsers.findIndex(u => u.email.trim().toLowerCase() === cleanEmail);
+    if (existingIdx === -1) {
+      memoryUsers.push(newMemUser);
+    } else {
+      memoryUsers[existingIdx] = newMemUser;
+    }
 
     if (newMemUser.role === 'STUDENT') {
       const newProf: MemoryStudentProfile = {
