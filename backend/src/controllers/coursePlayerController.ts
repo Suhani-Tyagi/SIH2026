@@ -194,7 +194,8 @@ export const getCourseDetailsWithModules = async (req: AuthRequest, res: Respons
       return { ...mod, lessons: lessonsWithStatus };
     });
 
-    const progressPercent = totalLessonsCount > 0 ? Math.round((completedLessonsCount / totalLessonsCount) * 100) : 0;
+    const calculatedPercent = totalLessonsCount > 0 ? Math.round((completedLessonsCount / totalLessonsCount) * 100) : 0;
+    const progressPercent = Math.max(enrollment?.progressPercent || 0, calculatedPercent);
 
     let skillsList: string[] = [];
     try {

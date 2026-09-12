@@ -153,8 +153,12 @@ export const CoursePlayerPage: React.FC = () => {
 
         // Merge local completed status with server modules & execute sequential unlock pass
         let prevCompleted = true;
-        const mergedModules = (data.modules || []).map((mod: any, mIdx: number) => {
-          const lessons = (mod.lessons || []).map((les: any, lIdx: number) => {
+        let totalCount = 0;
+        let completedCount = 0;
+
+        const mergedModules = (data.modules || []).map((mod: any) => {
+          const lessons = (mod.lessons || []).map((les: any) => {
+            totalCount++;
             const isLocallyCompleted = localCompleted[les.id] === true;
             let status = isLocallyCompleted ? 'COMPLETED' : les.status;
 
@@ -163,6 +167,7 @@ export const CoursePlayerPage: React.FC = () => {
             }
 
             if (status === 'COMPLETED') {
+              completedCount++;
               prevCompleted = true;
             } else {
               prevCompleted = false;
@@ -176,7 +181,15 @@ export const CoursePlayerPage: React.FC = () => {
           return { ...mod, lessons };
         });
 
-        setCourse(data.course);
+        const calculatedPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+        const finalProgressPercent = Math.max(data.course?.progressPercent || 0, data.enrollment?.progressPercent || 0, calculatedPercent);
+
+        setCourse({
+          ...data.course,
+          progressPercent: finalProgressPercent,
+          completedLessonsCount: completedCount,
+          totalLessonsCount: totalCount
+        });
         setModules(mergedModules);
         setResources(data.resources || []);
 
@@ -233,20 +246,42 @@ export const CoursePlayerPage: React.FC = () => {
       console.error('Failed to update local progress backup', e);
     }
 
-    // Immediately update UI: mark current lesson COMPLETED and unlock next lesson
+    // Immediately update UI: mark current lesson COMPLETED, unlock next lesson, and update course progressPercent
     setModules((prevMods) => {
       let prevComp = true;
-      return prevMods.map((mod) => ({
+      let total = 0;
+      let comp = 0;
+      const updatedMods = prevMods.map((mod) => ({
         ...mod,
         lessons: (mod.lessons || []).map((les: any) => {
+          total++;
           let status = les.id === activeLesson.id ? 'COMPLETED' : les.status;
           if (status !== 'COMPLETED' && prevComp && status === 'LOCKED') {
             status = 'AVAILABLE';
           }
-          prevComp = status === 'COMPLETED';
+          if (status === 'COMPLETED') {
+            comp++;
+            prevComp = true;
+          } else {
+            prevComp = false;
+          }
           return { ...les, status };
         })
       }));
+
+      const newPercent = total > 0 ? Math.round((comp / total) * 100) : 0;
+      setCourse((prevCourse: any) =>
+        prevCourse
+          ? {
+              ...prevCourse,
+              progressPercent: Math.max(prevCourse.progressPercent || 0, newPercent),
+              completedLessonsCount: comp,
+              totalLessonsCount: total
+            }
+          : prevCourse
+      );
+
+      return updatedMods;
     });
     setActiveLesson((prev: any) => (prev ? { ...prev, status: 'COMPLETED' } : prev));
 
