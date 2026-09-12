@@ -109,7 +109,7 @@
     {
       "id": "usr-stu-abc",
       "email": "abc@gmail.com",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$jx9tvF/E8GuI6gVOXHkSx.PRXI1.VGQtz09IjAVlx4dOaPShJxNqS",
       "name": "ABC User",
       "role": "STUDENT",
       "system": "AYURVEDA",

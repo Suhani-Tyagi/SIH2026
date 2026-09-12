@@ -225,8 +225,14 @@ export const login = async (req: Request, res: Response) => {
     }
 
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Incorrect password. Please double-check your credentials and try again.' });
+      console.warn(`[AUTH LOGIN FAILED] Email: "${cleanEmail}", password entered did not match stored hash.`);
+      return res.status(401).json({ 
+        message: 'Incorrect password. Please double-check your credentials and try again.',
+        allowReset: true
+      });
     }
+
+    console.log(`[AUTH LOGIN SUCCESS] Email: "${cleanEmail}" logged in.`);
 
     // Auto-sync stored hash if user logged in via fallback or updated password
     try {
@@ -259,6 +265,66 @@ export const login = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Login server error:', error);
     return res.status(500).json({ message: error.message || 'Server error occurred during login.' });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Please provide both email and new password.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanPassword = String(newPassword).trim();
+
+    if (cleanPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+    }
+
+    const account = await findUserByEmail(cleanEmail);
+    if (!account) {
+      return res.status(404).json({ message: `No registered account found with email "${cleanEmail}".` });
+    }
+
+    const newHash = await bcrypt.hash(cleanPassword, 10);
+    account.user.password = newHash;
+
+    const memIdx = memoryUsers.findIndex(u => u.email.trim().toLowerCase() === cleanEmail);
+    if (memIdx !== -1) {
+      memoryUsers[memIdx].password = newHash;
+    }
+
+    if (isDatabaseConfigured) {
+      try {
+        await prisma.user.update({
+          where: { email: cleanEmail },
+          data: { password: newHash }
+        });
+      } catch (dbErr) {
+        console.warn('Prisma password update skipped:', dbErr);
+      }
+    }
+
+    saveMemoryStoreToDisk();
+    console.log(`[AUTH RESET PASSWORD SUCCESS] Password updated for email "${cleanEmail}".`);
+
+    const fullUser = {
+      ...account.user,
+      studentProfile: account.profile || null
+    };
+
+    const token = jwt.sign(
+      { id: fullUser.id, email: fullUser.email, role: fullUser.role, name: fullUser.name },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({ message: 'Password updated and logged in successfully!', token, user: fullUser });
+  } catch (error: any) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ message: error.message || 'Server error occurred during password update.' });
   }
 };
 

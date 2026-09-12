@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe } from '../controllers/authController';
+import { register, login, resetPassword, getMe } from '../controllers/authController';
 import {
   getSkillProfile,
   submitAssessment,
@@ -50,6 +50,7 @@ const router = Router();
 // Auth Routes (Public & Me)
 router.post('/auth/register', register);
 router.post('/auth/login', login);
+router.post('/auth/reset-password', resetPassword);
 router.get('/auth/me', authenticateToken, getMe);
 
 // Public Portfolio & Taxonomies & Certificate Verification

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Leaf, Lock, Mail, ArrowRight, AlertCircle, UserCheck, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const { login, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -12,6 +12,7 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     const cleanEmail = email.trim();
@@ -85,11 +87,47 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const handleResetAndLogin = async () => {
+    setError('');
+    setSuccessMessage('');
+
+    if (!email.trim() || !password) {
+      setError('Please enter your email and the password you wish to use.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
+    const cleanEmail = email.trim();
+    const result = await resetPassword(cleanEmail, password);
+    setLoading(false);
+
+    if (result.success) {
+      saveOrClearCredentials(cleanEmail);
+      try {
+        const token = localStorage.getItem('ayush_token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          redirectByRole(payload.role);
+          return;
+        }
+      } catch (err) {}
+      redirectByRole('STUDENT');
+    } else {
+      setError(result.message || 'Password update failed. Please verify your email.');
+    }
+  };
+
   const handleQuickDemo = async (demoEmail: string, roleName: string) => {
     setEmail(demoEmail);
     setPassword('password123');
     setLoading(true);
     setError('');
+    setSuccessMessage('');
 
     saveOrClearCredentials(demoEmail);
 
@@ -180,9 +218,31 @@ export const LoginPage: React.FC = () => {
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-              <span>{error}</span>
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium space-y-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{error}</span>
+              </div>
+              {error.toLowerCase().includes('password') && (
+                <div className="pt-2 border-t border-red-200 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-red-800">Forgot or need to update your password?</span>
+                  <button
+                    type="button"
+                    onClick={handleResetAndLogin}
+                    disabled={loading}
+                    className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg text-[11px] transition-all shadow-xs shrink-0"
+                  >
+                    Set Password & Sign In
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-medium flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{successMessage}</span>
             </div>
           )}
 
@@ -203,7 +263,16 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700">Password</label>
+                <button
+                  type="button"
+                  onClick={handleResetAndLogin}
+                  className="text-[10px] text-emerald-700 hover:text-emerald-900 font-semibold hover:underline"
+                >
+                  Forgot / Reset Password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <input

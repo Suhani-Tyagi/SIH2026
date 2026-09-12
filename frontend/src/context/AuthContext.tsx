@@ -31,6 +31,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthResponse>;
   register: (data: any) => Promise<AuthResponse>;
+  resetPassword: (email: string, newPassword: string) => Promise<AuthResponse>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -124,6 +125,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string, newPassword: string): Promise<AuthResponse> => {
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('ayush_token', data.token);
+        if (data.user) {
+          localStorage.setItem('ayush_user', JSON.stringify(data.user));
+        }
+        setToken(data.token);
+        setUser(data.user);
+        return { success: true, message: data.message };
+      }
+      return { success: false, message: data.message || 'Password update failed. Please try again.' };
+    } catch (err: any) {
+      return { success: false, message: 'Network error or server unreachable. Please try again.' };
+    }
+  };
+
   const logout = () => {
     if (user) {
       try {
@@ -147,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, resetPassword, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
