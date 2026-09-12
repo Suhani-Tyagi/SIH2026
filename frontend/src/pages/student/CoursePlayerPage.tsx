@@ -8,6 +8,7 @@ import {
   Lock,
   FileText,
   Award,
+  ChevronLeft,
   ChevronRight,
   MessageSquare,
   Send,
@@ -40,13 +41,13 @@ export const CoursePlayerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'CONTENT' | 'RESOURCES' | 'QA'>('CONTENT');
   const [lessonStarted, setLessonStarted] = useState(false);
 
-  // Animated Video Lecture Player State
+  // Interactive 10-Slide PPT Video Player State
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0); // 0 to 100%
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [videoMode, setVideoMode] = useState<'3D_CANVAS' | 'YOUTUBE_3D'>('3D_CANVAS');
   const [isMuted, setIsMuted] = useState(false);
-  const videoDurationSec = 25; // Animated demo lecture playback duration
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const videoDurationSec = 40; // Total 10-slide presentation playback duration in seconds
 
   // Audio Voiceover Speech Synthesis
   const speakNarration = (text: string) => {
@@ -69,6 +70,20 @@ export const CoursePlayerPage: React.FC = () => {
     }
   }, [isPlaying]);
 
+  // Sync active slide index and trigger AI Voice Assistant speech on slide transition
+  useEffect(() => {
+    const slideIdx = Math.min(9, Math.floor(videoProgress / 10));
+    if (slideIdx !== activeSlideIndex) {
+      setActiveSlideIndex(slideIdx);
+      if (isPlaying) {
+        const slides = get10SlidesForLecture(activeLesson, course);
+        if (slides[slideIdx]) {
+          speakNarration(`Slide ${slideIdx + 1}: ${slides[slideIdx].title}. ${slides[slideIdx].speechText}`);
+        }
+      }
+    }
+  }, [videoProgress, isPlaying]);
+
   // Q&A state
   const [questions, setQuestions] = useState<{ author: string; role: string; text: string; date: string }[]>([
     { author: 'Aarav Sharma', role: 'Student', text: 'Does this course cover Schedule T HPLC extraction norms for export batches?', date: 'Yesterday' },
@@ -84,6 +99,7 @@ export const CoursePlayerPage: React.FC = () => {
   useEffect(() => {
     setIsPlaying(false);
     setVideoProgress(activeLesson?.status === 'COMPLETED' ? 100 : 0);
+    setActiveSlideIndex(0);
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   }, [activeLesson?.id]);
 
@@ -95,15 +111,6 @@ export const CoursePlayerPage: React.FC = () => {
         setVideoProgress((prev) => {
           const step = (100 / videoDurationSec) * 0.2 * playbackSpeed;
           const next = prev + step;
-
-          // Trigger narration voiceover at scene boundaries
-          if (prev < 5 && next >= 5) {
-            speakNarration(`Welcome to ${activeLesson?.title || 'this lecture'}. Scene 1: Introduction and core standards.`);
-          } else if (prev < 35 && next >= 35) {
-            speakNarration("Scene 2: Demonstrating practical analytical extraction, active marker fingerprinting, and clinical guidelines.");
-          } else if (prev < 75 && next >= 75) {
-            speakNarration("Scene 3: Completing final verification. All parameters match pharmacopoeial standards.");
-          }
 
           if (next >= 100) {
             setIsPlaying(false);
@@ -185,424 +192,733 @@ export const CoursePlayerPage: React.FC = () => {
     setNewQuestion('');
   };
 
-  const renderAnimatedVideoVisualizer = () => {
+  interface SlideData {
+    slideNumber: number;
+    title: string;
+    category: string;
+    mainPoints: string[];
+    keyHighlight: string;
+    speechText: string;
+    diagramType: 'HPTLC' | 'SHIRODHARA' | 'YOGA' | 'MANUFACTURING';
+  }
+
+  const get10SlidesForLecture = (activeLesson: any, course: any): SlideData[] => {
     const title = (activeLesson?.title || course?.title || '').toLowerCase();
     const discipline = (course?.discipline || '').toLowerCase();
 
-    // 1. HPTLC / HPLC / Quality Control / Standardization / Analytical
+    // 1. HPTLC / HPLC / Quality Control / Standardization
     if (title.includes('hptlc') || title.includes('hplc') || title.includes('quality') || title.includes('analytical') || title.includes('standard') || (discipline.includes('ayurveda') && title.includes('pharmacopoeia'))) {
-      return (
-        <div className="w-full h-full flex flex-col items-center justify-between p-4 relative text-white font-sans overflow-hidden select-none">
-          <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] opacity-20 animate-pulse"></div>
-
-          <div className="z-10 flex items-center justify-between w-full text-xs font-mono border-b border-slate-800 pb-2">
-            <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              INSTRUMENT: HPTLC CAMAG TLC SCANNER IV (254nm / 366nm)
-            </span>
-            <span className="text-amber-400 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-amber-500/30">
-              Rf Marker Spot Peak Analyzer
-            </span>
-          </div>
-
-          <div className="z-10 flex-1 w-full flex items-center justify-around gap-6 my-2">
-            <div className="relative w-28 h-44 bg-slate-900 border-2 border-emerald-500/60 rounded-lg p-2 shadow-2xl flex flex-col justify-between overflow-hidden">
-              <div className="text-[9px] font-mono text-emerald-400 text-center border-b border-emerald-950 pb-1">SILICA GEL 60 F254</div>
-              
-              <div
-                className="absolute left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_8px_#22d3ee] transition-all duration-200"
-                style={{ bottom: `${Math.min(90, 10 + videoProgress * 0.75)}%` }}
-              ></div>
-
-              <div className="flex-1 relative my-1">
-                {videoProgress > 15 && (
-                  <div className="absolute left-6 bottom-4 w-4 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse text-[8px] text-slate-950 font-bold flex items-center justify-center">
-                    Rf1
-                  </div>
-                )}
-                {videoProgress > 35 && (
-                  <div className="absolute left-8 bottom-12 w-5 h-4 rounded-full bg-amber-400 shadow-[0_0_12px_#fbbf24] animate-pulse text-[8px] text-slate-950 font-bold flex items-center justify-center">
-                    Rf2
-                  </div>
-                )}
-                {videoProgress > 60 && (
-                  <div className="absolute left-5 bottom-24 w-6 h-4 rounded-full bg-purple-400 shadow-[0_0_14px_#c084fc] animate-pulse text-[8px] text-slate-950 font-bold flex items-center justify-center">
-                    Rf3
-                  </div>
-                )}
-              </div>
-
-              <div
-                className="absolute top-0 bottom-0 w-1 bg-red-500/80 shadow-[0_0_12px_#ef4444] transition-all duration-300"
-                style={{ left: `${(videoProgress * 1.5) % 100}%` }}
-              ></div>
-              <div className="text-[8px] font-mono text-slate-500 text-center">SOLVENT FRONT</div>
-            </div>
-
-            <div className="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-inner flex flex-col justify-between h-44">
-              <div className="flex items-center justify-between text-[10px] font-mono">
-                <span className="text-slate-400">ABSORBANCE SPECTRA (AU)</span>
-                <span className="text-emerald-400 font-bold">LIVE PEAK INTEGRATION</span>
-              </div>
-
-              <div className="relative h-24 w-full bg-slate-950 rounded border border-slate-800 flex items-end p-1 overflow-hidden">
-                <svg className="w-full h-full text-emerald-400 overflow-visible" viewBox="0 0 200 60">
-                  <path
-                    d={`M 0 55 Q 30 ${55 - (videoProgress > 15 ? 30 : 0)} 60 55 T 120 ${55 - (videoProgress > 40 ? 45 : 0)} T 170 ${55 - (videoProgress > 70 ? 35 : 0)} T 200 55`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  />
-                  <path
-                    d={`M 0 55 Q 30 ${55 - (videoProgress > 15 ? 30 : 0)} 60 55 T 120 ${55 - (videoProgress > 40 ? 45 : 0)} T 170 ${55 - (videoProgress > 70 ? 35 : 0)} T 200 55 L 200 60 L 0 60 Z`}
-                    fill="currentColor"
-                    fillOpacity="0.15"
-                  />
-                </svg>
-              </div>
-
-              <div className="grid grid-cols-3 gap-1 text-[9px] font-mono text-center">
-                <div className="bg-slate-950 p-1 rounded border border-slate-800">
-                  <span className="text-slate-500 block">Peak 1 (Rf 0.24)</span>
-                  <span className="text-emerald-400 font-bold">{videoProgress > 15 ? '98.2% Purity' : 'Scanning...'}</span>
-                </div>
-                <div className="bg-slate-950 p-1 rounded border border-slate-800">
-                  <span className="text-slate-500 block">Peak 2 (Rf 0.48)</span>
-                  <span className="text-amber-400 font-bold">{videoProgress > 40 ? 'Active Marker' : 'Pending...'}</span>
-                </div>
-                <div className="bg-slate-950 p-1 rounded border border-slate-800">
-                  <span className="text-slate-500 block">Peak 3 (Rf 0.72)</span>
-                  <span className="text-purple-400 font-bold">{videoProgress > 70 ? 'Schedule T Compliant' : 'Pending...'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="z-10 w-full bg-slate-900/95 border border-slate-700/80 px-4 py-2 rounded-xl text-[11px] text-amber-300 font-mono text-center shadow-lg">
-            {videoProgress < 30 && "[Lecture Video Scene 1] Spotting raw extract on Silica Gel 60 F254 plate & initiating mobile phase migration (Toluene:Ethyl Acetate 9:1)."}
-            {videoProgress >= 30 && videoProgress < 75 && "[Lecture Video Scene 2] UV Scanner 254nm sweeping across plate. Quantifying active phytoconstituent markers against WHO reference standard."}
-            {videoProgress >= 75 && "[Lecture Video Scene 3] Chromatographic fingerprint verified. Batch meets Pharmacopoeial monograph purity standards (>98.5%)."}
-          </div>
-        </div>
-      );
+      return [
+        {
+          slideNumber: 1,
+          title: "Introduction to AYUSH Pharmacopoeial Monographs & SOPs",
+          category: "PHARMACOPOEIAL QUALITY CONTROL",
+          mainPoints: [
+            "Pharmacopoeial monographs define mandatory legal quality standards for raw herbal drugs and finished AYUSH formulations.",
+            "Schedule T of Drugs & Cosmetics Act governs Good Manufacturing Practices (GMP) across all manufacturing facilities.",
+            "Standardization ensures batch-to-batch therapeutic consistency, active marker quantification, and heavy metal compliance."
+          ],
+          keyHighlight: "Mandatory Regulatory Reference: Ayurvedic Pharmacopoeia of India (API) & Schedule T GMP Compliance.",
+          speechText: "Welcome to Slide 1. In this lecture, we introduce AYUSH Pharmacopoeial Monographs and Standard SOPs. Schedule T mandates strict GMP compliance for raw herb authentication and batch purity.",
+          diagramType: 'HPTLC'
+        },
+        {
+          slideNumber: 2,
+          title: "Raw Herbal Drug Sampling & Moisture Analysis",
+          category: "HERBAL RAW MATERIAL QC",
+          mainPoints: [
+            "Representative sampling protocols follow WHO guidelines to prevent batch contamination.",
+            "Moisture content is determined via Loss on Drying (LOD) to prevent microbial and fungal proliferation.",
+            "Foreign matter limits must not exceed 2.0% w/w under API monographs."
+          ],
+          keyHighlight: "Quality Parameter: Loss on Drying (LOD) <= 8.0% w/w for raw botanical drugs.",
+          speechText: "Slide 2 covers Raw Herbal Sampling. Moisture analysis via Loss on Drying is critical to prevent fungal growth, with foreign matter strictly limited under 2 percent.",
+          diagramType: 'MANUFACTURING'
+        },
+        {
+          slideNumber: 3,
+          title: "Silica Gel HPTLC Stationary Phase Preparation",
+          category: "CHROMATOGRAPHY SETUP",
+          mainPoints: [
+            "Pre-coated Silica Gel 60 F254 aluminum plates (0.2mm thickness) provide high chromatographic resolution.",
+            "Sample application using automatic Linomat V applicator delivers precise 6mm band widths.",
+            "Pre-washing plates in methanol eliminates organic background interference before spotting."
+          ],
+          keyHighlight: "Chromatographic Standard: CAMAG Silica Gel 60 F254 plates with 254nm fluorescent indicator.",
+          speechText: "Slide 3 explains Silica Gel HPTLC plate preparation. Precise sample spotting with automatic applicators ensures uniform 6 millimeter band width for reproducible separation.",
+          diagramType: 'HPTLC'
+        },
+        {
+          slideNumber: 4,
+          title: "Mobile Phase Migration & Rf Value Dynamics",
+          category: "SOLVENT SEPARATION PHYSICS",
+          mainPoints: [
+            "Mobile phase selection (Toluene:Ethyl Acetate 9:1 v/v) optimizes phytoconstituent partitioning.",
+            "Twin trough chamber saturation for 30 minutes establishes vapor-liquid equilibrium.",
+            "Retention Factor (Rf) values quantify exact compound migration distance relative to solvent front."
+          ],
+          keyHighlight: "Separation Formula: Rf = Distance traveled by solute band / Distance traveled by solvent front.",
+          speechText: "Slide 4 demonstrates Mobile Phase Migration. Solvent chamber saturation establishes vapor equilibrium, separating active phytoconstituents according to their distinct Rf values.",
+          diagramType: 'HPTLC'
+        },
+        {
+          slideNumber: 5,
+          title: "UV Densitometric Scanning (254nm & 366nm)",
+          category: "SPECTRAL QUANTIFICATION",
+          mainPoints: [
+            "Deuterium and Tungsten lamps scan TLC plates across UV-visible spectrum (200nm - 700nm).",
+            "UV 254nm fluorescence quenching detects conjugated double bond chromophores.",
+            "UV 366nm fluorescent emission visualizes natural flavonoid and alkaloid luminescence."
+          ],
+          keyHighlight: "Instrumentation: CAMAG TLC Scanner IV operating in absorption/fluorescence mode.",
+          speechText: "Slide 5 covers UV Densitometric Scanning. Dual lamps scan the chromatography plate at 254 and 366 nanometers to detect active flavonoid and alkaloid chromophores.",
+          diagramType: 'HPTLC'
+        },
+        {
+          slideNumber: 6,
+          title: "Active Phytoconstituent Marker Quantification Peak Spectra",
+          category: "QUANTITATIVE FINGERPRINTING",
+          mainPoints: [
+            "Integrated peak areas correlate directly to active marker concentration via calibration curves.",
+            "Rf 0.24, 0.48, and 0.72 represent primary bioactive marker compounds in standard extract.",
+            "Validation metrics require high linearity (R^2 > 0.995) and precision (RSD < 2.0%)."
+          ],
+          keyHighlight: "Assay Standard: Minimum 98.5% active marker purity relative to WHO chemical reference standard.",
+          speechText: "Slide 6 displays Quantitative Peak Area Integration. Peak absorbance profiles at Rf 0.24 and 0.48 verify marker concentration with R-squared linearity exceeding 0.995.",
+          diagramType: 'HPTLC'
+        },
+        {
+          slideNumber: 7,
+          title: "Heavy Metal Limit Testing via Atomic Absorption Spectroscopy (AAS)",
+          category: "SAFETY & TOXICOLOGY",
+          mainPoints: [
+            "Inductively Coupled Plasma Mass Spectrometry (ICP-MS) quantifies heavy metals in parts per million (ppm).",
+            "Permissible Limits: Lead (Pb) <= 10.0 ppm, Arsenic (As) <= 3.0 ppm, Cadmium (Cd) <= 0.3 ppm.",
+            "Mercury (Hg) limits strictly capped at <= 1.0 ppm under Ministry of AYUSH Gazette."
+          ],
+          keyHighlight: "Toxicology Threshold: Heavy metal concentration must remain strictly within API safety limits.",
+          speechText: "Slide 7 focuses on Heavy Metal Testing via AAS and ICP-MS. Permissible limits for Lead, Arsenic, Cadmium, and Mercury are strictly enforced for patient safety.",
+          diagramType: 'MANUFACTURING'
+        },
+        {
+          slideNumber: 8,
+          title: "Microbial Limit Testing & Aflatoxin Screening",
+          category: "BIOLOGICAL SAFETY",
+          mainPoints: [
+            "Total Viable Aerobic Count (TYMC/TAMC) verified via nutrient agar plate incubation.",
+            "Specific pathogen screening confirms total absence of E. coli, Salmonella, and S. aureus.",
+            "Immunoaffinity column HPLC screens for Aflatoxins B1, B2, G1, and G2."
+          ],
+          keyHighlight: "Biological Standard: Zero tolerance for pathogenic E. coli and Salmonella in oral doses.",
+          speechText: "Slide 8 details Microbial and Aflatoxin Screening. Culture plate incubation verifies the total absence of pathogenic bacteria and fungal aflatoxins.",
+          diagramType: 'MANUFACTURING'
+        },
+        {
+          slideNumber: 9,
+          title: "GMP Batch Manufacturing Record (BMR) Signoff",
+          category: "INDUSTRIAL COMPLIANCE",
+          mainPoints: [
+            "Complete raw material weighment logs, operator signatures, and room environmental logs.",
+            "In-Process Checks (IPC) record mass uniformity, disintegration time, and dissolution rate.",
+            "QA Head verification required prior to commercial batch release."
+          ],
+          keyHighlight: "Quality Assurance: Dual-operator verification log mandated for full batch traceability.",
+          speechText: "Slide 9 covers Batch Manufacturing Record signoff. Complete weighment logs, in-process testing records, and QA signatures ensure 100 percent batch traceability.",
+          diagramType: 'MANUFACTURING'
+        },
+        {
+          slideNumber: 10,
+          title: "Certificate of Analysis (CoA) & Export Compliance Summary",
+          category: "FINAL CERTIFICATION",
+          mainPoints: [
+            "Final Certificate of Analysis (CoA) summarizes physical, chemical, and biological test results.",
+            "WHO-GMP certification unlocks international export compliance for European & US markets.",
+            "Verification code registered on Ministry of AYUSH portal for digital verification."
+          ],
+          keyHighlight: "Final Verification: Course module completed! Automated verified e-certificate unlocked.",
+          speechText: "Slide 10 presents the Certificate of Analysis and Export Compliance Summary. The batch meets all WHO-GMP parameters. Congratulations, lecture verification complete!",
+          diagramType: 'HPTLC'
+        }
+      ];
     }
 
     // 2. Panchakarma / Shirodhara / Ayurveda Therapy
     if (title.includes('shirodhara') || title.includes('panchakarma') || title.includes('ayurvedic') || title.includes('dosha') || title.includes('bhasma') || discipline.includes('ayurveda')) {
-      return (
-        <div className="w-full h-full flex flex-col items-center justify-between p-4 relative text-white font-sans overflow-hidden select-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-amber-950/30 via-slate-950 to-slate-950"></div>
-
-          <div className="z-10 flex items-center justify-between w-full text-xs font-mono border-b border-slate-800 pb-2">
-            <span className="text-amber-400 font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-              PANCHAKARMA CLINICAL SIMULATOR: SHIRODHARA & TRIDOSHA BALANCE
-            </span>
-            <span className="text-emerald-400 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-emerald-500/30">
-              Ajna Chakra Oscillating Stream
-            </span>
-          </div>
-
-          <div className="z-10 flex-1 w-full flex items-center justify-around gap-6 my-2">
-            <div className="relative w-40 h-44 bg-slate-900/90 border border-amber-500/40 rounded-xl p-2 flex flex-col items-center justify-between overflow-hidden shadow-2xl">
-              <div
-                className="relative w-16 h-10 bg-gradient-to-r from-amber-700 via-yellow-600 to-amber-800 rounded-b-2xl border-t-2 border-amber-400 shadow-lg flex items-center justify-center animate-pulse"
-                style={{ transform: `translateX(${Math.sin(videoProgress * 0.2) * 15}px)` }}
-              >
-                <div className="w-2 h-2 rounded-full bg-amber-300 animate-ping"></div>
-              </div>
-
-              <div
-                className="w-1 bg-amber-400 shadow-[0_0_8px_#fbbf24] h-20 animate-pulse"
-                style={{ transform: `translateX(${Math.sin(videoProgress * 0.2) * 15}px)` }}
-              ></div>
-
-              <div className="relative w-24 h-8 bg-slate-950 rounded-t-full border-t border-amber-500/60 flex items-center justify-center">
-                <div className="w-6 h-6 rounded-full border border-amber-400 animate-ping absolute opacity-75"></div>
-                <span className="text-[8px] font-mono text-amber-300 z-10">AJNA CHAKRA</span>
-              </div>
-            </div>
-
-            <div className="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-inner flex flex-col justify-between h-44">
-              <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
-                <span>PARASYMPATHETIC EEG THETA WAVE</span>
-                <span className="text-amber-400 font-bold">DOSHA EQUILIBRIUM</span>
-              </div>
-
-              <div className="h-16 w-full bg-slate-950 rounded border border-slate-800 flex items-center p-1 overflow-hidden">
-                <svg className="w-full h-full text-amber-400" viewBox="0 0 200 40">
-                  <path
-                    d={`M 0 20 Q 25 ${20 + Math.sin(videoProgress) * 12} 50 20 T 100 20 T 150 20 T 200 20`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center text-[9px] font-mono">
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">VATA (Air)</span>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
-                    <div className="bg-cyan-400 h-full transition-all duration-300" style={{ width: `${Math.max(20, 80 - videoProgress * 0.6)}%` }}></div>
-                  </div>
-                  <span className="text-cyan-300 text-[8px] font-bold mt-0.5 block">{videoProgress > 50 ? 'Pacified' : 'Elevated'}</span>
-                </div>
-
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">PITTA (Fire)</span>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
-                    <div className="bg-amber-400 h-full transition-all duration-300" style={{ width: `${Math.max(30, 70 - videoProgress * 0.4)}%` }}></div>
-                  </div>
-                  <span className="text-amber-300 text-[8px] font-bold mt-0.5 block">Cooling</span>
-                </div>
-
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">KAPHA (Earth)</span>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full mt-1 overflow-hidden">
-                    <div className="bg-emerald-400 h-full transition-all duration-300" style={{ width: `${Math.min(65, 40 + videoProgress * 0.25)}%` }}></div>
-                  </div>
-                  <span className="text-emerald-300 text-[8px] font-bold mt-0.5 block">Nourished</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="z-10 w-full bg-slate-900/95 border border-slate-700/80 px-4 py-2 rounded-xl text-[11px] text-amber-300 font-mono text-center shadow-lg">
-            {videoProgress < 30 && "[Lecture Video Scene 1] Positioning warm Ksheerabala Taila vessel 10cm above forehead. Initiating steady 30-min continuous pendulum stream."}
-            {videoProgress >= 30 && videoProgress < 75 && "[Lecture Video Scene 2] Stimulating Ajna Chakra & Prana Vayu. Cortisol level dropping by 42%, inducing parasympathetic theta relaxation."}
-            {videoProgress >= 75 && "[Lecture Video Scene 3] Shirodhara protocol complete. Vata pacification verified; clinical post-care SOP recorded."}
-          </div>
-        </div>
-      );
+      return [
+        {
+          slideNumber: 1,
+          title: "Principles of Shodhana Therapies in Classical Panchakarma",
+          category: "AYURVEDIC THERAPEUTICS",
+          mainPoints: [
+            "Panchakarma constitutes the five primary purification procedures (Vamana, Virechana, Basti, Nasya, Raktamokshana).",
+            "Purvakarma (Snehana & Swedana) mobilizes morbid Doshas from peripheral tissues to the gastrointestinal tract.",
+            "Shirodhara is a specialized Murdhni Taila procedure targeting neurological and psychosomatic conditions."
+          ],
+          keyHighlight: "Classical Text Reference: Charaka Samhita Siddhi Sthana Chapter 1-3.",
+          speechText: "Welcome to Slide 1 on Panchakarma and Shirodhara. Shodhana therapies eliminate deep-seated morbid Doshas, with Shirodhara providing targeted neurological soothing.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 2,
+          title: "Clinical Etiology & Indications for Shirodhara",
+          category: "CLINICAL DIAGNOSTICS",
+          mainPoints: [
+            "Indicated for Vata and Pitta disorders: Shiroroga (headaches), Anidra (insomnia), Chittodvega (anxiety).",
+            "Normalizes hyperactive sympathetic nervous system and reduces elevated salivary cortisol.",
+            "Contraindicated in acute febrile states, head trauma, or acute intoxication."
+          ],
+          keyHighlight: "Primary Indication: Insomnia (Anidra), Anxiety (Chittodvega), and Essential Hypertension.",
+          speechText: "Slide 2 covers Clinical Indications. Shirodhara is indicated for Vata-Pitta disorders such as chronic insomnia, anxiety, and hypertension by calming the nervous system.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 3,
+          title: "Medicated Oil (Ksheerabala/Mahanarayana) Selection & SOP",
+          category: "FORMULATION PREPARATION",
+          mainPoints: [
+            "Ksheerabala Taila (processed 101 times) provides deep nerve nourishment and Vata pacification.",
+            "Oil temperature must be maintained strictly at 38°C - 40°C throughout 30-45 minute session.",
+            "Kwatha (decoctions), Takra (medicated buttermilk), or Milk (Ksheeradhara) selected based on Prakriti."
+          ],
+          keyHighlight: "Therapeutic Parameter: Medicated oil maintained precisely at body temperature (38°C - 40°C).",
+          speechText: "Slide 3 details Medicated Oil selection. Warm Ksheerabala Taila, maintained strictly at 38 to 40 degrees Celsius, nourishes cranial nerves and calms Vata dosha.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 4,
+          title: "Patient Ergonomics & Ajna Chakra Position Setup",
+          category: "PROCEDURAL SOP",
+          mainPoints: [
+            "Patient lies supine on traditional wooden Droni table with head supported in neutral neck alignment.",
+            "Shirodhara pot (Patra) suspended 10 cm directly above the forehead (Ajna Chakra / Sthapani Marma).",
+            "Gauze pad placed over eyes to protect from oil ingress and maintain relaxing ambient sensory state."
+          ],
+          keyHighlight: "Anatomical Target: Sthapani Marma / Ajna Chakra (Third Eye Center).",
+          speechText: "Slide 4 explains Patient Positioning. The copper vessel is suspended 10 centimeters above the forehead, directing a continuous stream onto the Sthapani Marma point.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 5,
+          title: "Pendulum Oscillation & Hydrodynamic Flow Physics",
+          category: "FLUID DYNAMICS",
+          mainPoints: [
+            "Continuous, uninterrupted oil stream flows side-to-side across forehead in rhythmic sinusoidal arc.",
+            "Laminar fluid flow generates gentle mechanical tactile stimulation across trigeminal cutaneous receptors.",
+            "Consistent 30-minute drip rate stimulates serotonin and endorphin release."
+          ],
+          keyHighlight: "Flow Rate: Steady 100-120 drops per minute continuous pendulum motion.",
+          speechText: "Slide 5 demonstrates Hydrodynamic Pendulum Flow. The rhythmic side-to-side stream stimulates cutaneous nerve receptors, triggering serotonin and endorphin release.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 6,
+          title: "Neurophysiological Impact & Parasympathetic Shift",
+          category: "AUTONOMIC PHYSIOLOGY",
+          mainPoints: [
+            "EEG monitors reveal transition from hyperactive Beta brainwaves to calm Theta (4-8 Hz) relaxation waves.",
+            "Baroreceptor activation decreases mean arterial pressure and resting heart rate.",
+            "Prefrontal cortex blood perfusion increases, enhancing cognitive clarity and emotional stability."
+          ],
+          keyHighlight: "Biomarker Outcome: 42% average reduction in plasma cortisol levels post-session.",
+          speechText: "Slide 6 highlights Neurophysiological Impact. EEG recordings show a shift to calm Theta brainwaves, reducing plasma cortisol by 42 percent post-procedure.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 7,
+          title: "Tridosha Equilibrium & Marma Energy Balancing",
+          category: "DOSHA MECHANICS",
+          mainPoints: [
+            "Pacifies Vata (Air/Ether) by grounding Prana Vayu and stabilizing Mind (Manas).",
+            "Cools Pitta (Fire/Water) by dissipating excessive cranial metabolic heat (Sadhaka Pitta).",
+            "Promotes Kapha (Earth/Water) nourishment to Tarpaka Kapha in brain ventricles."
+          ],
+          keyHighlight: "Dosha Target: Balancing Prana Vayu, Sadhaka Pitta, and Tarpaka Kapha.",
+          speechText: "Slide 7 explains Tridosha Equilibrium. Shirodhara grounds Prana Vayu, cools Sadhaka Pitta, and restores nourishment to Tarpaka Kapha in the central nervous system.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 8,
+          title: "Intra-Procedure Safety & Vital Monitoring",
+          category: "CLINICAL SAFETY",
+          mainPoints: [
+            "Monitor blood pressure and pulse rate at 10-minute intervals throughout therapy.",
+            "Observe for signs of vasovagal syncope, dizziness, or oil temperature fluctuations.",
+            "Therapy immediately paused if patient reports nausea or severe chill."
+          ],
+          keyHighlight: "Safety Protocol: Continuous vital monitoring with emergency warm cloth standby.",
+          speechText: "Slide 8 details Clinical Safety. Blood pressure and pulse rates are monitored at 10 minute intervals to ensure complete patient safety throughout treatment.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 9,
+          title: "Paschatkarma Post-Therapy Management Protocols",
+          category: "POST-PROCEDURE CARE",
+          mainPoints: [
+            "Excess oil gently wiped; patient rests in warm room for 15-20 minutes.",
+            "Warm lukewarm water bath recommended using herbal hair wash powder (Snana Churna).",
+            "Pathya Ahara: Light, warm, easily digestible diet (Mudga Yusha / Kitchari) prescribed."
+          ],
+          keyHighlight: "Post-Care Norm: Avoid cold exposure, direct sunlight, and strenuous physical exertion.",
+          speechText: "Slide 9 covers Paschatkarma Management. Post-therapy care includes 20 minutes of warm rest, herbal cleansing, and a light Kitchari diet.",
+          diagramType: 'SHIRODHARA'
+        },
+        {
+          slideNumber: 10,
+          title: "Clinical Outcome Documentation & Final Course Signoff",
+          category: "EHR DOCUMENTATION",
+          mainPoints: [
+            "Document patient feedback, Pittsburgh Sleep Quality Index (PSQI) score improvements.",
+            "Log batch details of medicated oil used for full regulatory traceability.",
+            "Automatic completion verified! Student assessment unlocked."
+          ],
+          keyHighlight: "Final Signoff: Shirodhara protocol completed! Verified 100% lecture completion.",
+          speechText: "Slide 10 presents Clinical Documentation and Final Verification. Patient sleep scores and batch records are logged. Lecture completed successfully!",
+          diagramType: 'SHIRODHARA'
+        }
+      ];
     }
 
-    // 3. Yoga & Naturopathy / Pranayama / HRV
+    // 3. Yoga & Naturopathy (Pranayama / HRV)
     if (title.includes('yoga') || title.includes('pranayama') || title.includes('hrv') || title.includes('naturopathy') || discipline.includes('yoga')) {
+      return [
+        {
+          slideNumber: 1,
+          title: "Foundations of Clinical Yoga Therapy & Naturopathy",
+          category: "YOGA PHYSIOLOGY",
+          mainPoints: [
+            "Clinical Yoga integrates Asana, Pranayama, and Dhyana for psychosomatic health management.",
+            "Pancha Kosha model: Annamaya, Pranamaya, Manomaya, Vijnanamaya, and Anandamaya Koshas.",
+            "Naturopathy emphasizes vitalistic self-healing mechanisms and non-invasive natural modalities."
+          ],
+          keyHighlight: "Holistic Framework: Pancha Kosha assessment & Vitalistic self-healing.",
+          speechText: "Welcome to Slide 1 on Clinical Yoga Therapy and Naturopathy. We explore the Pancha Kosha health model and vitalistic self-healing mechanisms.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 2,
+          title: "Pranayama Breath Mechanics & Respiratory Physiology",
+          category: "BREATH MECHANICS",
+          mainPoints: [
+            "Diaphragmatic excursion increases tidal volume and improves lower lobe pulmonary ventilation.",
+            "Inspiration (Puraka), Retention (Kumbhaka), and Expiration (Rechaka) control respiratory cadence.",
+            "Reduces anatomical dead space ventilation and optimizes arterial oxygen saturation (SpO2)."
+          ],
+          keyHighlight: "Physiological Target: Enhanced alveolar gas exchange & vagal nerve stimulation.",
+          speechText: "Slide 2 covers Respiratory Breath Mechanics. Diaphragmatic breathing increases tidal volume, optimizing alveolar oxygen exchange and vagal nerve tone.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 3,
+          title: "Anulom Vilom (Nadi Shodhana) Cadence Protocol",
+          category: "PRANAYAMA TECHNIQUE",
+          mainPoints: [
+            "Alternate nostril breathing balances Ida (parasympathetic) and Pingala (sympathetic) Nadis.",
+            "Prescribed Cadence: 4 seconds Inhale -> 16 seconds Retention -> 8 seconds Exhale (1:4:2 ratio).",
+            "Clears autonomic nasal cycle asymmetry and synchronizes hemispheric EEG activity."
+          ],
+          keyHighlight: "Classical Ratio: Puraka (1) : Kumbhaka (4) : Rechaka (2) for Nadi purification.",
+          speechText: "Slide 3 details Anulom Vilom Nadi Shodhana. Alternate nostril breathing in a 1:4:2 ratio synchronizes left and right brain hemispheric activity.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 4,
+          title: "Autonomic Nervous System & Vagal Tone Activation",
+          category: "NEURO-PHYSIOLOGY",
+          mainPoints: [
+            "Slow, rhythmic breathing at 6 breaths per minute triggers cardiac baroreflex sensitivity.",
+            "Vagus nerve (Cranial Nerve X) activation releases acetylcholine, slowing sinoatrial node firing.",
+            "Downregulates sympathetic fight-or-flight adrenal response."
+          ],
+          keyHighlight: "Autonomic Outcome: Parasympathetic dominance with reduced serum catecholamines.",
+          speechText: "Slide 4 highlights Autonomic Vagal Activation. Breathing at 6 breaths per minute stimulates the vagus nerve, lowering heart rate and sympathetic stress.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 5,
+          title: "Heart Rate Variability (HRV) Biofeedback Analytics",
+          category: "CARDIAC METRICS",
+          mainPoints: [
+            "HRV quantifies beat-to-beat (RR interval) variation controlled by autonomic inputs.",
+            "Time-domain SDNN and RMSSD metrics increase significantly during deep Pranayama.",
+            "High-Frequency (HF) power spectrum indicates robust vagal parasympathetic reserve."
+          ],
+          keyHighlight: "Clinical Metric: High RMSSD & SDNN reflect optimal cardiac autonomic adaptability.",
+          speechText: "Slide 5 presents HRV Biofeedback Analytics. Increased SDNN and High-Frequency power confirm elevated parasympathetic cardiac adaptability.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 6,
+          title: "Pranic Energy Meridian & 7 Chakra Alignment",
+          category: "ENERGY PHYSIOLOGY",
+          mainPoints: [
+            "Sushumna Nadi serves as the central energy channel along the vertebral column.",
+            "7 Chakra nodes (Muladhara to Sahasrara) regulate endocrine and autonomic nerve plexuses.",
+            "Anahata (Heart Chakra) biofeedback correlates with emotional coherence and vagal tone."
+          ],
+          keyHighlight: "Energy Center: Anahata Chakra alignment enhancing cardiovascular harmony.",
+          speechText: "Slide 6 explores Pranic Energy Meridian Alignment. Sushumna Nadi and Chakra energy centers harmonize endocrine and autonomic nerve function.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 7,
+          title: "Naturopathic Hydrotherapy & Dietetics Synergy",
+          category: "NATUROPATHIC MODALITIES",
+          mainPoints: [
+            "Cold mud packs to abdomen reduce visceral hyperemia and stimulate gastrointestinal peristalsis.",
+            "Hydrotherapy hip baths enhance pelvic hemodynamics and autonomic circulation.",
+            "Elimination diet (raw fruit/vegetables) promotes systemic detoxification and metabolic rest."
+          ],
+          keyHighlight: "Naturopathic SOP: Hydrotherapy & Mud packs promoting visceral detox.",
+          speechText: "Slide 7 details Naturopathic Modalities. Hydrotherapy hip baths and elimination diets enhance pelvic hemodynamics and gastrointestinal detox.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 8,
+          title: "Psychosomatic Stress Reduction & Biomarker Metrics",
+          category: "STRESS BIOMARKERS",
+          mainPoints: [
+            "Galvanic Skin Resistance (GSR) drops, indicating reduced sympathetic palmar sweating.",
+            "Salivary alpha-amylase and cortisol levels decline by >35% after 4 weeks of practice.",
+            "Systemic inflammatory cytokines (IL-6, TNF-alpha) decrease in chronic stress patients."
+          ],
+          keyHighlight: "Biomarker Reduction: >35% drop in salivary cortisol & inflammatory cytokines.",
+          speechText: "Slide 8 shows Psychosomatic Stress Metrics. Galvanic skin resistance and salivary cortisol drop significantly, confirming reduced systemic inflammation.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 9,
+          title: "Clinical Practice Contraindications & Modifications",
+          category: "PATIENT SAFETY",
+          mainPoints: [
+            "Avoid forceful breath retention (Kumbhaka) in uncontrolled hypertension or cardiac lesions.",
+            "Modify Asanas for spinal disc herniations, pregnancy, or joint hypermobility.",
+            "Tailor routines according to age, physical constitution, and clinical diagnosis."
+          ],
+          keyHighlight: "Safety Rule: No breath holding (Kumbhaka) for patients with hypertension.",
+          speechText: "Slide 9 covers Patient Safety & Contraindications. Breath retention is avoided in hypertension, with yoga asanas customized to individual patient safety.",
+          diagramType: 'YOGA'
+        },
+        {
+          slideNumber: 10,
+          title: "Patient Self-Care Prescription & Final Completion",
+          category: "CLINICAL SUMMARY",
+          mainPoints: [
+            "Prescribe structured 20-minute daily Sadhana home practice plan.",
+            "Log patient adherence and wearable device HRV metrics via digital portal.",
+            "Lecture completed! Verified 100% video completion signal sent."
+          ],
+          keyHighlight: "Final Summary: Clinical Yoga & Naturopathy module verified complete!",
+          speechText: "Slide 10 presents the Patient Prescription and Final Verification. Daily Sadhana routines are assigned. Lecture verification completed successfully!",
+          diagramType: 'YOGA'
+        }
+      ];
+    }
+
+    // 4. Default / Homoeopathy / Unani / Siddha / Manufacturing SOP
+    return [
+      {
+        slideNumber: 1,
+        title: "Overview of Industrial AYUSH Manufacturing & Clinical SOPs",
+        category: "INDUSTRIAL MANUFACTURING",
+        mainPoints: [
+          "AYUSH manufacturing facilities operate under Schedule T of Drugs & Cosmetics Rules 1945.",
+          "Standard Operating Procedures (SOPs) mandate rigorous material handling and hygiene.",
+          "Ensures reproducible quality, therapeutic efficacy, and safety across commercial batches."
+        ],
+        keyHighlight: "Regulatory Standard: Schedule T GMP & ISO 9001:2015 Quality Systems.",
+        speechText: "Welcome to Slide 1 on Industrial AYUSH Manufacturing and SOPs. Schedule T mandates strict compliance for raw materials, facility hygiene, and batch consistency.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 2,
+        title: "Raw Material Botanical Authentication & Storage SOPs",
+        category: "BOTANICAL RAW MATERIALS",
+        mainPoints: [
+          "Herbal species verified via macroscopic, microscopic, and organoleptic parameters.",
+          "Quarantine storage maintained at controlled temperature (20-25°C) and relative humidity (<60%).",
+          "First-In, First-Out (FIFO) inventory control prevents raw material degradation."
+        ],
+        keyHighlight: "Material Control: Verified botanical identity & FIFO quarantine release.",
+        speechText: "Slide 2 covers Botanical Authentication and Storage. Herbal species undergo microscopic verification and quarantine storage under controlled humidity.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 3,
+        title: "Herbal Extraction & Decanting Hydrodynamics",
+        category: "EXTRACTION TECHNOLOGY",
+        mainPoints: [
+          "Stainless Steel 316L reactors execute hydro-alcoholic extraction at 85°C.",
+          "Mechanical agitation impellers maintain uniform heat distribution and mass transfer.",
+          "Decanters and disc-stack centrifuges clarify liquid extracts from insoluble marc."
+        ],
+        keyHighlight: "Extraction Telemetry: Temp 85.4°C | Pressure 1.2 BAR | Stirrer 120 RPM.",
+        speechText: "Slide 3 details Extraction Kettle operations. Stainless steel reactors maintain 85 degrees Celsius with continuous agitation for optimal extract yield.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 4,
+        title: "In-Process Quality Checks (IPC) & Concentration",
+        category: "PROCESS CONTROL",
+        mainPoints: [
+          "Triple-effect falling film evaporators concentrate extracts under low temperature vacuum.",
+          "In-Process Checks monitor specific gravity, total solids, pH, and Brix levels.",
+          "Concentrated extract spray-dried into uniform free-flowing botanical powder."
+        ],
+        keyHighlight: "IPC Parameter: Vacuum evaporation < 50°C to protect thermolabile active compounds.",
+        speechText: "Slide 4 covers In-Process Quality Checks. Vacuum evaporation concentrates extracts under 50 degrees to preserve heat-sensitive active constituents.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 5,
+        title: "Finished Dosage Form (Tablet/Capsule/Syrup) Standardization",
+        category: "DOSAGE FORM METROLOGY",
+        mainPoints: [
+          "Automated rotary tablet presses produce uniform weight tablets (USP/IP limits +/- 5%).",
+          "Hardness testers ensure mechanical strength (> 6 kg/cm2) for transport stability.",
+          "Disintegration testing confirms rapid gastric release (< 15 minutes)."
+        ],
+        keyHighlight: "Dosage Metrology: Tablet disintegration < 15 mins & Uniformity of mass compliant.",
+        speechText: "Slide 5 details Dosage Form Standardization. Rotary tablet presses enforce weight uniformity and rapid disintegration under 15 minutes.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 6,
+        title: "Primary & Secondary Packaging Compliance",
+        category: "PACKAGING INTEGRITY",
+        mainPoints: [
+          "Blister packaging lines utilize pharmaceutical PVC/PVDC and aluminum foil seals.",
+          "Amber glass bottles shield liquid formulations from photo-degradation.",
+          "Batch number, manufacturing date, expiry date, and QR codes printed automatically."
+        ],
+        keyHighlight: "Packaging Norm: Moisture barrier blister packs & light-resistant amber containers.",
+        speechText: "Slide 6 highlights Packaging Compliance. Blister sealing and amber glass bottles shield products against light and moisture degradation.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 7,
+        title: "Stability Testing & Shelf-Life Estimation (ICH Guidelines)",
+        category: "STABILITY ANALYTICS",
+        mainPoints: [
+          "Accelerated stability testing conducted at 40°C +/- 2°C / 75% RH +/- 5% RH for 6 months.",
+          "Real-time stability chambers monitor product physical and chemical integrity over 3 years.",
+          "Assay of active markers must remain >90% of labeled claim throughout shelf-life."
+        ],
+        keyHighlight: "Stability Metric: Minimum 90.0% active potency retention over 36 months.",
+        speechText: "Slide 7 covers Stability Testing. Accelerated stability testing at 40 degrees and 75 percent humidity verifies a minimum 3-year shelf life.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 8,
+        title: "Cleanroom Environmental Monitoring (HVAC & Microbe Counts)",
+        category: "ENVIRONMENTAL HYGIENE",
+        mainPoints: [
+          "HEPA filtration systems maintain Class 100,000 (ISO Class 8) cleanroom air quality.",
+          "Positive pressure differentials prevent external dust and contaminant ingress.",
+          "Settle plates and air samplers monitor airborne microbial colony forming units (CFU)."
+        ],
+        keyHighlight: "Cleanroom Spec: ISO Class 8 environment with HEPA 99.97% air filtration.",
+        speechText: "Slide 8 details Cleanroom Environmental Hygiene. HEPA filtration maintains ISO Class 8 cleanrooms with positive pressure preventing contamination.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 9,
+        title: "Quality Assurance Logbook & Digital Audit Trails",
+        category: "DATA INTEGRITY",
+        mainPoints: [
+          "21 CFR Part 11 compliant digital logging system prevents data tampering.",
+          "Every batch step records operator ID, timestamp, and QA supervisor signoff.",
+          "Deviation reports investigate any out-of-specification (OOS) analytical result."
+        ],
+        keyHighlight: "Data Integrity: Audit trail security with zero unauthorized log alterations.",
+        speechText: "Slide 9 presents Data Integrity and Audit Trails. Tamper-proof digital logs record every operator action and QA signoff for full compliance.",
+        diagramType: 'MANUFACTURING'
+      },
+      {
+        slideNumber: 10,
+        title: "Final Batch Release & Digital Certificate of Analysis (CoA)",
+        category: "BATCH CLEARANCE",
+        mainPoints: [
+          "QA Manager issues final batch clearance upon reviewing all BMR records.",
+          "Digital CoA uploaded to Ministry of AYUSH portal for instant authenticity verification.",
+          "Presentation completed! Verified 100% video lecture completion."
+        ],
+        keyHighlight: "Final Signoff: Batch release authorized! Verified 100% lecture completion.",
+        speechText: "Slide 10 presents Final Batch Release and Certification. Quality Assurance authorizes release and registers the digital Certificate of Analysis. Verification complete!",
+        diagramType: 'MANUFACTURING'
+      }
+    ];
+  };
+
+  const renderSlideDiagram = (diagramType: string, progress: number) => {
+    if (diagramType === 'HPTLC') {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-between p-4 relative text-white font-sans overflow-hidden select-none">
-          <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:20px_20px] opacity-15"></div>
-
-          <div className="z-10 flex items-center justify-between w-full text-xs font-mono border-b border-slate-800 pb-2">
-            <span className="text-cyan-400 font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-              YOGA PHYSIOLOGY: PRANAYAMA BREATH RHYTHM & AUTONOMIC HRV
-            </span>
-            <span className="text-emerald-400 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-emerald-500/30">
-              Anahata Biofeedback
-            </span>
+        <div className="w-full h-44 bg-slate-950 rounded-xl border border-slate-800 p-2 flex flex-col justify-between items-center relative overflow-hidden">
+          <div className="text-[9px] font-mono text-emerald-400 font-bold">HPTLC TLC SCANNER IV DIAGRAM</div>
+          <div className="relative w-full h-24 bg-slate-900 border border-emerald-500/50 rounded flex items-end p-1 overflow-hidden">
+            <svg className="w-full h-full text-emerald-400 overflow-visible" viewBox="0 0 200 50">
+              <path d="M 0 45 Q 30 15 60 45 T 120 10 T 170 25 T 200 45" fill="none" stroke="currentColor" strokeWidth="2.5" />
+              <path d="M 0 45 Q 30 15 60 45 T 120 10 T 170 25 T 200 45 L 200 50 L 0 50 Z" fill="currentColor" fillOpacity="0.2" />
+            </svg>
+            <div className="absolute top-0 bottom-0 w-0.5 bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse" style={{ left: `${(progress * 2) % 100}%` }}></div>
           </div>
-
-          <div className="z-10 flex-1 w-full flex items-center justify-around gap-6 my-2">
-            <div className="relative w-36 h-44 bg-slate-900/90 border border-cyan-500/40 rounded-xl p-3 flex flex-col items-center justify-center overflow-hidden shadow-2xl">
-              <div className="relative flex items-center justify-center">
-                <div
-                  className="absolute rounded-full border border-cyan-400/60 bg-cyan-500/10 transition-all duration-700"
-                  style={{
-                    width: `${60 + Math.sin(videoProgress * 0.3) * 30}px`,
-                    height: `${60 + Math.sin(videoProgress * 0.3) * 30}px`
-                  }}
-                ></div>
-                <div className="w-12 h-20 bg-gradient-to-b from-amber-400 via-emerald-400 to-cyan-500 rounded-t-full opacity-80 blur-xs"></div>
-              </div>
-              <span className="text-[9px] font-mono text-cyan-300 mt-2 font-bold">
-                PRANA RHYTHM: {Math.sin(videoProgress * 0.3) > 0 ? 'INHALE 4s' : 'EXHALE 8s'}
-              </span>
-            </div>
-
-            <div className="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-inner flex flex-col justify-between h-44">
-              <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
-                <span>HEART RATE VARIABILITY (HRV SDNN)</span>
-                <span className="text-cyan-400 font-bold">VAGAL TONE: OPTIMAL</span>
-              </div>
-
-              <div className="h-20 w-full bg-slate-950 rounded border border-slate-800 flex items-center p-2">
-                <svg className="w-full h-full text-cyan-400" viewBox="0 0 200 50">
-                  <path
-                    d={`M 0 25 L 30 25 L 35 10 L 40 40 L 45 25 L 80 25 L 85 5 L 90 45 L 95 25 L 140 25 L 145 10 L 150 40 L 155 25 L 200 25`}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-mono">
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">SYMPATHETIC STRESS</span>
-                  <span className="text-amber-400 font-extrabold text-xs">{Math.max(12, Math.round(65 - videoProgress * 0.5))} ms</span>
-                </div>
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">PARASYMPATHETIC RECOVERY</span>
-                  <span className="text-emerald-400 font-extrabold text-xs">{Math.min(98, Math.round(45 + videoProgress * 0.5))}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="z-10 w-full bg-slate-900/95 border border-slate-700/80 px-4 py-2 rounded-xl text-[11px] text-amber-300 font-mono text-center shadow-lg">
-            {videoProgress < 30 && "[Lecture Video Scene 1] Initiating Anulom Vilom (Alternate Nostril Breathing). Inhale 4s -> Retain 16s -> Exhale 8s."}
-            {videoProgress >= 30 && videoProgress < 75 && "[Lecture Video Scene 2] Vagus nerve stimulation enhancing baroreflex sensitivity & lowering arterial blood pressure."}
-            {videoProgress >= 75 && "[Lecture Video Scene 3] Autonomic nervous system balance achieved. Autonomic stability score: 98/100."}
+          <div className="grid grid-cols-3 gap-1 text-[8px] font-mono text-center w-full">
+            <span className="bg-slate-900 p-1 rounded text-emerald-300 font-bold">Rf1: 0.24</span>
+            <span className="bg-slate-900 p-1 rounded text-amber-300 font-bold">Rf2: 0.48</span>
+            <span className="bg-slate-900 p-1 rounded text-purple-300 font-bold">Rf3: 0.72</span>
           </div>
         </div>
       );
     }
 
-    // 4. Homoeopathy / Potentization / Succussion
-    if (title.includes('homoeopath') || title.includes('potentiz') || title.includes('succussion') || title.includes('repertory') || discipline.includes('homeopathy')) {
+    if (diagramType === 'SHIRODHARA') {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-between p-4 relative text-white font-sans overflow-hidden select-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-slate-950 to-slate-950"></div>
-
-          <div className="z-10 flex items-center justify-between w-full text-xs font-mono border-b border-slate-800 pb-2">
-            <span className="text-indigo-400 font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
-              HOMOEOPATHIC PHARMACY: CENTESIMAL POTENTIZATION & SUCCUSSION
-            </span>
-            <span className="text-amber-400 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-amber-500/30">
-              30C / 200C Dynamic Imprint
-            </span>
-          </div>
-
-          <div className="z-10 flex-1 w-full flex items-center justify-around gap-6 my-2">
-            <div className="relative w-36 h-44 bg-slate-900/90 border border-indigo-500/40 rounded-xl p-3 flex flex-col items-center justify-between overflow-hidden shadow-2xl">
-              <div
-                className="w-12 h-24 border-2 border-indigo-300/80 rounded-b-xl bg-indigo-950/50 relative overflow-hidden flex items-end shadow-[0_0_15px_#818cf8]"
-                style={{ transform: `translateY(${Math.sin(videoProgress * 0.4) * 8}px)` }}
-              >
-                <div className="w-full bg-indigo-500/60 h-14 relative flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-white/40 animate-ping"></div>
-                </div>
-              </div>
-
-              <div className="w-24 h-4 bg-amber-950 border border-amber-700 rounded text-[8px] font-mono text-amber-400 text-center font-bold">
-                LEATHER PAD IMPACT
-              </div>
-            </div>
-
-            <div className="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-inner flex flex-col justify-between h-44">
-              <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
-                <span>WATER CLATHRATE NANOSTRUCTURE LATTICE</span>
-                <span className="text-indigo-400 font-bold">HAHNEMANNIAN RATIO 1:99</span>
-              </div>
-
-              <div className="h-20 w-full bg-slate-950 rounded border border-slate-800 flex items-center justify-center p-2 relative overflow-hidden">
-                <div className="grid grid-cols-5 gap-2">
-                  {[...Array(10)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-4 h-4 rounded-full bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-ping"
-                      style={{ animationDelay: `${i * 150}ms` }}
-                    ></div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-mono">
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">SUCCUSSION STRIKES</span>
-                  <span className="text-indigo-400 font-extrabold text-xs">{Math.min(10, Math.floor(videoProgress / 10))} / 10 STRIKES</span>
-                </div>
-                <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
-                  <span className="text-slate-400 block">DYNAMIZED POTENCY</span>
-                  <span className="text-emerald-400 font-extrabold text-xs">{videoProgress > 50 ? '30C Potency Verified' : 'In Succussion...'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="z-10 w-full bg-slate-900/95 border border-slate-700/80 px-4 py-2 rounded-xl text-[11px] text-amber-300 font-mono text-center shadow-lg">
-            {videoProgress < 30 && "[Lecture Video Scene 1] Adding 1 part mother tincture (Q) to 99 parts dispensing alcohol in clean glass vial."}
-            {videoProgress >= 30 && videoProgress < 75 && "[Lecture Video Scene 2] Applying 10 powerful downward succussion strikes against leather cushion to release dynamic medicinal force."}
-            {videoProgress >= 75 && "[Lecture Video Scene 3] Centesimal potency (30C) complete. Nanoparticle electromagnetic imprint verified."}
+        <div className="w-full h-44 bg-slate-950 rounded-xl border border-slate-800 p-2 flex flex-col justify-between items-center relative overflow-hidden">
+          <div className="text-[9px] font-mono text-amber-400 font-bold">SHIRODHARA HYDRODYNAMIC STREAM</div>
+          <div className="relative w-20 h-10 bg-amber-700/80 rounded-b-xl border-t-2 border-amber-400 shadow-md animate-pulse"></div>
+          <div className="w-1 bg-amber-400 shadow-[0_0_8px_#fbbf24] h-14 animate-pulse"></div>
+          <div className="w-24 h-6 bg-slate-900 rounded-t-full border-t border-amber-500 flex items-center justify-center">
+            <span className="text-[8px] font-mono text-amber-300 font-bold">AJNA CHAKRA</span>
           </div>
         </div>
       );
     }
 
-    // 5. Default / Industrial SOP & General AYUSH Video Explanation
+    if (diagramType === 'YOGA') {
+      return (
+        <div className="w-full h-44 bg-slate-950 rounded-xl border border-slate-800 p-2 flex flex-col justify-between items-center relative overflow-hidden">
+          <div className="text-[9px] font-mono text-cyan-400 font-bold">RESPIRATORY PHYSIOLOGY & HRV</div>
+          <div className="relative w-16 h-16 rounded-full border-2 border-cyan-400/80 flex items-center justify-center bg-cyan-500/10">
+            <div className="w-8 h-12 bg-gradient-to-b from-amber-400 via-emerald-400 to-cyan-500 rounded-t-full opacity-80 animate-pulse"></div>
+          </div>
+          <div className="w-full bg-slate-900 p-1 rounded border border-slate-800 text-[8px] font-mono text-center text-cyan-300 font-bold">
+            VAGAL TONE HRV: OPTIMAL (SDNN 68ms)
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="w-full h-full flex flex-col items-center justify-between p-4 relative text-white font-sans overflow-hidden select-none">
-        <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-10"></div>
-
-        <div className="z-10 flex items-center justify-between w-full text-xs font-mono border-b border-slate-800 pb-2">
-          <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            MANUFACTURING SOP & CLINICAL QUALITY ASSURANCE SIMULATION
-          </span>
-          <span className="text-amber-400 font-extrabold bg-slate-900 px-2 py-0.5 rounded border border-amber-500/30">
-            GMP & Schedule T SOP
-          </span>
+      <div className="w-full h-44 bg-slate-950 rounded-xl border border-slate-800 p-2 flex flex-col justify-between items-center relative overflow-hidden">
+        <div className="text-[9px] font-mono text-emerald-400 font-bold">EXTRACTION KETTLE & TELEMETRY</div>
+        <div className="w-16 h-20 border-2 border-emerald-400 rounded-b-2xl bg-slate-900 flex items-center justify-center relative">
+          <div className="w-full h-1 bg-amber-400 animate-spin"></div>
         </div>
-
-        <div className="z-10 flex-1 w-full flex items-center justify-around gap-6 my-2">
-          <div className="relative w-36 h-44 bg-slate-900/90 border border-emerald-500/40 rounded-xl p-3 flex flex-col items-center justify-between overflow-hidden shadow-2xl">
-            <div className="w-20 h-24 border-2 border-emerald-400 rounded-b-3xl bg-slate-950 relative overflow-hidden flex flex-col justify-end p-1">
-              <div className="w-full bg-emerald-600/60 rounded-b-2xl h-16 relative flex items-center justify-center">
-                <div className="w-full h-1 bg-amber-400 animate-spin"></div>
-              </div>
-            </div>
-            <span className="text-[9px] font-mono text-emerald-300 font-bold">EXTRACTION KETTLE (85°C)</span>
-          </div>
-
-          <div className="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow-inner flex flex-col justify-between h-44">
-            <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
-              <span>ACTIVE SOP WORKFLOW MONITOR</span>
-              <span className="text-emerald-400 font-bold">LIVE TELEMETRY</span>
-            </div>
-
-            <div className="h-16 w-full bg-slate-950 rounded border border-slate-800 flex items-center p-2 gap-2">
-              <div className="flex-1 bg-slate-900 p-2 rounded border border-slate-800 text-[9px] font-mono text-center">
-                <span className="text-slate-500 block">TEMP</span>
-                <span className="text-amber-400 font-bold text-xs">85.4 °C</span>
-              </div>
-              <div className="flex-1 bg-slate-900 p-2 rounded border border-slate-800 text-[9px] font-mono text-center">
-                <span className="text-cyan-400 font-bold text-xs">1.2 BAR</span>
-              </div>
-              <div className="flex-1 bg-slate-900 p-2 rounded border border-slate-800 text-[9px] font-mono text-center">
-                <span className="text-emerald-400 font-bold text-xs">99.1%</span>
-              </div>
-            </div>
-
-            <div className="w-full bg-slate-950 p-2 rounded border border-slate-800 text-[9px] font-mono">
-              <div className="flex justify-between mb-1 text-slate-400">
-                <span>GMP Inspection Checklist</span>
-                <span className="text-emerald-400 font-bold">{Math.round(videoProgress)}% Verified</span>
-              </div>
-              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full transition-all duration-200" style={{ width: `${videoProgress}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="z-10 w-full bg-slate-900/95 border border-slate-700/80 px-4 py-2 rounded-xl text-[11px] text-amber-300 font-mono text-center shadow-lg">
-          {videoProgress < 30 && `[Lecture Video Scene 1] Initializing ${activeLesson?.title || 'lecture SOP'}. Checking raw material authentication & moisture specs.`}
-          {videoProgress >= 30 && videoProgress < 75 && `[Lecture Video Scene 2] Executing extraction SOP under Schedule T GMP parameters. Verifying active yield.`}
-          {videoProgress >= 75 && `[Lecture Video Scene 3] Final quality control check complete. Verified 100% video completion & updated student records.`}
+        <div className="grid grid-cols-2 gap-1 text-[8px] font-mono text-center w-full">
+          <span className="bg-slate-900 p-1 rounded text-amber-300 font-bold">85.4 °C</span>
+          <span className="bg-slate-900 p-1 rounded text-cyan-300 font-bold">1.2 BAR</span>
         </div>
       </div>
     );
   };
 
-  const getYouTube3DVideoUrl = () => {
-    const title = (activeLesson?.title || course?.title || '').toLowerCase();
-    const discipline = (course?.discipline || '').toLowerCase();
+  const render10SlidePresentationVideo = () => {
+    const slides = get10SlidesForLecture(activeLesson, course);
+    const slideIdx = Math.min(9, Math.floor(videoProgress / 10));
+    const currentSlide = slides[slideIdx] || slides[0];
 
-    if (title.includes('hptlc') || title.includes('hplc') || title.includes('quality') || title.includes('analytical') || title.includes('standard')) {
-      return 'https://www.youtube.com/embed/wQI6Y8_Y1Y4?autoplay=1&enablejsapi=1';
-    }
-    if (title.includes('shirodhara') || title.includes('panchakarma') || title.includes('ayurvedic') || discipline.includes('ayurveda')) {
-      return 'https://www.youtube.com/embed/iASOF7MLQHo?autoplay=1&enablejsapi=1';
-    }
-    if (title.includes('yoga') || title.includes('pranayama') || title.includes('hrv') || discipline.includes('yoga')) {
-      return 'https://www.youtube.com/embed/z-Fm8o5dO68?autoplay=1&enablejsapi=1';
-    }
-    if (title.includes('homoeopath') || title.includes('potentiz') || discipline.includes('homeopathy')) {
-      return 'https://www.youtube.com/embed/_8u-t1xG98M?autoplay=1&enablejsapi=1';
-    }
-    return 'https://www.youtube.com/embed/iASOF7MLQHo?autoplay=1&enablejsapi=1';
+    return (
+      <div className="w-full h-full flex flex-col justify-between p-4 bg-slate-950 text-white font-sans overflow-hidden select-none relative">
+        <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:20px_20px] opacity-15 pointer-events-none"></div>
+
+        {/* Top Slide Header Bar */}
+        <div className="z-10 flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-black tracking-wider uppercase">
+              Slide {currentSlide.slideNumber} of 10
+            </span>
+            <span className="text-[11px] font-mono text-amber-400 font-bold">
+              {currentSlide.category}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono text-emerald-300 bg-slate-900 px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              {isMuted ? '🎙️ AI Voice Muted' : '🎙️ AI Voice Assistant Explaining'}
+            </span>
+          </div>
+        </div>
+
+        {/* Main Presentation Screen: 2 Cols */}
+        <div className="z-10 flex-1 grid grid-cols-1 md:grid-cols-5 gap-4 my-3 overflow-hidden items-center">
+          
+          {/* Left 3 Cols: PPT Text Content & Bullet Points */}
+          <div className="md:col-span-3 space-y-3 flex flex-col justify-between h-full py-1">
+            <div>
+              <h2 className="text-lg md:text-xl font-black text-white tracking-tight leading-snug">
+                {currentSlide.title}
+              </h2>
+              
+              <ul className="mt-2.5 space-y-2 text-xs text-slate-200">
+                {currentSlide.mainPoints.map((pt, i) => (
+                  <li key={i} className="flex items-start gap-2 leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>
+                    <span>{pt}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 font-mono font-medium">
+                ⚡ <strong>KEY PHARMACOPOEIAL NORMS:</strong> {currentSlide.keyHighlight}
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-emerald-300 font-mono flex items-center gap-2 shadow-inner">
+                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 animate-pulse"></span>
+                <p className="truncate">
+                  <strong>AI Voiceover:</strong> "{currentSlide.speechText}"
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right 2 Cols: Relevant Diagram Graphic */}
+          <div className="md:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col items-center justify-between h-full shadow-2xl relative overflow-hidden">
+            <div className="w-full text-center text-[10px] font-mono text-slate-400 border-b border-slate-800 pb-1 font-bold">
+              SLIDE DIAGRAM & ILLUSTRATION
+            </div>
+
+            {renderSlideDiagram(currentSlide.diagramType, videoProgress)}
+
+            <div className="w-full text-center text-[9px] font-mono text-emerald-400 bg-slate-950 p-1 rounded border border-slate-800 font-bold">
+              AYUSH Standard SOP • Illustrated Figure {currentSlide.slideNumber}.1
+            </div>
+          </div>
+        </div>
+
+        {/* 10-Slide Thumbnail Pills Navigation */}
+        <div className="z-10 flex items-center justify-between gap-1 border-t border-slate-800 pt-2">
+          <div className="flex items-center gap-1 overflow-x-auto w-full justify-between">
+            {slides.map((s, idx) => {
+              const isActive = idx === slideIdx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    const targetPct = idx * 10;
+                    setVideoProgress(targetPct);
+                    setActiveSlideIndex(idx);
+                    if (isPlaying) {
+                      speakNarration(`Slide ${idx + 1}: ${s.title}. ${s.speechText}`);
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border transition shrink-0 flex items-center gap-1 ${
+                    isActive
+                      ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-md scale-105'
+                      : idx < slideIdx
+                      ? 'bg-slate-800 text-emerald-400 border-slate-700 hover:bg-slate-700'
+                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>Slide {s.slideNumber}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -673,47 +989,17 @@ export const CoursePlayerPage: React.FC = () => {
         {/* Left 2 Cols: Lesson Player & Workspace */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Video Player Header Mode Switcher Bar */}
-          <div className="flex items-center justify-between bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 text-xs">
-            <span className="text-slate-300 font-bold flex items-center gap-1.5">
-              <Video className="w-4 h-4 text-emerald-400" /> Animated Video Lecture Mode:
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setVideoMode('3D_CANVAS')}
-                className={`px-3 py-1 rounded-lg font-bold text-[11px] transition flex items-center gap-1 border ${
-                  videoMode === '3D_CANVAS'
-                    ? 'bg-emerald-600 text-white border-emerald-500 shadow-md'
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" /> 3D Motion Graphics & Voiceover
-              </button>
-              <button
-                onClick={() => { setVideoMode('YOUTUBE_3D'); setIsPlaying(true); }}
-                className={`px-3 py-1 rounded-lg font-bold text-[11px] transition flex items-center gap-1 border ${
-                  videoMode === 'YOUTUBE_3D'
-                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-md'
-                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
-                }`}
-              >
-                <Tv className="w-3.5 h-3.5" /> HD 3D Educational Video (Stream)
-              </button>
-            </div>
-          </div>
-
-          {/* Animated Video Lecture Player Canvas */}
+          {/* Interactive 10-Slide PPT Presentation Video Player Canvas */}
           <div className="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 relative aspect-video flex flex-col justify-between group">
             
             {/* Header Overlay Badge */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-none">
               <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-md text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold rounded-full flex items-center gap-1.5 shadow-md">
-                <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
-                {videoMode === '3D_CANVAS' ? '3D Animated Graphics Engine' : 'HD 3D Video Stream'}: {activeLesson?.title || 'AYUSH Module'}
+                <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" /> 10-Slide Interactive Presentation Video Deck: {activeLesson?.title || 'AYUSH Module'}
               </span>
               {activeLesson?.status === 'COMPLETED' || videoProgress >= 100 ? (
                 <span className="px-3 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% Video Completed & Auto-Verified
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% Presentation Completed & Auto-Verified
                 </span>
               ) : (
                 <span className="px-3 py-1 bg-amber-400/90 text-slate-950 text-[10px] font-bold rounded-full">
@@ -722,35 +1008,27 @@ export const CoursePlayerPage: React.FC = () => {
               )}
             </div>
 
-            {/* Center Animation Scenes Container / YouTube Embed Container */}
+            {/* Center Animation Scenes Container */}
             <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-950">
-              {videoMode === 'YOUTUBE_3D' ? (
-                <iframe
-                  className="w-full h-full border-0"
-                  src={getYouTube3DVideoUrl()}
-                  title="3D Animated Biology & AYUSH Lecture Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                ></iframe>
-              ) : (
-                <>
-                  {renderAnimatedVideoVisualizer()}
+              {render10SlidePresentationVideo()}
 
-                  {/* Large Play Button Overlay when Paused */}
-                  {!isPlaying && videoProgress < 100 && (
-                    <button
-                      onClick={() => {
-                        setIsPlaying(true);
-                        speakNarration(`Welcome to ${activeLesson?.title || 'this lecture'}. Starting video explanation.`);
-                      }}
-                      className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center group-hover:bg-slate-950/40 transition-all z-20"
-                    >
-                      <div className="w-16 h-16 rounded-full bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all">
-                        <Play className="w-8 h-8 ml-1 fill-current" />
-                      </div>
-                    </button>
-                  )}
-                </>
+              {/* Large Play Button Overlay when Paused */}
+              {!isPlaying && videoProgress < 100 && (
+                <button
+                  onClick={() => {
+                    setIsPlaying(true);
+                    const slides = get10SlidesForLecture(activeLesson, course);
+                    const slideIdx = Math.min(9, Math.floor(videoProgress / 10));
+                    if (slides[slideIdx]) {
+                      speakNarration(`Slide ${slideIdx + 1}: ${slides[slideIdx].title}. ${slides[slideIdx].speechText}`);
+                    }
+                  }}
+                  className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center group-hover:bg-slate-950/40 transition-all z-20"
+                >
+                  <div className="w-16 h-16 rounded-full bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all">
+                    <Play className="w-8 h-8 ml-1 fill-current" />
+                  </div>
+                </button>
               )}
             </div>
 
@@ -782,7 +1060,11 @@ export const CoursePlayerPage: React.FC = () => {
                       const nextPlay = !isPlaying;
                       setIsPlaying(nextPlay);
                       if (nextPlay) {
-                        speakNarration(`Resuming video explanation for ${activeLesson?.title || 'lecture'}.`);
+                        const slides = get10SlidesForLecture(activeLesson, course);
+                        const slideIdx = Math.min(9, Math.floor(videoProgress / 10));
+                        if (slides[slideIdx]) {
+                          speakNarration(`Slide ${slideIdx + 1}: ${slides[slideIdx].title}. ${slides[slideIdx].speechText}`);
+                        }
                       } else if ('speechSynthesis' in window) {
                         window.speechSynthesis.cancel();
                       }
@@ -790,17 +1072,44 @@ export const CoursePlayerPage: React.FC = () => {
                     className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors font-bold flex items-center gap-1.5"
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                    <span>{isPlaying ? 'Pause Video' : videoProgress >= 100 ? 'Replay Video' : 'Play Video'}</span>
+                    <span>{isPlaying ? 'Pause Presentation' : videoProgress >= 100 ? 'Replay Presentation' : 'Play Presentation'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const prevIdx = Math.max(0, Math.floor(videoProgress / 10) - 1);
+                      const targetPct = prevIdx * 10;
+                      setVideoProgress(targetPct);
+                    }}
+                    className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
+                    title="Previous Slide"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const nextIdx = Math.min(9, Math.floor(videoProgress / 10) + 1);
+                      const targetPct = nextIdx * 10;
+                      setVideoProgress(targetPct);
+                    }}
+                    className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
+                    title="Next Slide"
+                  >
+                    <ChevronRight className="w-4 h-4" />
                   </button>
 
                   <button
                     onClick={() => {
                       setVideoProgress(0);
                       setIsPlaying(true);
-                      speakNarration(`Restarting video lecture for ${activeLesson?.title || 'topic'}.`);
+                      const slides = get10SlidesForLecture(activeLesson, course);
+                      if (slides[0]) {
+                        speakNarration(`Slide 1: ${slides[0].title}. ${slides[0].speechText}`);
+                      }
                     }}
                     className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
-                    title="Restart Video"
+                    title="Restart Presentation"
                   >
                     <RotateCcw className="w-4 h-4" />
                   </button>
@@ -815,7 +1124,7 @@ export const CoursePlayerPage: React.FC = () => {
                     className={`p-1.5 rounded-lg border transition ${
                       isMuted ? 'bg-rose-950/80 border-rose-700 text-rose-300' : 'bg-slate-800 border-slate-700 text-emerald-400 hover:text-white'
                     }`}
-                    title={isMuted ? 'Unmute Audio Narration' : 'Mute Audio Narration'}
+                    title={isMuted ? 'Unmute AI Voice Assistant' : 'Mute AI Voice Assistant'}
                   >
                     {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
