@@ -199,6 +199,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const cleanEmail = String(email).trim().toLowerCase();
+    const cleanPassword = String(password).trim();
 
     // Unified account lookup
     const account = await findUserByEmail(cleanEmail);
@@ -206,8 +207,19 @@ export const login = async (req: Request, res: Response) => {
       return res.status(404).json({ message: `No registered account found with email "${cleanEmail}". Please check your email or sign up.` });
     }
 
-    const isValidPassword = await bcrypt.compare(password, account.user.password);
-    
+    let isValidPassword = await bcrypt.compare(cleanPassword, account.user.password);
+
+    if (!isValidPassword && String(password) !== cleanPassword) {
+      isValidPassword = await bcrypt.compare(String(password), account.user.password);
+    }
+
+    if (!isValidPassword) {
+      const isDefaultDemoPass = await bcrypt.compare('password123', account.user.password);
+      if (isDefaultDemoPass && (cleanPassword === 'password123' || password === 'password123')) {
+        isValidPassword = true;
+      }
+    }
+
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Incorrect password. Please double-check your credentials and try again.' });
     }

@@ -1193,6 +1193,7 @@ export const memoryAuditLogs: MemoryAuditLog[] = [
 
 import os from 'os';
 
+const PERSISTENT_DB_FILE_ROOT = path.resolve(process.cwd(), 'persistent_user_store.json');
 const PERSISTENT_DB_FILE_PRIMARY = path.join(process.cwd(), '.data', 'persistent_user_store.json');
 const PERSISTENT_DB_FILE_SECONDARY = path.join(os.tmpdir(), 'ayush_setu_persistent_user_store.json');
 
@@ -1204,22 +1205,21 @@ export function saveMemoryStoreToDisk(): void {
     };
     const content = JSON.stringify(dataToSave, null, 2);
 
-    try {
-      fs.writeFileSync(PERSISTENT_DB_FILE_SECONDARY, content, 'utf-8');
-    } catch (e) {}
-
-    try {
-      const dir = path.dirname(PERSISTENT_DB_FILE_PRIMARY);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(PERSISTENT_DB_FILE_PRIMARY, content, 'utf-8');
-    } catch (e) {}
+    const paths = [PERSISTENT_DB_FILE_ROOT, PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_SECONDARY];
+    for (const p of paths) {
+      try {
+        const dir = path.dirname(p);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(p, content, 'utf-8');
+      } catch (e) {}
+    }
   } catch (err) {
     console.warn('Failed to persist memory store to disk:', err);
   }
 }
 
 export function loadMemoryStoreFromDisk(): void {
-  const filesToTry = [PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_SECONDARY];
+  const filesToTry = [PERSISTENT_DB_FILE_ROOT, PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_SECONDARY];
   for (const file of filesToTry) {
     try {
       if (fs.existsSync(file)) {
@@ -1231,8 +1231,6 @@ export function loadMemoryStoreFromDisk(): void {
             const idx = memoryUsers.findIndex(existing => existing.email.trim().toLowerCase() === u.email.trim().toLowerCase());
             if (idx === -1) {
               memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
-            } else {
-              memoryUsers[idx] = { ...u, createdAt: new Date(u.createdAt) };
             }
           });
         }
@@ -1241,8 +1239,6 @@ export function loadMemoryStoreFromDisk(): void {
             const pIdx = memoryStudentProfiles.findIndex(existing => existing.id === p.id || existing.userId === p.userId);
             if (pIdx === -1) {
               memoryStudentProfiles.push(p);
-            } else {
-              memoryStudentProfiles[pIdx] = p;
             }
           });
         }
