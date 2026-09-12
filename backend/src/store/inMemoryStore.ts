@@ -1224,15 +1224,21 @@ export function loadMemoryStoreFromDisk(): void {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed.users)) {
           parsed.users.forEach((u: MemoryUser) => {
-            if (!memoryUsers.some(existing => existing.email.trim().toLowerCase() === u.email.trim().toLowerCase())) {
+            const idx = memoryUsers.findIndex(existing => existing.email.trim().toLowerCase() === u.email.trim().toLowerCase());
+            if (idx === -1) {
               memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
+            } else {
+              memoryUsers[idx] = { ...u, createdAt: new Date(u.createdAt) };
             }
           });
         }
         if (Array.isArray(parsed.profiles)) {
           parsed.profiles.forEach((p: MemoryStudentProfile) => {
-            if (!memoryStudentProfiles.some(existing => existing.id === p.id || existing.userId === p.userId)) {
+            const pIdx = memoryStudentProfiles.findIndex(existing => existing.id === p.id || existing.userId === p.userId);
+            if (pIdx === -1) {
               memoryStudentProfiles.push(p);
+            } else {
+              memoryStudentProfiles[pIdx] = p;
             }
           });
         }
