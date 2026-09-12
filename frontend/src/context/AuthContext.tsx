@@ -38,7 +38,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const getInitialUser = (): User | null => {
+    try {
+      const savedUser = localStorage.getItem('ayush_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [user, setUser] = useState<User | null>(getInitialUser);
   const [token, setToken] = useState<string | null>(localStorage.getItem('ayush_token'));
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -50,6 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        localStorage.setItem('ayush_user', JSON.stringify(data.user));
       } else {
         logout();
       }
@@ -78,6 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       if (res.ok && data.token) {
         localStorage.setItem('ayush_token', data.token);
+        if (data.user) {
+          localStorage.setItem('ayush_user', JSON.stringify(data.user));
+        }
         setToken(data.token);
         setUser(data.user);
         return { success: true, message: data.message };
@@ -98,6 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await res.json();
       if ((res.ok || res.status === 201) && data.token) {
         localStorage.setItem('ayush_token', data.token);
+        if (data.user) {
+          localStorage.setItem('ayush_user', JSON.stringify(data.user));
+        }
         setToken(data.token);
         setUser(data.user);
         return { success: true, message: data.message };
@@ -121,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     localStorage.removeItem('ayush_token');
+    localStorage.removeItem('ayush_user');
     setToken(null);
     setUser(null);
   };
