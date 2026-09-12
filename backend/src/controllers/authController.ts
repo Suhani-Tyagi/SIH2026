@@ -3,15 +3,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, AuthRequest } from '../middleware/auth';
 import prisma, { isDatabaseConfigured, ensureTablesExist } from '../prisma';
-import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, saveMemoryStoreToDisk, loadMemoryStoreFromDisk } from '../store/inMemoryStore';
+import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, saveMemoryStoreToDisk } from '../store/inMemoryStore';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function findUserByEmail(cleanEmail: string) {
   const normalized = cleanEmail.trim().toLowerCase();
-  
-  // Always ensure memory store is synced from disk before email lookup
-  loadMemoryStoreFromDisk();
 
   // 1. Check in-memory / persistent file store first for fast, reliable lookup
   const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === normalized);
@@ -214,16 +211,6 @@ export const login = async (req: Request, res: Response) => {
       isValidPassword = await bcrypt.compare(String(password), account.user.password);
     }
 
-    // Universal fallback: Allow password123 for seamless testing & demo accounts
-    if (!isValidPassword && (cleanPassword === 'password123' || String(password) === 'password123')) {
-      isValidPassword = true;
-    }
-
-    if (!isValidPassword) {
-      const lowerPass = cleanPassword.toLowerCase();
-      isValidPassword = await bcrypt.compare(lowerPass, account.user.password);
-    }
-
     if (!isValidPassword) {
       console.warn(`[AUTH LOGIN FAILED] Email: "${cleanEmail}", password entered did not match stored hash.`);
       return res.status(401).json({ 
@@ -233,22 +220,6 @@ export const login = async (req: Request, res: Response) => {
     }
 
     console.log(`[AUTH LOGIN SUCCESS] Email: "${cleanEmail}" logged in.`);
-
-    // Auto-sync stored hash if user logged in via fallback or updated password
-    try {
-      const isExactMatch = await bcrypt.compare(cleanPassword, account.user.password);
-      if (!isExactMatch && cleanPassword.length >= 6) {
-        const newHash = await bcrypt.hash(cleanPassword, 10);
-        account.user.password = newHash;
-        const memIdx = memoryUsers.findIndex(u => u.id === account.user.id || u.email.trim().toLowerCase() === cleanEmail);
-        if (memIdx !== -1) {
-          memoryUsers[memIdx].password = newHash;
-        }
-        saveMemoryStoreToDisk();
-      }
-    } catch (syncErr) {
-      console.warn('Failed to auto-sync user password hash:', syncErr);
-    }
 
     const fullUser = {
       ...account.user,

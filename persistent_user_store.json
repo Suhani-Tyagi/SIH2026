@@ -3,119 +3,119 @@
     {
       "id": "usr-admin-1",
       "email": "admin@aiia.gov.in",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Dr. Tanuja Nesari",
       "role": "SUPER_ADMIN",
       "system": "ALL",
       "institutionName": "All India Institute of Ayurveda (AIIA), New Delhi",
       "designation": "Director & AIIA Super Admin",
       "avatar": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-inst-1",
       "email": "admin@aiia-delhi.ac.in",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "AIIA New Delhi Academic Cell",
       "role": "INSTITUTION_ADMIN",
       "system": "AYURVEDA",
       "institutionName": "All India Institute of Ayurveda, New Delhi",
       "designation": "Dean of Academics",
       "avatar": "https://images.unsplash.com/photo-1562774053-701939374585?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-inst-2",
       "email": "admin@bhu-ayurveda.edu.in",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Faculty of Ayurveda - BHU",
       "role": "INSTITUTION_ADMIN",
       "system": "AYURVEDA",
       "institutionName": "Banaras Hindu University, Varanasi",
       "designation": "Head of Placement Cell",
       "avatar": "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-ind-1",
       "email": "careers@daburayush.com",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Dabur AYUSH R&D Centre",
       "role": "INDUSTRY",
       "system": "AYURVEDA",
       "companyName": "Dabur India Ltd.",
       "designation": "Head of Herbal R&D Recruitment",
       "avatar": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-ind-2",
       "email": "hr@himalayawellness.com",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Himalaya Wellness Company",
       "role": "INDUSTRY",
       "system": "AYURVEDA",
       "companyName": "Himalaya Wellness",
       "designation": "Senior HR Manager - Clinical Talent",
       "avatar": "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-ind-3",
       "email": "contact@keralaayurveda.biz",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Kerala Ayurveda Ltd.",
       "role": "INDUSTRY",
       "system": "AYURVEDA",
       "companyName": "Kerala Ayurveda Ltd.",
       "designation": "Panchakarma Operations Lead",
       "avatar": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-aca-1",
       "email": "dr.sharma@aiia-delhi.ac.in",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Prof. (Dr.) Rajesh Sharma",
       "role": "ACADEMICIAN",
       "system": "AYURVEDA",
       "institutionName": "All India Institute of Ayurveda",
       "designation": "Professor & HOD, Dravyaguna Department",
       "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-stu-1",
       "email": "aarav.sharma@student.aiia.ac.in",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Aarav Sharma",
       "role": "STUDENT",
       "system": "AYURVEDA",
       "institutionName": "All India Institute of Ayurveda, New Delhi",
       "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-stu-2",
       "email": "priya.patel@student.bhu.ac.in",
-      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "Priya Patel",
       "role": "STUDENT",
       "system": "AYURVEDA",
       "institutionName": "Banaras Hindu University, Varanasi",
       "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-stu-abc",
       "email": "abc@gmail.com",
-      "password": "$2a$10$jx9tvF/E8GuI6gVOXHkSx.PRXI1.VGQtz09IjAVlx4dOaPShJxNqS",
+      "password": "$2a$10$PH/hVO16e4SJjAk2Iu.Jt.caqrJl4yD15sKMqrKCnHa28rL1p8nIm",
       "name": "ABC User",
       "role": "STUDENT",
       "system": "AYURVEDA",
       "institutionName": "All India Institute of Ayurveda, New Delhi",
       "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=ABC%20User",
-      "createdAt": "2026-09-12T09:52:29.714Z"
+      "createdAt": "2026-09-12T16:06:06.880Z"
     },
     {
       "id": "usr-mem-1789226141573",
@@ -168,6 +168,16 @@
       "system": "AYURVEDA",
       "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Serverless%20User",
       "createdAt": "2026-09-12T15:57:35.882Z"
+    },
+    {
+      "id": "usr-mem-1789229166949",
+      "email": "acceptance_1789229166882@example.com",
+      "password": "$2a$10$5egb.pHFmyIUCIKEqbk9DeFf0vNh3pXr35MR2vcGgKODwQuBS4VQS",
+      "name": "Acceptance User",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Acceptance%20User",
+      "createdAt": "2026-09-12T16:06:06.949Z"
     }
   ],
   "profiles": [
@@ -284,6 +294,19 @@
     {
       "id": "prof-mem-1789228655882",
       "userId": "usr-mem-1789228655882",
+      "degree": "BAMS",
+      "passoutYear": 2025,
+      "readinessScore": 75,
+      "bio": "Student registered on AYUSH Setu platform.",
+      "phone": "+91 98765 00000",
+      "location": "New Delhi, India",
+      "skillScores": "{\"panchakarma\":70,\"herbalFormulation\":70,\"clinicalDiagnostics\":75,\"nadiPariksha\":65,\"yogaTherapy\":60,\"researchMethodology\":70,\"patientCounseling\":75,\"qaGmp\":65}",
+      "verifiedBadges": "[\"AYUSH Student Portal Registration\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\"]"
+    },
+    {
+      "id": "prof-mem-1789229166949",
+      "userId": "usr-mem-1789229166949",
       "degree": "BAMS",
       "passoutYear": 2025,
       "readinessScore": 75,

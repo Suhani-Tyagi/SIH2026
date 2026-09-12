@@ -1240,8 +1240,6 @@ export function loadMemoryStoreFromDisk(): void {
           const idx = memoryUsers.findIndex(existing => existing.email.trim().toLowerCase() === u.email.trim().toLowerCase());
           if (idx === -1) {
             memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
-          } else {
-            memoryUsers[idx] = { ...u, createdAt: new Date(u.createdAt) };
           }
         });
       }
@@ -1250,8 +1248,6 @@ export function loadMemoryStoreFromDisk(): void {
           const pIdx = memoryStudentProfiles.findIndex(existing => existing.id === p.id || existing.userId === p.userId);
           if (pIdx === -1) {
             memoryStudentProfiles.push(p);
-          } else {
-            memoryStudentProfiles[pIdx] = p;
           }
         });
       }
@@ -1261,5 +1257,7 @@ export function loadMemoryStoreFromDisk(): void {
   }
 }
 
-// Auto-load persistent accounts on startup
+// One-time rehydration on cold start: The in-memory store is loaded once at process/module startup.
+// This must NOT be called per-request, ensuring in-memory runtime updates (e.g. password resets)
+// remain authoritative for the process lifetime and are never overwritten by stale disk state.
 loadMemoryStoreFromDisk();
