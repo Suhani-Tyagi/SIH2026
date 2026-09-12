@@ -8,8 +8,9 @@ import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, s
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function findUserByEmail(cleanEmail: string) {
+  const normalized = cleanEmail.trim().toLowerCase();
   // 1. Check in-memory / persistent file store first for fast, reliable lookup
-  const memUser = memoryUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === normalized);
   if (memUser) {
     const memProfile = memoryStudentProfiles.find(p => p.userId === memUser.id);
     return { source: 'MEMORY', user: memUser, profile: memProfile || null };
@@ -19,7 +20,7 @@ async function findUserByEmail(cleanEmail: string) {
   if (isDatabaseConfigured) {
     try {
       const dbUser = await prisma.user.findUnique({
-        where: { email: cleanEmail },
+        where: { email: normalized },
         include: { studentProfile: true }
       });
       if (dbUser) {
