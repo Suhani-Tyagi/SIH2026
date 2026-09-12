@@ -366,6 +366,17 @@ export const memoryUsers: MemoryUser[] = [
     institutionName: 'Banaras Hindu University, Varanasi',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
     createdAt: new Date()
+  },
+  {
+    id: 'usr-stu-abc',
+    email: 'abc@gmail.com',
+    password: defaultPasswordHash,
+    name: 'ABC User',
+    role: 'STUDENT',
+    system: 'AYURVEDA',
+    institutionName: 'All India Institute of Ayurveda, New Delhi',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ABC%20User',
+    createdAt: new Date()
   }
 ];
 
@@ -419,6 +430,28 @@ export const memoryStudentProfiles: MemoryStudentProfile[] = [
     coursePassedSkills: JSON.stringify({ herbalFormulation: 90 }),
     verifiedBadges: JSON.stringify(['Herbal Standardization Expert', 'AYUSH QA/QC Certified', 'NABH Clinical Safety']),
     careerGoals: JSON.stringify(['Clinical Research Associate', 'Herbal Formulation Scientist'])
+  },
+  {
+    id: 'prof-stu-abc',
+    userId: 'usr-stu-abc',
+    degree: 'BAMS (Final Year)',
+    passoutYear: 2025,
+    readinessScore: 80,
+    bio: 'Student account registered on AYUSH Setu platform.',
+    phone: '+91 98765 00000',
+    location: 'New Delhi, India',
+    skillScores: JSON.stringify({
+      panchakarma: 75,
+      herbalFormulation: 75,
+      clinicalDiagnostics: 80,
+      nadiPariksha: 70,
+      yogaTherapy: 65,
+      researchMethodology: 75,
+      patientCounseling: 80,
+      qaGmp: 70
+    }),
+    verifiedBadges: JSON.stringify(['AYUSH Student Portal Registration']),
+    careerGoals: JSON.stringify(['Herbal Formulation Scientist'])
   }
 ];
 
@@ -912,17 +945,9 @@ export const memoryAuditLogs: MemoryAuditLog[] = [
 
 import os from 'os';
 
-const PERSISTENT_DB_FILE_PRIMARY = path.join(__dirname, 'persistent_user_store.json');
+const PERSISTENT_DB_FILE_PRIMARY = path.resolve(process.cwd(), 'persistent_user_store.json');
+const PERSISTENT_DB_FILE_SECONDARY = path.join(__dirname, 'persistent_user_store.json');
 const PERSISTENT_DB_FILE_FALLBACK = path.join(os.tmpdir(), 'ayush_setu_users.json');
-
-function getWritableDbFile(): string {
-  try {
-    fs.writeFileSync(PERSISTENT_DB_FILE_PRIMARY, fs.existsSync(PERSISTENT_DB_FILE_PRIMARY) ? fs.readFileSync(PERSISTENT_DB_FILE_PRIMARY) : '{}');
-    return PERSISTENT_DB_FILE_PRIMARY;
-  } catch (e) {
-    return PERSISTENT_DB_FILE_FALLBACK;
-  }
-}
 
 export function saveMemoryStoreToDisk(): void {
   try {
@@ -931,10 +956,11 @@ export function saveMemoryStoreToDisk(): void {
       profiles: memoryStudentProfiles
     };
     const content = JSON.stringify(dataToSave, null, 2);
-    try {
-      fs.writeFileSync(PERSISTENT_DB_FILE_PRIMARY, content, 'utf-8');
-    } catch (e) {
-      fs.writeFileSync(PERSISTENT_DB_FILE_FALLBACK, content, 'utf-8');
+    const paths = [PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_SECONDARY, PERSISTENT_DB_FILE_FALLBACK];
+    for (const p of paths) {
+      try {
+        fs.writeFileSync(p, content, 'utf-8');
+      } catch (e) {}
     }
   } catch (err) {
     console.warn('Failed to persist memory store to disk:', err);
@@ -942,7 +968,7 @@ export function saveMemoryStoreToDisk(): void {
 }
 
 export function loadMemoryStoreFromDisk(): void {
-  const filesToTry = [PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_FALLBACK];
+  const filesToTry = [PERSISTENT_DB_FILE_PRIMARY, PERSISTENT_DB_FILE_SECONDARY, PERSISTENT_DB_FILE_FALLBACK];
   for (const file of filesToTry) {
     try {
       if (fs.existsSync(file)) {
@@ -950,7 +976,7 @@ export function loadMemoryStoreFromDisk(): void {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed.users)) {
           parsed.users.forEach((u: MemoryUser) => {
-            if (!memoryUsers.some(existing => existing.email.toLowerCase() === u.email.toLowerCase())) {
+            if (!memoryUsers.some(existing => existing.email.trim().toLowerCase() === u.email.trim().toLowerCase())) {
               memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
             }
           });
