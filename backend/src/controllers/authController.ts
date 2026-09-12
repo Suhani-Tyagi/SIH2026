@@ -71,28 +71,6 @@ export const register = async (req: Request, res: Response) => {
     // Check unified account lookup
     const existing = await findUserByEmail(cleanEmail);
     if (existing) {
-      // If it's a memory store account (like pre-seeded abc@gmail.com), update password and user details seamlessly
-      if (existing.source === 'MEMORY') {
-        const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === cleanEmail);
-        if (memUser) {
-          memUser.password = hashedPassword;
-          memUser.name = name.trim();
-          memUser.role = targetRole as any;
-          if (system) memUser.system = system;
-          if (institutionName) memUser.institutionName = institutionName.trim();
-          if (companyName) memUser.companyName = companyName.trim();
-          if (designation) memUser.designation = designation.trim();
-          saveMemoryStoreToDisk();
-
-          const finalUser = { ...memUser, studentProfile: existing.profile };
-          const token = jwt.sign(
-            { id: finalUser.id, email: finalUser.email, role: finalUser.role, name: finalUser.name },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-          );
-          return res.status(201).json({ message: 'Registration successful!', token, user: finalUser });
-        }
-      }
       return res.status(409).json({ message: `An account with the email "${cleanEmail}" already exists. Please sign in instead.` });
     }
 
@@ -221,10 +199,11 @@ export const login = async (req: Request, res: Response) => {
 
     let isValidPassword = await bcrypt.compare(password, account.user.password);
     
-    // For demo/memory store users, if password mismatch occurs, update password to what the user typed so login always succeeds
+    // For pre-seeded demo accounts, allow fallback if default password was expected
     if (!isValidPassword) {
       const isDefaultPass = await bcrypt.compare('password123', account.user.password);
-      if (isDefaultPass || cleanEmail === 'abc@gmail.com' || account.user.id.startsWith('usr-mem-') || account.user.id.startsWith('usr-stu-')) {
+      const isPreseededDemoUser = account.user.id.startsWith('usr-admin-') || account.user.id.startsWith('usr-inst-') || account.user.id.startsWith('usr-ind-') || account.user.id.startsWith('usr-acad-');
+      if (isDefaultPass && isPreseededDemoUser) {
         const hashedPassword = await bcrypt.hash(password, 10);
         account.user.password = hashedPassword;
         const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === cleanEmail);

@@ -130,9 +130,19 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-              <span>{error}</span>
+            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{error}</span>
+              </div>
+              {error.toLowerCase().includes('already exists') && (
+                <Link
+                  to="/login"
+                  className="px-3 py-1 bg-ayush-primary hover:bg-emerald-900 text-white rounded-lg text-xs font-bold shrink-0 transition-all shadow-xs"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
           )}
 
