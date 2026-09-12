@@ -43,7 +43,7 @@ import {
 import { getInstitutionAnalytics, getSuperAdminAnalytics, exportAnalyticsCSV, exportSuperAdminCSV } from '../controllers/analyticsController';
 import { getMessages, sendMessage } from '../controllers/messagesController';
 import { getNotifications, markRead } from '../controllers/notificationsController';
-import { authenticateToken, authorizeRoles } from '../middleware/auth';
+import { authenticateToken, optionalAuthenticateToken, authorizeRoles } from '../middleware/auth';
 
 const router = Router();
 
@@ -73,9 +73,9 @@ router.post('/courses/:courseId/assessment/submit', authenticateToken, authorize
 router.post('/courses/:courseId/structure', authenticateToken, authorizeRoles('INDUSTRY'), saveCourseStructure);
 
 // Opportunities & Candidate Search Routes
-router.get('/opportunities', authenticateToken, getOpportunities);
+router.get('/opportunities', optionalAuthenticateToken, getOpportunities);
 router.get('/opportunities/candidates/search', authenticateToken, authorizeRoles('INDUSTRY', 'SUPER_ADMIN'), searchCandidates);
-router.get('/opportunities/:id', authenticateToken, getOpportunityById);
+router.get('/opportunities/:id', optionalAuthenticateToken, getOpportunityById);
 router.post('/opportunities', authenticateToken, authorizeRoles('INDUSTRY'), createOpportunity);
 
 // Applications & Timeline Event Routes (RBAC Protected)
@@ -86,7 +86,7 @@ router.put('/applications/:id/status', authenticateToken, authorizeRoles('INDUST
 router.get('/applications/:id/timeline', authenticateToken, getApplicationTimeline);
 
 // Courses & Verified Certificates Routes (RBAC Protected)
-router.get('/courses', authenticateToken, getCourses);
+router.get('/courses', optionalAuthenticateToken, getCourses);
 router.post('/courses/enroll', authenticateToken, authorizeRoles('STUDENT'), enrollCourse);
 router.post('/courses/complete', authenticateToken, authorizeRoles('STUDENT'), completeCourse);
 router.post('/courses', authenticateToken, authorizeRoles('INDUSTRY'), createCourse);

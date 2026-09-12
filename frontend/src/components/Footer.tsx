@@ -67,27 +67,27 @@ export const Footer: React.FC = () => {
           </h4>
           <ul className="space-y-2 text-[11px] text-slate-300">
             <li>
-              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+              <Link to="/student/opportunities?system=AYURVEDA" className="hover:text-amber-400 transition-colors">
                 Ayurveda (BAMS, MD/MS)
               </Link>
             </li>
             <li>
-              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+              <Link to="/student/opportunities?system=YOGA" className="hover:text-amber-400 transition-colors">
                 Yoga & Naturopathy (BNYS)
               </Link>
             </li>
             <li>
-              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+              <Link to="/student/opportunities?system=UNANI" className="hover:text-amber-400 transition-colors">
                 Unani Medicine (BUMS)
               </Link>
             </li>
             <li>
-              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+              <Link to="/student/opportunities?system=SIDDHA" className="hover:text-amber-400 transition-colors">
                 Siddha Medicine (BSMS)
               </Link>
             </li>
             <li>
-              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+              <Link to="/student/opportunities?system=HOMEOPATHY" className="hover:text-amber-400 transition-colors">
                 Homoeopathy (BHMS)
               </Link>
             </li>

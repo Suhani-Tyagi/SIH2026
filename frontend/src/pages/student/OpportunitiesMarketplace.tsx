@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Briefcase,
   Search,
@@ -13,13 +14,23 @@ import {
 } from 'lucide-react';
 
 export const OpportunitiesMarketplace: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const initialSystem = searchParams.get('system') || 'ALL';
+
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
-  const [systemFilter, setSystemFilter] = useState('ALL');
+  const [systemFilter, setSystemFilter] = useState(initialSystem);
   const [modeFilter, setModeFilter] = useState('ALL');
+
+  useEffect(() => {
+    const sys = searchParams.get('system');
+    if (sys) {
+      setSystemFilter(sys);
+    }
+  }, [searchParams]);
 
   // Application Modal state
   const [selectedOpp, setSelectedOpp] = useState<any>(null);
@@ -35,9 +46,11 @@ export const OpportunitiesMarketplace: React.FC = () => {
     if (systemFilter !== 'ALL') params.append('system', systemFilter);
     if (modeFilter !== 'ALL') params.append('mode', modeFilter);
 
-    fetch(`/api/opportunities?${params.toString()}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('ayush_token')}` }
-    })
+    const token = localStorage.getItem('ayush_token');
+    const headers: any = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    fetch(`/api/opportunities?${params.toString()}`, { headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.opportunities) setOpportunities(data.opportunities);
