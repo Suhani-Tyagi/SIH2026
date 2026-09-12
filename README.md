@@ -70,6 +70,8 @@ Configure the following in `backend/.env` and in Vercel Project Settings:
 DATABASE_URL="postgresql://user:password@host:5432/ayush_setu?sslmode=require"
 DIRECT_URL="postgresql://user:password@host:5432/ayush_setu?sslmode=require"
 
+> ⚠️ **Required in production**: without a real `DATABASE_URL` set in your hosting provider's environment variables, user accounts will silently fail to persist across requests due to how serverless functions isolate memory. This is the most common cause of 'my account disappeared' bugs after deployment.
+
 # Server Configuration
 PORT=5000
 NODE_ENV=production

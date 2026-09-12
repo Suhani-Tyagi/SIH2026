@@ -3,7 +3,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRoutes from './routes/api';
 
+import { isDatabaseConfigured } from './prisma';
+
 dotenv.config();
+
+if (!isDatabaseConfigured) {
+  console.error('[FATAL CONFIG] No DATABASE_URL is configured. User accounts will NOT persist across requests in this serverless deployment — this is a critical production misconfiguration, not a code bug. Set DATABASE_URL (or POSTGRES_URL/POSTGRES_PRISMA_URL) in the Vercel project\'s Environment Variables (Settings → Environment Variables) to a real hosted Postgres connection string (e.g. from Neon, Supabase, or Vercel Postgres), then redeploy.');
+}
 
 const app = express();
 
@@ -21,11 +27,21 @@ app.use(express.json({ limit: '256kb' }));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'AYUSH Setu API is running cleanly', time: new Date() });
+  res.json({
+    status: 'OK',
+    message: 'AYUSH Setu API is running cleanly',
+    databaseConfigured: isDatabaseConfigured,
+    time: new Date()
+  });
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'AYUSH Setu API is running cleanly', time: new Date() });
+  res.json({
+    status: 'OK',
+    message: 'AYUSH Setu API is running cleanly',
+    databaseConfigured: isDatabaseConfigured,
+    time: new Date()
+  });
 });
 
 // API Routes - mounted at both /api and / for Vercel serverless rewrite compatibility

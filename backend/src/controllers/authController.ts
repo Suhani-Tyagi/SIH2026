@@ -10,14 +10,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function findUserByEmail(cleanEmail: string) {
   const normalized = cleanEmail.trim().toLowerCase();
 
-  // 1. Check in-memory / persistent file store first for fast, reliable lookup
-  const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === normalized);
-  if (memUser) {
-    const memProfile = memoryStudentProfiles.find(p => p.userId === memUser.id);
-    return { source: 'MEMORY', user: memUser, profile: memProfile || null };
-  }
-
-  // 2. Check Prisma DB if configured
+  // 1. Check Prisma DB first if configured
   if (isDatabaseConfigured) {
     try {
       const dbUser = await prisma.user.findUnique({
@@ -28,8 +21,15 @@ async function findUserByEmail(cleanEmail: string) {
         return { source: 'DB', user: dbUser, profile: dbUser.studentProfile || null };
       }
     } catch (e) {
-      console.warn('Prisma DB lookup error in findUserByEmail:', e);
+      console.warn('Prisma DB lookup error in findUserByEmail, falling back to memory store:', e);
     }
+  }
+
+  // 2. Check in-memory store as fallback (also covers pre-seeded demo accounts)
+  const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === normalized);
+  if (memUser) {
+    const memProfile = memoryStudentProfiles.find(p => p.userId === memUser.id);
+    return { source: 'MEMORY', user: memUser, profile: memProfile || null };
   }
 
   return null;
