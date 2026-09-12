@@ -1,0 +1,181 @@
+{
+  "users": [
+    {
+      "id": "usr-admin-1",
+      "email": "admin@aiia.gov.in",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Dr. Tanuja Nesari",
+      "role": "SUPER_ADMIN",
+      "system": "ALL",
+      "institutionName": "All India Institute of Ayurveda (AIIA), New Delhi",
+      "designation": "Director & AIIA Super Admin",
+      "avatar": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-inst-1",
+      "email": "admin@aiia-delhi.ac.in",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "AIIA New Delhi Academic Cell",
+      "role": "INSTITUTION_ADMIN",
+      "system": "AYURVEDA",
+      "institutionName": "All India Institute of Ayurveda, New Delhi",
+      "designation": "Dean of Academics",
+      "avatar": "https://images.unsplash.com/photo-1562774053-701939374585?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-inst-2",
+      "email": "admin@bhu-ayurveda.edu.in",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Faculty of Ayurveda - BHU",
+      "role": "INSTITUTION_ADMIN",
+      "system": "AYURVEDA",
+      "institutionName": "Banaras Hindu University, Varanasi",
+      "designation": "Head of Placement Cell",
+      "avatar": "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-ind-1",
+      "email": "careers@daburayush.com",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Dabur AYUSH R&D Centre",
+      "role": "INDUSTRY",
+      "system": "AYURVEDA",
+      "companyName": "Dabur India Ltd.",
+      "designation": "Head of Herbal R&D Recruitment",
+      "avatar": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-ind-2",
+      "email": "hr@himalayawellness.com",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Himalaya Wellness Company",
+      "role": "INDUSTRY",
+      "system": "AYURVEDA",
+      "companyName": "Himalaya Wellness",
+      "designation": "Senior HR Manager - Clinical Talent",
+      "avatar": "https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-ind-3",
+      "email": "contact@keralaayurveda.biz",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Kerala Ayurveda Ltd.",
+      "role": "INDUSTRY",
+      "system": "AYURVEDA",
+      "companyName": "Kerala Ayurveda Ltd.",
+      "designation": "Panchakarma Operations Lead",
+      "avatar": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-aca-1",
+      "email": "dr.sharma@aiia-delhi.ac.in",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Prof. (Dr.) Rajesh Sharma",
+      "role": "ACADEMICIAN",
+      "system": "AYURVEDA",
+      "institutionName": "All India Institute of Ayurveda",
+      "designation": "Professor & HOD, Dravyaguna Department",
+      "avatar": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-stu-1",
+      "email": "aarav.sharma@student.aiia.ac.in",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Aarav Sharma",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "institutionName": "All India Institute of Ayurveda, New Delhi",
+      "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-stu-2",
+      "email": "priya.patel@student.bhu.ac.in",
+      "password": "$2a$10$1XXgBVFxgBU2a5rPtZiHIuV38mOE4vL2tbc4XUSd5r6F619QEcYOi",
+      "name": "Priya Patel",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "institutionName": "Banaras Hindu University, Varanasi",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-stu-abc",
+      "email": "abc@gmail.com",
+      "password": "$2a$10$mRVBVu2ad7PgWDCCxMTBSOzK0WLVVrGN8WAPGHT6bWJR/JUirpHJ2",
+      "name": "ABC User",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "institutionName": "All India Institute of Ayurveda, New Delhi",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=ABC%20User",
+      "createdAt": "2026-09-12T09:52:29.714Z"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "prof-stu-1",
+      "userId": "usr-stu-1",
+      "degree": "BAMS (Final Year)",
+      "passoutYear": 2025,
+      "readinessScore": 88,
+      "bio": "Enthusiastic BAMS student passionate about evidence-based AYUSH healthcare and clinical research.",
+      "phone": "+91 98765 43210",
+      "location": "New Delhi",
+      "skillScores": "{\"panchakarma\":85,\"herbalFormulation\":78,\"clinicalDiagnostics\":90,\"nadiPariksha\":82,\"yogaTherapy\":65,\"researchMethodology\":75,\"patientCounseling\":88,\"qaGmp\":70}",
+      "assessedSkills": "{\"panchakarma\":85,\"herbalFormulation\":80,\"clinicalDiagnostics\":92,\"nadiPariksha\":80,\"qaGmp\":75}",
+      "mentorVerifiedSkills": "{\"panchakarma\":88,\"clinicalDiagnostics\":90}",
+      "coursePassedSkills": "{\"herbalFormulation\":85,\"qaGmp\":80}",
+      "verifiedBadges": "[\"Advanced Panchakarma Practitioner\",\"Clinical Research Associate\",\"Ayurvedic Pulse Diagnosis\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\",\"Panchakarma Consultant\"]"
+    },
+    {
+      "id": "prof-stu-2",
+      "userId": "usr-stu-2",
+      "degree": "BAMS (Intern)",
+      "passoutYear": 2025,
+      "readinessScore": 92,
+      "bio": "Top-ranking BHMS intern with certified expertise in AYUSH quality control and phytochemistry.",
+      "phone": "+91 98123 45678",
+      "location": "Varanasi, UP",
+      "skillScores": "{\"panchakarma\":92,\"herbalFormulation\":90,\"clinicalDiagnostics\":85,\"nadiPariksha\":88,\"yogaTherapy\":70,\"researchMethodology\":85,\"patientCounseling\":90,\"qaGmp\":80}",
+      "assessedSkills": "{\"herbalFormulation\":92,\"qaGmp\":85,\"researchMethodology\":88}",
+      "mentorVerifiedSkills": "{\"herbalFormulation\":90,\"qaGmp\":85}",
+      "coursePassedSkills": "{\"herbalFormulation\":90}",
+      "verifiedBadges": "[\"Herbal Standardization Expert\",\"AYUSH QA/QC Certified\",\"NABH Clinical Safety\"]",
+      "careerGoals": "[\"Clinical Research Associate\",\"Herbal Formulation Scientist\"]"
+    },
+    {
+      "id": "prof-stu-abc",
+      "userId": "usr-stu-abc",
+      "degree": "BAMS (Final Year)",
+      "passoutYear": 2025,
+      "readinessScore": 80,
+      "bio": "Student account registered on AYUSH Setu platform.",
+      "phone": "+91 98765 00000",
+      "location": "New Delhi, India",
+      "skillScores": "{\"panchakarma\":75,\"herbalFormulation\":75,\"clinicalDiagnostics\":80,\"nadiPariksha\":70,\"yogaTherapy\":65,\"researchMethodology\":75,\"patientCounseling\":80,\"qaGmp\":70}",
+      "verifiedBadges": "[\"AYUSH Student Portal Registration\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\"]"
+    },
+    {
+      "id": "prof-mem-1789206112916",
+      "userId": "usr-mem-1789206112916",
+      "degree": "BAMS",
+      "passoutYear": 2025,
+      "readinessScore": 75,
+      "bio": "Student registered on AYUSH Setu platform.",
+      "phone": "+91 98765 00000",
+      "location": "New Delhi, India",
+      "skillScores": "{\"panchakarma\":70,\"herbalFormulation\":70,\"clinicalDiagnostics\":75,\"nadiPariksha\":65,\"yogaTherapy\":60,\"researchMethodology\":70,\"patientCounseling\":75,\"qaGmp\":65}",
+      "verifiedBadges": "[\"AYUSH Student Portal Registration\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\"]"
+    }
+  ]
+}
