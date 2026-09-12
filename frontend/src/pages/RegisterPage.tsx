@@ -46,7 +46,7 @@ export const RegisterPage: React.FC = () => {
       try {
         localStorage.setItem('ayush_remember_me', 'true');
         localStorage.setItem('ayush_saved_email', email.trim());
-        localStorage.setItem('ayush_saved_password', password);
+        localStorage.removeItem('ayush_saved_password');
       } catch (e) {}
 
       if (role === 'STUDENT') navigate('/student/skill-assessment');

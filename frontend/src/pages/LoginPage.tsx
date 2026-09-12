@@ -11,21 +11,20 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [autoLoaded, setAutoLoaded] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     try {
+      // Clear any legacy saved password from localStorage to prevent stale password mismatches
+      localStorage.removeItem('ayush_saved_password');
+
       const isRemembered = localStorage.getItem('ayush_remember_me') === 'true';
       const savedEmail = localStorage.getItem('ayush_saved_email');
-      const savedPassword = localStorage.getItem('ayush_saved_password');
 
       if (isRemembered && savedEmail) {
         setEmail(savedEmail);
-        if (savedPassword) setPassword(savedPassword);
         setRememberMe(true);
-        setAutoLoaded(true);
       }
     } catch (e) {
       console.error('Failed to read saved login credentials:', e);
@@ -34,24 +33,17 @@ export const LoginPage: React.FC = () => {
 
   const handleEmailChange = (val: string) => {
     setEmail(val);
-    try {
-      const savedEmail = localStorage.getItem('ayush_saved_email');
-      if (savedEmail && val.trim().toLowerCase() !== savedEmail.trim().toLowerCase()) {
-        setAutoLoaded(false);
-      }
-    } catch (e) {}
   };
 
-  const saveOrClearCredentials = (emailVal: string, passVal: string) => {
+  const saveOrClearCredentials = (emailVal: string) => {
     try {
+      localStorage.removeItem('ayush_saved_password');
       if (rememberMe) {
         localStorage.setItem('ayush_remember_me', 'true');
         localStorage.setItem('ayush_saved_email', emailVal);
-        localStorage.setItem('ayush_saved_password', passVal);
       } else {
         localStorage.removeItem('ayush_remember_me');
         localStorage.removeItem('ayush_saved_email');
-        localStorage.removeItem('ayush_saved_password');
       }
     } catch (e) {
       console.error('Failed to save login credentials state:', e);
@@ -72,7 +64,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     const cleanEmail = email.trim();
-    saveOrClearCredentials(cleanEmail, password);
+    saveOrClearCredentials(cleanEmail);
 
     const result = await login(cleanEmail, password);
     setLoading(false);
@@ -99,7 +91,7 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     setError('');
 
-    saveOrClearCredentials(demoEmail, 'password123');
+    saveOrClearCredentials(demoEmail);
 
     const result = await login(demoEmail, 'password123');
     setLoading(false);
@@ -187,26 +179,6 @@ export const LoginPage: React.FC = () => {
         {/* Regular Sign-In Form */}
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           
-          {autoLoaded && (
-            <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-medium flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Saved login credentials automatically loaded</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('');
-                  setPassword('');
-                  setAutoLoaded(false);
-                }}
-                className="text-[10px] text-emerald-700 underline font-semibold hover:text-emerald-900"
-              >
-                Clear
-              </button>
-            </div>
-          )}
-
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />

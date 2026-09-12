@@ -136,6 +136,28 @@
       "system": "AYURVEDA",
       "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Test%20User",
       "createdAt": "2026-09-12T15:20:20.757Z"
+    },
+    {
+      "id": "usr-mem-1789227110145",
+      "email": "realuser123@example.com",
+      "password": "$2a$10$Y1ZrNBefo8.KXWJJr/AQjOin4yowzMwS9Ag5n/y6raP9RLkMloRea",
+      "name": "Real User Test",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "institutionName": "AIIA Delhi",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Real%20User%20Test",
+      "createdAt": "2026-09-12T15:31:50.145Z"
+    },
+    {
+      "id": "usr-mem-1789227340527",
+      "email": "finaltest@gmail.com",
+      "password": "$2a$10$moNao/M6wtDfNAlsnOnfMuMYmie.lDJcVJUZ6R4ucO9q5PCYOtJau",
+      "name": "Suhani Test",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "institutionName": "AIIA Delhi",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Suhani%20Test",
+      "createdAt": "2026-09-12T15:35:40.527Z"
     }
   ],
   "profiles": [
@@ -213,6 +235,32 @@
     {
       "id": "prof-mem-1789226420757",
       "userId": "usr-mem-1789226420757",
+      "degree": "BAMS",
+      "passoutYear": 2025,
+      "readinessScore": 75,
+      "bio": "Student registered on AYUSH Setu platform.",
+      "phone": "+91 98765 00000",
+      "location": "New Delhi, India",
+      "skillScores": "{\"panchakarma\":70,\"herbalFormulation\":70,\"clinicalDiagnostics\":75,\"nadiPariksha\":65,\"yogaTherapy\":60,\"researchMethodology\":70,\"patientCounseling\":75,\"qaGmp\":65}",
+      "verifiedBadges": "[\"AYUSH Student Portal Registration\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\"]"
+    },
+    {
+      "id": "prof-mem-1789227110145",
+      "userId": "usr-mem-1789227110145",
+      "degree": "BAMS",
+      "passoutYear": 2025,
+      "readinessScore": 75,
+      "bio": "Student registered on AYUSH Setu platform.",
+      "phone": "+91 98765 00000",
+      "location": "New Delhi, India",
+      "skillScores": "{\"panchakarma\":70,\"herbalFormulation\":70,\"clinicalDiagnostics\":75,\"nadiPariksha\":65,\"yogaTherapy\":60,\"researchMethodology\":70,\"patientCounseling\":75,\"qaGmp\":65}",
+      "verifiedBadges": "[\"AYUSH Student Portal Registration\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\"]"
+    },
+    {
+      "id": "prof-mem-1789227340527",
+      "userId": "usr-mem-1789227340527",
       "degree": "BAMS",
       "passoutYear": 2025,
       "readinessScore": 75,

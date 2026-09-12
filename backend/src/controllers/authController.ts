@@ -70,7 +70,8 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const cleanPassword = String(password).trim();
+    const hashedPassword = await bcrypt.hash(cleanPassword, 10);
 
     // Check unified account lookup
     const existing = await findUserByEmail(cleanEmail);

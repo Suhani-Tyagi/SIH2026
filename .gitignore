@@ -25,3 +25,4 @@ backend/prisma/dev.db-journal
 .vercel
 .cache
 .DS_Store
+scratch/
