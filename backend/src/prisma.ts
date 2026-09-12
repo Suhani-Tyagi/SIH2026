@@ -34,6 +34,12 @@ export function getCleanDatabaseUrl(): string | null {
 const activeUrl = getCleanDatabaseUrl();
 export const isDatabaseConfigured = Boolean(activeUrl);
 
+if (!isDatabaseConfigured) {
+  console.warn(
+    'WARNING: No DATABASE_URL configured — falling back to ephemeral in-memory/tmp storage. User accounts WILL NOT reliably persist across serverless instances. Set DATABASE_URL in your deployment environment variables.'
+  );
+}
+
 const clientDatasourceUrl =
   activeUrl || 'postgresql://postgres:postgres@localhost:5432/ayush_setu?sslmode=disable';
 

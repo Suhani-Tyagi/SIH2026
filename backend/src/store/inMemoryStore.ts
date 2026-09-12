@@ -1193,7 +1193,28 @@ export const memoryAuditLogs: MemoryAuditLog[] = [
 
 import os from 'os';
 
-const PERSISTENT_DB_FILE = path.resolve(__dirname, '../../../persistent_user_store.json');
+// Fallback path resolution: On serverless platforms like Vercel, the bundled project
+// filesystem is read-only except for /tmp. We verify write permissions on the bundled directory first,
+// and fall back to os.tmpdir() (/tmp) where serverless execution environments are writable.
+function resolvePersistentStorePath(): string {
+  const bundledPath = path.resolve(__dirname, '../../../persistent_user_store.json');
+  try {
+    fs.accessSync(path.dirname(bundledPath), fs.constants.W_OK);
+    return bundledPath;
+  } catch {
+    const tmpPath = path.join(os.tmpdir(), 'ayush_setu_persistent_user_store.json');
+    try {
+      if (!fs.existsSync(tmpPath) && fs.existsSync(bundledPath)) {
+        fs.copyFileSync(bundledPath, tmpPath);
+      }
+    } catch {
+      // Ignore copy error, will write on next save
+    }
+    return tmpPath;
+  }
+}
+
+const PERSISTENT_DB_FILE = resolvePersistentStorePath();
 
 export function saveMemoryStoreToDisk(): void {
   try {
