@@ -187,22 +187,16 @@ export const CoursePlayerPage: React.FC = () => {
                   href={activeLesson.videoSearchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => {
-                    // Record lesson viewing progress without generating premature badges
-                    if (activeLesson && activeLesson.status !== 'COMPLETED') {
-                      handleMarkComplete();
-                    }
-                  }}
                   className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2.5 text-sm font-bold text-stone-900 hover:bg-amber-200 focus-visible:outline-white"
                 >
-                  <PlayCircle className="w-4 h-4" aria-hidden="true" /> Open YouTube lecture & Track Progress
+                  <PlayCircle className="w-4 h-4" aria-hidden="true" /> Open YouTube lecture search
                 </a>
               )}
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
             <span className="text-emerald-900 font-medium">
-              🎓 <strong>Completion Detection:</strong> Watching lectures updates lesson progress. Verified E-Badges generate automatically only after 100% course completion is detected & passing the 75% Aptitude Test.
+              🎓 <strong>Completion Verification:</strong> Study notes and click "Mark as Complete" for each lesson. E-Badges generate automatically <strong>only after</strong> 100% course progress is reached and you pass the 75% Aptitude Test.
             </span>
             <button onClick={() => { setLessonStarted(!lessonStarted); setActiveTab('CONTENT'); }} className="font-bold text-emerald-800 underline shrink-0">{lessonStarted ? 'Hide lesson notes' : 'Show lesson notes'}</button>
           </div>

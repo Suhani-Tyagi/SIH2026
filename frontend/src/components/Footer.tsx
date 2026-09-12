@@ -66,11 +66,31 @@ export const Footer: React.FC = () => {
             AYUSH Disciplines
           </h4>
           <ul className="space-y-2 text-[11px] text-slate-300">
-            <li>Ayurveda (BAMS, MD/MS)</li>
-            <li>Yoga & Naturopathy (BNYS)</li>
-            <li>Unani Medicine (BUMS)</li>
-            <li>Siddha Medicine (BSMS)</li>
-            <li>Homoeopathy (BHMS)</li>
+            <li>
+              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+                Ayurveda (BAMS, MD/MS)
+              </Link>
+            </li>
+            <li>
+              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+                Yoga & Naturopathy (BNYS)
+              </Link>
+            </li>
+            <li>
+              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+                Unani Medicine (BUMS)
+              </Link>
+            </li>
+            <li>
+              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+                Siddha Medicine (BSMS)
+              </Link>
+            </li>
+            <li>
+              <Link to={user ? '/student/learning' : '/login'} className="hover:text-amber-400 transition-colors">
+                Homoeopathy (BHMS)
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -80,9 +100,23 @@ export const Footer: React.FC = () => {
             Nodal Authority
           </h4>
           <p className="text-[11px] text-slate-300 leading-relaxed">
-            All India Institute of Ayurveda (AIIA)<br />
-            Mathura Road, Gautampuri, Sarita Vihar,<br />
-            New Delhi, Delhi 110076, India
+            <a
+              href="https://aiia.gov.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-amber-400 font-bold transition-colors block text-white"
+            >
+              All India Institute of Ayurveda (AIIA)
+            </a>
+            <a
+              href="https://maps.google.com/?q=All+India+Institute+of+Ayurveda+New+Delhi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-amber-400 transition-colors block mt-1"
+            >
+              Mathura Road, Gautampuri, Sarita Vihar,<br />
+              New Delhi, Delhi 110076, India
+            </a>
           </p>
           <div className="mt-3 tricolor-strip"></div>
         </div>
@@ -91,7 +125,6 @@ export const Footer: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-6 border-t border-emerald-900/60 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-emerald-300/60">
         <p>© 2026 AYUSH Setu Platform. Built for Smart India Hackathon (SIH 2026).</p>
-        <p>Designed with Deep Herbal Green & Warm Saffron Palette</p>
       </div>
     </footer>
   );

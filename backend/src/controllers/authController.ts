@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, AuthRequest } from '../middleware/auth';
 import prisma, { isDatabaseConfigured, ensureTablesExist } from '../prisma';
-import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile } from '../store/inMemoryStore';
+import { memoryUsers, memoryStudentProfiles, MemoryUser, MemoryStudentProfile, saveMemoryStoreToDisk } from '../store/inMemoryStore';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -117,6 +117,7 @@ export const register = async (req: Request, res: Response) => {
               careerGoals: JSON.stringify(['Herbal Formulation Scientist'])
             });
           }
+          saveMemoryStoreToDisk();
         }
 
         const token = jwt.sign(
@@ -179,6 +180,8 @@ export const register = async (req: Request, res: Response) => {
       memoryStudentProfiles.push(newProf);
     }
 
+    saveMemoryStoreToDisk();
+
     const token = jwt.sign(
       { id: newMemUser.id, email: newMemUser.email, role: newMemUser.role, name: newMemUser.name },
       JWT_SECRET,
@@ -232,6 +235,7 @@ export const login = async (req: Request, res: Response) => {
               avatar: user.avatar || undefined,
               createdAt: user.createdAt
             });
+            saveMemoryStoreToDisk();
           }
 
           const token = jwt.sign(

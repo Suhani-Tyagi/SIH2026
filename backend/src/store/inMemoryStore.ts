@@ -1,4 +1,6 @@
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 // Pre-seeded data store with full AYUSH Setu enterprise dataset
 const defaultPasswordHash = bcrypt.hashSync('password123', 10);
@@ -907,3 +909,45 @@ export const memoryAuditLogs: MemoryAuditLog[] = [
     timestamp: new Date()
   }
 ];
+
+const PERSISTENT_DB_FILE = path.join(__dirname, 'persistent_user_store.json');
+
+export function saveMemoryStoreToDisk(): void {
+  try {
+    const dataToSave = {
+      users: memoryUsers,
+      profiles: memoryStudentProfiles
+    };
+    fs.writeFileSync(PERSISTENT_DB_FILE, JSON.stringify(dataToSave, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Failed to persist memory store to disk:', err);
+  }
+}
+
+export function loadMemoryStoreFromDisk(): void {
+  try {
+    if (fs.existsSync(PERSISTENT_DB_FILE)) {
+      const raw = fs.readFileSync(PERSISTENT_DB_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.users)) {
+        parsed.users.forEach((u: MemoryUser) => {
+          if (!memoryUsers.some(existing => existing.email.toLowerCase() === u.email.toLowerCase())) {
+            memoryUsers.push({ ...u, createdAt: new Date(u.createdAt) });
+          }
+        });
+      }
+      if (Array.isArray(parsed.profiles)) {
+        parsed.profiles.forEach((p: MemoryStudentProfile) => {
+          if (!memoryStudentProfiles.some(existing => existing.id === p.id || existing.userId === p.userId)) {
+            memoryStudentProfiles.push(p);
+          }
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load memory store from disk:', err);
+  }
+}
+
+// Auto-load persistent accounts on startup
+loadMemoryStoreFromDisk();
