@@ -197,22 +197,8 @@ export const login = async (req: Request, res: Response) => {
       return res.status(404).json({ message: `No registered account found with email "${cleanEmail}". Please check your email or sign up.` });
     }
 
-    let isValidPassword = await bcrypt.compare(password, account.user.password);
+    const isValidPassword = await bcrypt.compare(password, account.user.password);
     
-    // Auto-sync & repair stored password hash for registered user accounts if password mismatch occurs
-    if (!isValidPassword) {
-      if (typeof password === 'string' && password.length >= 6) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        account.user.password = hashedPassword;
-        const memUser = memoryUsers.find(u => u.email.trim().toLowerCase() === cleanEmail);
-        if (memUser) {
-          memUser.password = hashedPassword;
-          saveMemoryStoreToDisk();
-        }
-        isValidPassword = true;
-      }
-    }
-
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Incorrect password. Please double-check your credentials and try again.' });
     }
