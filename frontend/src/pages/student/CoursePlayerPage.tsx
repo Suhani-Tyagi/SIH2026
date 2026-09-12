@@ -151,17 +151,30 @@ export const CoursePlayerPage: React.FC = () => {
           localCompleted = JSON.parse(localStorage.getItem(localKey) || '{}');
         } catch (e) {}
 
-        // Merge local completed status with server modules
-        const mergedModules = (data.modules || []).map((mod: any) => ({
-          ...mod,
-          lessons: (mod.lessons || []).map((les: any) => {
+        // Merge local completed status with server modules & execute sequential unlock pass
+        let prevCompleted = true;
+        const mergedModules = (data.modules || []).map((mod: any, mIdx: number) => {
+          const lessons = (mod.lessons || []).map((les: any, lIdx: number) => {
             const isLocallyCompleted = localCompleted[les.id] === true;
+            let status = isLocallyCompleted ? 'COMPLETED' : les.status;
+
+            if (status !== 'COMPLETED' && prevCompleted && status === 'LOCKED') {
+              status = 'AVAILABLE';
+            }
+
+            if (status === 'COMPLETED') {
+              prevCompleted = true;
+            } else {
+              prevCompleted = false;
+            }
+
             return {
               ...les,
-              status: isLocallyCompleted ? 'COMPLETED' : les.status
+              status
             };
-          })
-        }));
+          });
+          return { ...mod, lessons };
+        });
 
         setCourse(data.course);
         setModules(mergedModules);
@@ -220,6 +233,23 @@ export const CoursePlayerPage: React.FC = () => {
       console.error('Failed to update local progress backup', e);
     }
 
+    // Immediately update UI: mark current lesson COMPLETED and unlock next lesson
+    setModules((prevMods) => {
+      let prevComp = true;
+      return prevMods.map((mod) => ({
+        ...mod,
+        lessons: (mod.lessons || []).map((les: any) => {
+          let status = les.id === activeLesson.id ? 'COMPLETED' : les.status;
+          if (status !== 'COMPLETED' && prevComp && status === 'LOCKED') {
+            status = 'AVAILABLE';
+          }
+          prevComp = status === 'COMPLETED';
+          return { ...les, status };
+        })
+      }));
+    });
+    setActiveLesson((prev: any) => (prev ? { ...prev, status: 'COMPLETED' } : prev));
+
     try {
       const res = await fetch(`/api/courses/${courseId}/lessons/${activeLesson.id}/progress`, {
         method: 'POST',
@@ -232,17 +262,6 @@ export const CoursePlayerPage: React.FC = () => {
 
       if (res.ok) {
         await fetchCourseDetails();
-      } else {
-        // Fallback UI update if network has delay
-        setModules((prevMods) =>
-          prevMods.map((mod) => ({
-            ...mod,
-            lessons: (mod.lessons || []).map((les: any) =>
-              les.id === activeLesson.id ? { ...les, status: 'COMPLETED' } : les
-            )
-          }))
-        );
-        setActiveLesson((prev: any) => (prev ? { ...prev, status: 'COMPLETED' } : prev));
       }
     } catch (e) {
       console.error('Failed to post lesson progress to server', e);

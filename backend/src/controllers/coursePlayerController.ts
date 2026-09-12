@@ -154,21 +154,37 @@ export const getCourseDetailsWithModules = async (req: AuthRequest, res: Respons
       }))
     }));
 
-    // Map progress status onto lessons
+    // Map progress status onto lessons with sequential unlock logic
     const progressMap = new Map(lessonProgressList.map(lp => [lp.lessonId, lp]));
     let totalLessonsCount = 0;
     let completedLessonsCount = 0;
+    let previousLessonCompleted = true; // First lesson is available by default
 
-    const starterCompletedCount = usesStarterModules ? Math.round((enrollment?.progressPercent || 0) / 25) : 0;
+    const starterCompletedCount = usesStarterModules ? Math.round(((enrollment?.progressPercent || 0) / 100) * 4) : 0;
+
     const modulesWithProgress = modules.map((mod: any, mIdx: number) => {
       const lessonsWithStatus = (mod.lessons || []).map((les: any, lIdx: number) => {
         totalLessonsCount++;
         const prog = progressMap.get(les.id);
         const lessonNumber = totalLessonsCount;
-        let status = prog ? prog.status : usesStarterModules
-          ? (lessonNumber <= starterCompletedCount ? 'COMPLETED' : lessonNumber === starterCompletedCount + 1 ? 'AVAILABLE' : 'LOCKED')
-          : (mIdx === 0 && lIdx === 0 ? 'AVAILABLE' : 'LOCKED');
-        if (status === 'COMPLETED') completedLessonsCount++;
+
+        let status = 'LOCKED';
+
+        if (prog?.status === 'COMPLETED' || (usesStarterModules && lessonNumber <= starterCompletedCount)) {
+          status = 'COMPLETED';
+        } else if (prog?.status === 'IN_PROGRESS') {
+          status = 'IN_PROGRESS';
+        } else if (previousLessonCompleted || (usesStarterModules && lessonNumber === starterCompletedCount + 1) || (mIdx === 0 && lIdx === 0)) {
+          status = 'AVAILABLE';
+        }
+
+        if (status === 'COMPLETED') {
+          completedLessonsCount++;
+          previousLessonCompleted = true;
+        } else {
+          previousLessonCompleted = false;
+        }
+
         return {
           ...les,
           status,
