@@ -183,22 +183,35 @@ export const CoursePlayerPage: React.FC = () => {
               <h2 className="text-lg font-bold">Choose a lecture from YouTube</h2>
               <p className="mt-2 text-sm leading-relaxed text-stone-300">Direct embeds are paused while every suggested lecture is reviewed for relevance and appropriateness. Your course notes and workbook are available here now.</p>
               {activeLesson?.videoSearchUrl && (
-                <a href={activeLesson.videoSearchUrl} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2.5 text-sm font-bold text-stone-900 hover:bg-amber-200 focus-visible:outline-white">
-                  <PlayCircle className="w-4 h-4" aria-hidden="true" /> Open YouTube lecture search
+                <a
+                  href={activeLesson.videoSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    // Record lesson viewing progress without generating premature badges
+                    if (activeLesson && activeLesson.status !== 'COMPLETED') {
+                      handleMarkComplete();
+                    }
+                  }}
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2.5 text-sm font-bold text-stone-900 hover:bg-amber-200 focus-visible:outline-white"
+                >
+                  <PlayCircle className="w-4 h-4" aria-hidden="true" /> Open YouTube lecture & Track Progress
                 </a>
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
-            <span className="text-stone-600">No unreviewed video plays inside AYUSH Setu. Use the course-specific YouTube search or study the detailed notes and workbook.</span>
-            <button onClick={() => { setLessonStarted(!lessonStarted); setActiveTab('CONTENT'); }} className="font-bold text-emerald-800 underline">{lessonStarted ? 'Hide lesson notes' : 'Show lesson notes'}</button>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+            <span className="text-emerald-900 font-medium">
+              🎓 <strong>Completion Detection:</strong> Watching lectures updates lesson progress. Verified E-Badges generate automatically only after 100% course completion is detected & passing the 75% Aptitude Test.
+            </span>
+            <button onClick={() => { setLessonStarted(!lessonStarted); setActiveTab('CONTENT'); }} className="font-bold text-emerald-800 underline shrink-0">{lessonStarted ? 'Hide lesson notes' : 'Show lesson notes'}</button>
           </div>
 
           {/* Lesson Action Header */}
           <div className="bg-white rounded-xl p-5 border shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-              <h2 className="text-xl font-bold text-gray-900">{activeLesson?.title || 'Module Overview'}</h2>
+                <h2 className="text-xl font-bold text-gray-900">{activeLesson?.title || 'Module Overview'}</h2>
                 <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {activeLesson?.duration || '15 mins'}</span>
                   <span>•</span>

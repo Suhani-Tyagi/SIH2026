@@ -5,6 +5,7 @@
   "description": "AYUSH Setu - Academia Industry Collaboration & Placement Portal",
   "scripts": {
     "build": "cd backend && npm install && npx prisma generate && npm run build && cd ../frontend && npm install && npm run build",
+    "vercel-build": "cd backend && npm install && npx prisma generate && npm run build && cd ../frontend && npm install && npm run build",
     "build:backend": "cd backend && npm install && npx prisma generate && npm run build",
     "build:frontend": "cd frontend && npm install && npm run build",
     "test": "cd backend && npx ts-node src/tests/platform.test.ts",

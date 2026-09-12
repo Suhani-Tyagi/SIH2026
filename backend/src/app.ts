@@ -24,7 +24,12 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'AYUSH Setu API is running cleanly', time: new Date() });
 });
 
-// API Routes
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'AYUSH Setu API is running cleanly', time: new Date() });
+});
+
+// API Routes - mounted at both /api and / for Vercel serverless rewrite compatibility
 app.use('/api', apiRoutes);
+app.use('/', apiRoutes);
 
 export default app;

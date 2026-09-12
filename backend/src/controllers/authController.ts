@@ -64,8 +64,9 @@ export const register = async (req: Request, res: Response) => {
           }
         });
 
+        let studentProfData: any = null;
         if (user.role === 'STUDENT') {
-          await prisma.studentProfile.create({
+          studentProfData = await prisma.studentProfile.create({
             data: {
               userId: user.id,
               degree: degree || 'BAMS',
@@ -84,6 +85,38 @@ export const register = async (req: Request, res: Response) => {
               verifiedBadges: JSON.stringify(['AYUSH Student Portal Registration'])
             }
           });
+        }
+
+        // Sync to memory store so lookups succeed even during DB fallback
+        if (!memoryUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
+          memoryUsers.push({
+            id: user.id,
+            email: cleanEmail,
+            password: hashedPassword,
+            name: user.name,
+            role: user.role as any,
+            system: user.system,
+            institutionName: user.institutionName || undefined,
+            companyName: user.companyName || undefined,
+            designation: user.designation || undefined,
+            avatar: user.avatar || undefined,
+            createdAt: user.createdAt
+          });
+          if (user.role === 'STUDENT' && studentProfData) {
+            memoryStudentProfiles.push({
+              id: studentProfData.id,
+              userId: user.id,
+              degree: studentProfData.degree,
+              passoutYear: studentProfData.passoutYear,
+              readinessScore: studentProfData.readinessScore,
+              bio: 'Student registered on AYUSH Setu platform.',
+              phone: '+91 98765 00000',
+              location: 'New Delhi, India',
+              skillScores: studentProfData.skillScores,
+              verifiedBadges: studentProfData.verifiedBadges,
+              careerGoals: JSON.stringify(['Herbal Formulation Scientist'])
+            });
+          }
         }
 
         const token = jwt.sign(
@@ -168,7 +201,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Please enter both email address and password.' });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = String(email).trim().toLowerCase();
 
     // Try Prisma DB first if configured
     if (isDatabaseConfigured) {
@@ -182,6 +215,23 @@ export const login = async (req: Request, res: Response) => {
           const isValidPassword = await bcrypt.compare(password, user.password);
           if (!isValidPassword) {
             return res.status(401).json({ message: 'Incorrect password. Please double-check your credentials and try again.' });
+          }
+
+          // Also ensure in-memory store has this user synced for offline fallback
+          if (!memoryUsers.some(u => u.email.toLowerCase() === cleanEmail)) {
+            memoryUsers.push({
+              id: user.id,
+              email: user.email,
+              password: user.password,
+              name: user.name,
+              role: user.role as any,
+              system: user.system,
+              institutionName: user.institutionName || undefined,
+              companyName: user.companyName || undefined,
+              designation: user.designation || undefined,
+              avatar: user.avatar || undefined,
+              createdAt: user.createdAt
+            });
           }
 
           const token = jwt.sign(
