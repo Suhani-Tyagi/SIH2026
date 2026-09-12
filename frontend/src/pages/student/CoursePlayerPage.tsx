@@ -990,17 +990,203 @@ export const CoursePlayerPage: React.FC = () => {
         {/* Left 2 Cols: Lesson Player & Workspace */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Keraleeya Panchakarma Masterclass Interactive Video Presentation Player */}
-          <KeraleeyaPanchakarmaPlayer
-            lessonTitle={activeLesson?.title || "Orientation and Learning Outcomes"}
-            courseTitle={course?.title || "Masterclass in Classical Keraleeya Panchakarma Protocols"}
-            moduleTitle={
-              modules.find(m => m.lessons?.some((l: any) => l.id === activeLesson?.id))?.title 
-                ? `MODULE ${modules.findIndex(m => m.lessons?.some((l: any) => l.id === activeLesson?.id)) + 1} · ${modules.find(m => m.lessons?.some((l: any) => l.id === activeLesson?.id))?.title}` 
-                : "MODULE 1 · FOUNDATION"
+          {/* Strictly scoped Keraleeya Panchakarma Masterclass Module 1 Player vs General Video Presentation */}
+          {(() => {
+            const isKeraleeyaCourse =
+              courseId === 'crs-2' ||
+              course?.title?.toLowerCase().includes('keraleeya panchakarma') ||
+              course?.title?.toLowerCase().includes('panchakarma protocols');
+
+            const activeModuleIndex = modules.findIndex(m => m.lessons?.some((l: any) => l.id === activeLesson?.id));
+            const isModule1 = activeModuleIndex === 0 || activeLesson?.moduleId === 'mod-1' || activeLesson?.id?.includes('-l1') || activeLesson?.id?.includes('-l2');
+
+            // Strictly check if this is Module 1 of Keraleeya Panchakarma course
+            const isKeraleeyaModule1 = isKeraleeyaCourse && isModule1;
+
+            if (isKeraleeyaModule1) {
+              const isLecture2 =
+                activeLesson?.order === 2 ||
+                activeLesson?.id?.endsWith('-l2') ||
+                activeLesson?.title?.toLowerCase().includes('standards');
+
+              const keraleeyaLectureNumber: 1 | 2 = isLecture2 ? 2 : 1;
+
+              return (
+                <KeraleeyaPanchakarmaPlayer
+                  lectureNumber={keraleeyaLectureNumber}
+                  lessonTitle={activeLesson?.title}
+                  courseTitle={course?.title || "Masterclass in Classical Keraleeya Panchakarma Protocols"}
+                  moduleTitle={
+                    activeModuleIndex >= 0
+                      ? `MODULE ${activeModuleIndex + 1} · ${modules[activeModuleIndex]?.title}`
+                      : "MODULE 1 · FOUNDATION"
+                  }
+                  onComplete={handleAutoMarkComplete}
+                />
+              );
             }
-            onComplete={handleAutoMarkComplete}
-          />
+
+            // For all other modules or courses, render standard presentation video player
+            return (
+              <div className="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 relative aspect-video flex flex-col justify-between group">
+                {/* Header Overlay Badge */}
+                <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-none">
+                  <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-md text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold rounded-full flex items-center gap-1.5 shadow-md">
+                    <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" /> 10-Slide Interactive Presentation Video Deck: {activeLesson?.title || 'AYUSH Module'}
+                  </span>
+                  {activeLesson?.status === 'COMPLETED' || videoProgress >= 100 ? (
+                    <span className="px-3 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> 100% Presentation Completed & Auto-Verified
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-amber-400/90 text-slate-950 text-[10px] font-bold rounded-full">
+                      Auto-Detection Active ({Math.round(videoProgress)}%)
+                    </span>
+                  )}
+                </div>
+
+                {/* Center Animation Scenes Container */}
+                <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-950">
+                  {render10SlidePresentationVideo()}
+
+                  {!isPlaying && videoProgress < 100 && (
+                    <button
+                      onClick={() => {
+                        setIsPlaying(true);
+                        const slides = get10SlidesForLecture(activeLesson, course);
+                        const slideIdx = Math.min(9, Math.floor(videoProgress / 10));
+                        if (slides[slideIdx]) {
+                          speakNarration(`Slide ${slideIdx + 1}: ${slides[slideIdx].title}. ${slides[slideIdx].speechText}`);
+                        }
+                      }}
+                      className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center group-hover:bg-slate-950/40 transition-all z-20"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-emerald-600 group-hover:bg-emerald-500 text-white flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-all">
+                        <Play className="w-8 h-8 ml-1 fill-current" />
+                      </div>
+                    </button>
+                  )}
+                </div>
+
+                {/* Video Controls Bar */}
+                <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-2 z-20">
+                  <div
+                    className="relative w-full bg-slate-800 h-2 rounded-full overflow-hidden cursor-pointer"
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickX = e.clientX - rect.left;
+                      const newPct = Math.min(100, Math.max(0, (clickX / rect.width) * 100));
+                      setVideoProgress(newPct);
+                      if (newPct >= 100) handleAutoMarkComplete();
+                    }}
+                  >
+                    <div
+                      className="bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-400 h-full transition-all duration-150"
+                      style={{ width: `${videoProgress}%` }}
+                    ></div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-300">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          const nextPlay = !isPlaying;
+                          setIsPlaying(nextPlay);
+                          if (nextPlay) {
+                            const slides = get10SlidesForLecture(activeLesson, course);
+                            const slideIdx = Math.min(9, Math.floor(videoProgress / 10));
+                            if (slides[slideIdx]) {
+                              speakNarration(`Slide ${slideIdx + 1}: ${slides[slideIdx].title}. ${slides[slideIdx].speechText}`);
+                            }
+                          } else if ('speechSynthesis' in window) {
+                            window.speechSynthesis.cancel();
+                          }
+                        }}
+                        className="p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors font-bold flex items-center gap-1.5"
+                      >
+                        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        <span>{isPlaying ? 'Pause Presentation' : videoProgress >= 100 ? 'Replay Presentation' : 'Play Presentation'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const prevIdx = Math.max(0, Math.floor(videoProgress / 10) - 1);
+                          const targetPct = prevIdx * 10;
+                          setVideoProgress(targetPct);
+                        }}
+                        className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
+                        title="Previous Slide"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const nextIdx = Math.min(9, Math.floor(videoProgress / 10) + 1);
+                          const targetPct = nextIdx * 10;
+                          setVideoProgress(targetPct);
+                        }}
+                        className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
+                        title="Next Slide"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setVideoProgress(0);
+                          setIsPlaying(true);
+                          const slides = get10SlidesForLecture(activeLesson, course);
+                          if (slides[0]) {
+                            speakNarration(`Slide 1: ${slides[0].title}. ${slides[0].speechText}`);
+                          }
+                        }}
+                        className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition-colors"
+                        title="Restart Presentation"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const nextMute = !isMuted;
+                          setIsMuted(nextMute);
+                          if (nextMute && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                        }}
+                        className={`p-1.5 rounded-lg border transition ${
+                          isMuted ? 'bg-rose-950/80 border-rose-700 text-rose-300' : 'bg-slate-800 border-slate-700 text-emerald-400 hover:text-white'
+                        }`}
+                        title={isMuted ? 'Unmute AI Voice Assistant' : 'Mute AI Voice Assistant'}
+                      >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </button>
+
+                      <span className="font-mono text-[11px] text-slate-400">
+                        {Math.floor((videoProgress / 100) * videoDurationSec)}s / {videoDurationSec}s ({Math.round(videoProgress)}%)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-bold">Speed:</span>
+                      {[1, 1.5, 2].map((spd) => (
+                        <button
+                          key={spd}
+                          onClick={() => setPlaybackSpeed(spd)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border transition ${
+                            playbackSpeed === spd
+                              ? 'bg-amber-400 text-slate-950 border-amber-400'
+                              : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                          }`}
+                        >
+                          {spd}x
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="flex flex-wrap items-center justify-between gap-3 text-xs bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
             <span className="text-emerald-900 font-medium">
