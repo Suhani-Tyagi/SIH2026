@@ -116,6 +116,16 @@
       "institutionName": "All India Institute of Ayurveda, New Delhi",
       "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=ABC%20User",
       "createdAt": "2026-09-12T09:52:29.714Z"
+    },
+    {
+      "id": "usr-mem-1789226141573",
+      "email": "test_1789226141328@example.com",
+      "password": "$2a$10$1HEqAY./4nwHHP4IW8gBSugajRQtUqKYdwIH/meRATaJ5wI/KEw7C",
+      "name": "Test User",
+      "role": "STUDENT",
+      "system": "AYURVEDA",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Test%20User",
+      "createdAt": "2026-09-12T15:15:41.573Z"
     }
   ],
   "profiles": [
@@ -167,6 +177,19 @@
     {
       "id": "prof-mem-1789206112916",
       "userId": "usr-mem-1789206112916",
+      "degree": "BAMS",
+      "passoutYear": 2025,
+      "readinessScore": 75,
+      "bio": "Student registered on AYUSH Setu platform.",
+      "phone": "+91 98765 00000",
+      "location": "New Delhi, India",
+      "skillScores": "{\"panchakarma\":70,\"herbalFormulation\":70,\"clinicalDiagnostics\":75,\"nadiPariksha\":65,\"yogaTherapy\":60,\"researchMethodology\":70,\"patientCounseling\":75,\"qaGmp\":65}",
+      "verifiedBadges": "[\"AYUSH Student Portal Registration\"]",
+      "careerGoals": "[\"Herbal Formulation Scientist\"]"
+    },
+    {
+      "id": "prof-mem-1789226141573",
+      "userId": "usr-mem-1789226141573",
       "degree": "BAMS",
       "passoutYear": 2025,
       "readinessScore": 75,
